@@ -1,0 +1,185 @@
+---
+title: "Florida Keys Reef Fish Biodiversity"
+author: "Megan Hepner"
+date: "April 28, 2017"
+output: html_document
+---
+
+## Reef Visual Census Background 
+
+Reef fish community data used in this study were collected as part of the multi-agency Reef Visual Census (RVC) [Brandt et al., 2009](https://www.coris.noaa.gov/activities/fish_monitoring_protocol/). Fish communities were visually surveyed underwater annually in the mainland FKNMS (Lower Keys, Middle Keys and Upper Keys) from 1999 to 2012, and biennially from 2012 to 2016. The Dry Tortugas region was surveyed from 1999 to 2000 and biennially from 2004 to 2016.     
+
+The RVC uses a stationary point count method within a randomly selected 7.5 m radius circular plot with a 200m map grid from 1999 to 2012 and 100m map grid from 2014 to 2016 to optimize the observation of conspicuous and diurnally active reef fish, specifically economically and ecologically important reef fish species [Bohnsack and Bannerot, 1986](https://docs.lib.noaa.gov/noaa_documents/NMFS/TR_NMFS/TR_NMFS_41.pdf). 
+
+## Objective 
+
+To analyze and compare changes in species richness, Simpson diversity, Shannon diversity and functional diversity in the Florida Keys National Marine Sanctuary (FKNMS) to reveal changes in temporal and spatial variability from 1999 – 2016. The indices were assessed throughout the Florida Keys, between four distinct regions of the FKNMS (Upper Keys, Middle Keys, Lower Keys, and Dry Tortugas) and for different levels of management (Ecological Reserves (ER), Sanctuary Preservations Areas (SPA), and Special Use/Research Only Areas (SU/RO)). 
+
+## Diversity indicse as effective number of species 
+
+All indices were computed as effective number of species. Effective number of species is the number of equally abundance species needed to produce the observed value of a diversity index (Jost, 2006; Jost et al., 2010; MacArthur, 1965). Jost, 2006 refers to these as true measures of diversity, where prior to the conversion the diversity indices are simply measures of entropy. 
+
+- Species Richness is the number of species in a habitat sampled  
+
+    $Richness = \sum_{i=1}^S p_i^0$  
+
+- Simpson diversity measures the probability that two individuals randomly selected from a sample will belong to different species.   
+
+    $Simpson = 1 - \sum_{i=1}^S p_i^2$  
+
+- Shannon diveristy is a measure of entropy, it is the uncertainty in the species identity of a sample  
+
+    $Shannon = - \sum_{i=1}^S p_i \log_b p_i$  
+
+- Functional diversity (Rao's Q) is a measure of pairwise functional differences between species weighted by their relative abundances   
+
+    $Rao Q = \sum_{i=1}^S-1 \sum_{j=i+1}^S d_i p_i p_j$
+
+## Outputs 
+1. Species relative abundance matrix by domain for each sampling year (Florida Keys and Dry Tortugas)
+2. Species richness, Simpson diversity, Shannon diversity, and Functional diversity as effective number  of  species for each sampling year by domain
+3. Species relative abundance matrix by strata for each sampling year
+Species richness, Simpson diversity, Shannon diversity, and Functional diversity as effective number of species for each sampling year by strata
+4. Species relative abundance matrix by primary sampling unit for each sampling year
+5. Species richness, Simpson diversity, Shannon diversity, and Functional diversity as effective number of species for each sampling year by primary sampling unit
+6. Functional dendogram 
+
+```{r setup, include= F}
+knitr::opts_chunk$set(echo = T)
+
+library(rvc) #calls RVC data from SEFSC server 
+library(tidyverse)
+library(vegan) # biodiveristy functions for richness, simpson, and shannon 
+
+```
+
+### Fetch the RVC data from [NOAA's Southeast Fisheries Science Center server](https://grunt.sefsc.noaa.gov/rvc_analysis20/) using the [RVC package](https://github.com/jeremiaheb/rvc)
+
+#### Sample Data Variables: 
+- PRIMARY_SAMPLE_UNIT: A code indicating the primary sample unit in which a sample was collected)
+- YEAR 
+- MONTH 
+- DAY 
+- STATION_NR: secondary sampling unit - 7.5m)
+- LAT_DEGREES: Latitude of secondary sampling unit in decimal degrees)
+- LON_DEGREES: Longitude of secondary sampling unit in decimal degrees)
+- DEPTH: Average depth, in meters, of secondary sampling unit)
+- UNDERWATER_VISIBILITY: visibility, in meters, at secondary sampling unit
+- MAPGRID_NR: A number indicating the primary sample unit  
+- HABITAT_CD: A code indicating the habitat type 
+- ZONE_NR: A code indicating the distance offshore: 
+    + 1 - Inshore
+    + 2 - Midchannel
+    + 3 - Offshore
+    + 4 - Fore-reef
+- SUBREGION_NR 
+- MPA_NR: A number identifying the marine protected area in which the sample was collected. Zero indicates unprotected status)
+- SPECIES_NR: A number indicating the species for a sample 
+- SPECIES_CD: A code indicating the species for a sample. Consists of the first three letters of the generic name and the first four of the specific name   
+- LEN      
+- NUM: The number of individuals of a given species and length observed in a secondary sampling unit 
+- TIME_SEEN 
+- PROT: A boolean value indicating whether a sample was in a protected area or not 
+    + 1 - protected area
+    + 0 - not protected 
+- STRAT: A code indicating the stratum in which a sample was taken. Differs by region   
+    + FMLR
+    + FSLR
+    + HRRF
+    + INPR
+    + MCPR 
+    + OFPR
+- REGION
+    + FLA KEYS (florida keys)
+    + DRY TORT (dry tortugas)
+
+#### Stratum Data Variables 
+- REGION 
+- YEAR 
+- PROT 
+- STRAT 
+- NTOT: The number of possible primary sample units for a given year, region, stratum, and protected status 
+- GRID_SIZE: The length (in meters) to a side of a primary sample unit for a given year, region, stratum, and protected status.
+
+#### Taxonomic Data Variables 
+- SPECIES_CD
+- FAMILY
+- SCINAME 
+- COMNAME
+- LC: Minimum length at capture, in centimeters
+- LM: Median length at maturity, in centimeters.
+- WLEN_A: The linear coefficient of the allometric growth equation in grams per millimeter (g/mm)
+- WLEN_B: The exponential coefficient of the allometric growth equation
+
+#### Benthic Data Variables: 
+- REGION: A code indicating the region. 
+- YEAR: A number indicating the calendar year.
+- PRIMARY_SAMPLE_UNIT: A code indicating the primary sample unit in which a sample was collected.
+- STATION_NR: A number indicating the secondary sampling unit within a given primary sample unit.
+- DEPTH: Average depth, in meters, of secondary sampling unit.
+- MAX_HARD_RELIEF: The maximum height, in meters, of hard relief (e.g. hard corals, rock).
+- MAX_SOFT_RELIEF: The maximum height, in meters, of soft relief (e.g. soft corals, sponges).
+- AVG_HARD_RELIEF: The average height, in meters, of hard relief.
+- HARD_REL_PCT_0: Percentage of hard relief less than 0.2 meters.
+- HARD_REL_PCT_1: Percentage of hard relief between 0.2 and 0.5 meters.
+- HARD_REL_PCT_2: Percentage of hard relief between 0.5 and 1.0 meters.
+- HARD_REL_PCT_3: Percentage of hard relief between 1.0 and 1.5 meters.
+- HARD_REL_PCT_4: Percentage of hard relief greater than 1.5 meters.
+- PCT_SAND: Percentage of abiotic cover that is sand.
+- PCT_HARD_BOTTOM: Percentage of abiotic cover that is hard bottom.
+- PCT_RUBBLE: Percentage of abiotic cover that is rubble.
+- PCT_CORAL: Percentage of biotic hardbottom that is coral.
+- PCT_OCTO: Percentage of biotic hardbottom that is octocoral.
+- PCT_SPONGE: Percentage of biotic hardbottom that is sponge.
+
+##### Function: getDomainDensity returns: 
+- YEAR
+- REGION
+- SPECIES_CD
+- density 
+- var: Variance in average density per secondary sampling unit
+- n: Number of primary sampling units sampled
+- nm: Number of secondary sampling units sampled
+- N: Number of possible primary sample units
+- NM: Number of possible secondary sampling units
+- length_class: The length class or bin. Only present if length_bins is not NULL. The notation, [lower, upper), is inclusive of the lower bound, but exclusive of the upper bound
+- protected_status: The protected status. Only present if merge_protected is FALSE
+
+```{r RVC data, eval = F}
+
+#getRvcData: Retrieves sample, stratum, and taxonomic data from server as list
+
+fk1999_to_2016 <- getRvcData(1999:2016, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+# no data in 2013, 2015 
+
+dt1999_to_2016 <- getRvcData(1999:2016, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') #no data for 2001, 2002, 2003, 2005, 2007, 2009, 2011, 2013, 2015 
+
+spp_list <- fk1999_to_2016$taxonomic_data$COMNAME #species list 
+
+#write.csv(fk1999_to_2016, file = "FK1999_2016.csv") #saved in Dropbox/github/RVC - Error in data.frame(sample_data = list(PRIMARY_SAMPLE_UNIT = c(1L, 1L,  : arguments imply differing number of rows: 4420893, 206, 402
+
+```
+
+```{r practice codes}
+
+fk1999 <- getRvcData(1999, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+
+getDomainDensity(fk1999, "ocy chry", merge_protected = F ) # returns: YEAR, REGION, SPECIES_CD, density, var, n, nm, N, NM, protected_status
+
+getDomainDensity(fk1999, "ocy chry", is_protected = T) # returns: YEAR, REGION, SPECIES_CD, density, var, n, nm, N, NM for only protected areas 
+
+getDomainDensity(fk1999, "ocy chry", when_present = T)
+
+abun1999 <- getDomainAbundance(fk1999, spp_list, merge_protected = F)
+
+write_csv(abun1999, abun1999.csv) #save domain abundance as csv 
+
+abun_1999_tbl = abun1999 %>%
+  select(YEAR, REGION, SPECIES_CD, abundance, protected_status) %>%
+  nest(-YEAR) %>% 
+  mutate(
+    data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abundance, fill =0))) %>% 
+    richness = map(
+      data_wide, 
+      function(x) specnumber(x)))) 
+
