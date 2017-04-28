@@ -1,0 +1,833 @@
+---
+title: "Fetch_RVC_data"
+author: "Megan Hepner"
+date: "April 28, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r fetch abundance data by year and domain, eval = F}
+#csv files to read (since time consuming to compute weighted abundance values)
+
+#FK 
+abunfk1999_csv = 'RVC/abunfk1999.csv' 
+abunfk2000_csv = 'RVC/abunfk2000.csv' 
+abunfk2001_csv = 'RVC/abunfk2001.csv' 
+abunfk2002_csv = 'RVC/abunfk2002.csv' 
+abunfk2003_csv = 'RVC/abunfk2003.csv' 
+abunfk2004_csv = 'RVC/abunfk2004.csv' 
+abunfk2005_csv = 'RVC/abunfk2005.csv' 
+abunfk2006_csv = 'RVC/abunfk2006.csv' 
+abunfk2007_csv = 'RVC/abunfk2007.csv' 
+abunfk2008_csv = 'RVC/abunfk2008.csv' 
+abunfk2009_csv = 'RVC/abunfk2009.csv' 
+abunfk2010_csv = 'RVC/abunfk2010.csv'
+abunfk2012_csv = 'RVC/abunfk2012.csv'
+abunfk2014_csv = 'RVC/abunfk2014.csv'
+abunfk2016_csv = 'RVC/abunfk2016.csv'
+
+#DT 
+abundt1999_csv = 'RVC/abundt1999.csv' 
+abundt2000_csv = 'RVC/abundt2000.csv'
+abundt2004_csv = 'RVC/abundt2004.csv' 
+abundt2006_csv = 'RVC/abundt2006.csv'
+abundt2008_csv = 'RVC/abundt2008.csv' 
+abundt2010_csv = 'RVC/abundt2010.csv'
+abundt2012_csv = 'RVC/abundt2012.csv'
+abundt2014_csv = 'RVC/abundt2014.csv'
+abundt2016_csv = 'RVC/abundt2016.csv'
+
+if (!all(file.exists(c('*abun'))){ #if files don't exist then compute abundance and write files by domain and year (will take awhile)
+
+fk1999<- getRvcData(1999, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')    
+abunfk1999 <- getDomainAbundance(fk1999, spp_list, merge_protected = F)
+write_csv(abunfk1999, 'abunfk1999.csv') #1999
+
+fk2000<- getRvcData(2000, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')    
+abunfk2000 <- getDomainAbundance(fk2000, spp_list, merge_protected = F)  
+write_csv(abunfk2000, 'abunfk2000.csv') #2000
+
+fk2001<- getRvcData(2001, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')    
+abunfk2001 <- getDomainAbundance(fk2001, spp_list, merge_protected = F) 
+write_csv(abunfk2001, 'abunfk2001.csv') #2001
+
+fk2002<- getRvcData(2002, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')    
+abunfk2002 <- getDomainAbundance(fk2002, spp_list, merge_protected = F) 
+write_csv(abunfk2002, 'abunfk2002.csv') #2002
+
+fk2003<- getRvcData(2003, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')   
+abunfk2003 <- getDomainAbundance(fk2003, spp_list, merge_protected = F) 
+write_csv(abunfk2003, 'abunfk2003.csv') #2003
+
+fk2004<- getRvcData(2004, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')  
+abunfk2004 <- getDomainAbundance(fk2004, spp_list, merge_protected = F)
+write_csv(abunfk2004, 'abunfk2004.csv') #2004
+
+fk2005<- getRvcData(2005, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+abunfk2005 <- getDomainAbundance(fk2005, spp_list, merge_protected = F) 
+write_csv(abunfk2005, 'abunfk2005.csv') #2005
+
+fk2006<- getRvcData(2006, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+abunfk2006 <- getDomainAbundance(fk2006, spp_list, merge_protected = F) 
+write_csv(abunfk2006, 'abunfk2006.csv') #2006
+
+fk2007<- getRvcData(2007, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+abunfk2007 <- getDomainAbundance(fk2007, spp_list, merge_protected = F) 
+write_csv(abunfk2007, 'abunfk2007.csv') #2007
+
+fk2008<- getRvcData(2008, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+abunfk2008 <- getDomainAbundance(fk2008, spp_list, merge_protected = F) 
+write_csv(abunfk2008, 'abunfk2008.csv') #2008
+
+fk2009<- getRvcData(2009, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+abunfk2009 <- getDomainAbundance(fk2009, spp_list, merge_protected = F) 
+write_csv(abunfk2009, 'abunfk2009.csv') #2009 
+
+fk2010<- getRvcData(2010, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+abunfk2010 <- getDomainAbundance(fk2010, spp_list, merge_protected = F) 
+write_csv(abunfk2010, 'abunfk2010.csv') #2010
+
+fk2012<- getRvcData(2012, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+abunfk2012 <- getDomainAbundance(fk2012, spp_list, merge_protected = F)
+write_csv(abunfk2012, 'abunfk2012.csv') #2012
+
+fk2014<- getRvcData(2014, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+abunfk2014 <- getDomainAbundance(fk2014, spp_list, merge_protected = F) 
+write_csv(abunfk2014, 'abunfk2014.csv') #2014
+
+fk2016<- getRvcData(2016, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+abunfk2016 <- getDomainAbundance(fk2016, spp_list, merge_protected = F) 
+write_csv(abunfk2016, 'abunfk2016.csv') #2016
+
+dt1999<- getRvcData(1999, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+abundt1999 <- getDomainAbundance(dt1999, spp_list, merge_protected = F)  
+write_csv(abundt1999, 'abundt1999.csv') #1999
+
+dt2000<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+abundt2000 <- getDomainAbundance(dt2000, spp_list, merge_protected = F)  
+write_csv(abundt2000, 'abundt2000.csv')#2000 
+
+dt2004<- getRvcData(2004, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+abundt2004 <- getDomainAbundance(dt2004, spp_list, merge_protected = F)  
+write_csv(abundt2004, 'abundt2004.csv')#2004 
+
+dt2006<- getRvcData(2006, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+abundt2006 <- getDomainAbundance(dt2006, spp_list, merge_protected = F) 
+write_csv(abundt2006, 'abundt2006.csv')#2006
+
+dt2008<- getRvcData(2008, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+abundt2008 <- getDomainAbundance(dt2008, spp_list, merge_protected = F)  
+write_csv(abundt2008, 'abundt2008.csv')#2008 
+
+dt2010<- getRvcData(2010, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+abundt2010 <- getDomainAbundance(dt2010, spp_list, merge_protected = F) 
+write_csv(abundt2010, 'abundt2010.csv')#2010 
+
+dt2012<- getRvcData(2012, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+abundt2012 <- getDomainAbundance(dt2012, spp_list, merge_protected = F) 
+write_csv(abundt2012, 'abundt2012.csv')#2012 
+
+dt2014<- getRvcData(2014, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+abundt2014 <- getDomainAbundance(dt2014, spp_list, merge_protected = F) 
+write_csv(abundt2014, 'abundt2014.csv')#2014 
+
+dt2016<- getRvcData(2016, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+abundt2016 <- getDomainAbundance(dt2016, spp_list, merge_protected = F) 
+write_csv(abundt2016, 'abundt2016.csv')#2016
+
+}
+```
+
+```{r bind domain abundance csv files, eval = F}
+
+
+
+```
+
+```{r fetch abundance data by year and strata, eval = F}
+#csv files to read (since time consuming to compute weighted abundance values)
+
+#FK 
+strata_abunfk1999_csv = 'RVC/strata_abunfk1999.csv' 
+strata_abunfk2000_csv = 'RVC/strata_abunfk2000.csv' 
+strata_abunfk2001_csv = 'RVC/strata_abunfk2001.csv' 
+strata_abunfk2002_csv = 'RVC/strata_abunfk2002.csv' 
+strata_abunfk2003_csv = 'RVC/strata_abunfk2003.csv' 
+strata_abunfk2004_csv = 'RVC/strata_abunfk2004.csv' 
+strata_abunfk2005_csv = 'RVC/strata_abunfk2005.csv' 
+strata_abunfk2006_csv = 'RVC/strata_abunfk2006.csv' 
+strata_abunfk2007_csv = 'RVC/strata_abunfk2007.csv' 
+strata_abunfk2008_csv = 'RVC/strata_abunfk2008.csv' 
+strata_abunfk2009_csv = 'RVC/strata_abunfk2009.csv' 
+strata_abunfk2010_csv = 'RVC/strata_abunfk2010.csv'
+strata_abunfk2012_csv = 'RVC/strata_abunfk2012.csv'
+strata_abunfk2014_csv = 'RVC/strata_abunfk2014.csv'
+strata_abunfk2016_csv = 'RVC/strata_abunfk2016.csv'
+
+#DT 
+strata_abundt1999_csv = 'RVC/abundt1999.csv' 
+strata_abundt2000_csv = 'RVC/abundt2000.csv'
+strata_abundt2004_csv = 'RVC/abundt2004.csv' 
+strata_abundt2006_csv = 'RVC/abundt2006.csv'
+strata_abundt2008_csv = 'RVC/abundt2008.csv' 
+strata_abundt2010_csv = 'RVC/abundt2010.csv'
+strata_abundt2012_csv = 'RVC/abundt2012.csv'
+strata_abundt2014_csv = 'RVC/abundt2014.csv'
+strata_abundt2016_csv = 'RVC/abundt2016.csv'
+
+if (!all(file.exists(c('*strata_abun'))){ #if files don't exist then compute abundance and write files by domain and year (will take awhile)
+
+#fk1999<- getRvcData(1999, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')    
+strata_abunfk1999 <- getStratumAbundance(fk1999, spp_list, merge_protected = F)
+write_csv(strata_abunfk1999, 'strata_abunfk1999') #1999
+
+#fk2000<- getRvcData(2000, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')    
+strata_abunfk2000 <- getStratumAbundance(fk2000, spp_list, merge_protected = F)  
+write_csv(strata_abunfk2000, 'strata_abunfk2000') #2000
+
+#fk2001<- getRvcData(2001, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')    
+strata_abunfk2001 <- getStratumAbundance(fk2001, spp_list, merge_protected = F) 
+write_csv(strata_abunfk2001, 'strata_abunfk2001') #2001
+
+#fk2002<- getRvcData(2002, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')    
+strata_abunfk2002 <- getStratumAbundance(fk2002, spp_list, merge_protected = F) 
+write_csv(strata_abunfk2002, 'strata_abunfk2002') #2002
+
+#fk2003<- getRvcData(2003, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')   
+strata_abunfk2003 <- getStratumAbundance(fk2003, spp_list, merge_protected = F) 
+write_csv(strata_abunfk2003, 'strata_abunfk2003') #2003
+
+#fk2004<- getRvcData(2004, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')  
+strata_abunfk2004 <- getStratumAbundance(fk2004, spp_list, merge_protected = F)
+write_csv(strata_abunfk2004, 'strata_abunfk2004') #2004
+
+#fk2005<- getRvcData(2005, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+strata_abunfk2005 <- getStratumAbundance(fk2005, spp_list, merge_protected = F) 
+write_csv(strata_abunfk2005, 'strata_abunfk2005') #2005
+
+#fk2006<- getRvcData(2006, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+strata_abunfk2006 <- getStratumAbundance(fk2006, spp_list, merge_protected = F) 
+write_csv(strata_abunfk2006, 'strata_abunfk2006') #2006
+
+#fk2007<- getRvcData(2007, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+strata_abunfk2007 <- getStratumAbundance(fk2007, spp_list, merge_protected = F) 
+write_csv(strata_abunfk2007, 'strata_abunfk2007') #2007
+
+#fk2008<- getRvcData(2008, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+strata_abunfk2008 <- getStratumAbundance(fk2008, spp_list, merge_protected = F) 
+write_csv(strata_abunfk2008, 'strata_abunfk2008') #2008
+
+#fk2009<- getRvcData(2009, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+strata_abunfk2009 <- getStratumAbundance(fk2009, spp_list, merge_protected = F) 
+write_csv(strata_abunfk2009, 'strata_abunfk2009') #2009 
+
+#fk2010<- getRvcData(2010, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+strata_abunfk2010 <- getStratumAbundance(fk2010, spp_list, merge_protected = F) 
+write_csv(strata_abunfk2010, 'strata_abunfk2010') #2010
+
+#fk2012<- getRvcData(2012, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+strata_abunfk2012 <- getStratumAbundance(fk2012, spp_list, merge_protected = F)
+write_csv(strata_abunfk2012, 'strata_abunfk2012') #2012
+
+#fk2014<- getRvcData(2014, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+strata_abunfk2014 <- getStratumAbundance(fk2014, spp_list, merge_protected = F) 
+write_csv(strata_abunfk2014, 'strata_abunfk2014') #2014
+
+#fk2016<- getRvcData(2016, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+strata_abunfk2016 <- getStratumAbundance(fk2016, spp_list, merge_protected = F) 
+  write_csv(strata_abunfk2016, 'strata_abunfk2016') #2016
+
+#dt1999<- getRvcData(1999, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+strata_abundt1999 <- getStratumAbundance(dt1999, spp_list, merge_protected = F)  
+write_csv(strata_abundt1999, 'strata_abundt1999') #1999
+
+#dt2000<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+strata_abundt2000 <- getStratumAbundance(dt2000, spp_list, merge_protected = F)  
+write_csv(strata_abundt2000, 'strata_abundt2000')#2000 
+
+#dt2004<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+strata_abundt2004 <- getStratumAbundance(dt2004, spp_list, merge_protected = F)  
+write_csv(strata_abundt2004, 'strata_abundt2004')#2004 
+
+#dt2006<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+strata_abundt2006 <- getStratumAbundance(dt2006, spp_list, merge_protected = F) 
+write_csv(strata_abundt2006, 'strata_abundt2006')#2006
+
+#dt2008<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+strata_abundt2008 <- getStratumAbundance(dt2008, spp_list, merge_protected = F)  
+write_csv(strata_abundt2008, 'strata_abundt2008')#2008 
+
+#dt2010<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+strata_abundt2010 <- getStratumAbundance(dt2010, spp_list, merge_protected = F) 
+write_csv(strata_abundt2010, 'strata_abundt2010')#2010 
+
+#dt2012<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+strata_abundt2012 <- getStratumAbundance(dt2012, spp_list, merge_protected = F) 
+write_csv(strata_abundt2012, 'strata_abundt2012')#2012 
+
+#dt2014<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+strata_abundt2014 <- getStratumAbundance(dt2014, spp_list, merge_protected = F) 
+write_csv(strata_abundt2014, 'strata_abundt2014')#2014
+
+#dt2016<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+strata_abundt2016 <- getStratumAbundance(dt2016, spp_list, merge_protected = F) 
+write_csv(strata_abundt2016, 'strata_abundt2016')#2016
+}
+  
+```
+
+```{r bind strata abundance csv files, eval = F}
+
+```
+
+```{r fetch abundance data by year and primary sampling unit, eval = F}
+#csv files to read (since time consuming to compute weighted abundance values)
+
+#FK 
+psu_abunfk1999_csv = 'RVC/psu_abunfk1999.csv' 
+psu_abunfk2000_csv = 'RVC/psu_abunfk2000.csv' 
+psu_abunfk2001_csv = 'RVC/psu_abunfk2001.csv' 
+psu_abunfk2002_csv = 'RVC/psu_abunfk2002.csv' 
+psu_abunfk2003_csv = 'RVC/psu_abunfk2003.csv' 
+psu_abunfk2004_csv = 'RVC/psu_abunfk2004.csv' 
+psu_abunfk2005_csv = 'RVC/psu_abunfk2005.csv' 
+psu_abunfk2006_csv = 'RVC/psu_abunfk2006.csv' 
+psu_abunfk2007_csv = 'RVC/psu_abunfk2007.csv' 
+psu_abunfk2008_csv = 'RVC/psu_abunfk2008.csv' 
+psu_abunfk2009_csv = 'RVC/psu_abunfk2009.csv' 
+psu_abunfk2010_csv = 'RVC/psu_abunfk2010.csv'
+psu_abunfk2012_csv = 'RVC/psu_abunfk2012.csv'
+psu_abunfk2014_csv = 'RVC/psu_abunfk2014.csv'
+psu_abunfk2016_csv = 'RVC/psu_abunfk2016.csv'
+
+#DT 
+psu_abundt1999_csv = 'RVC/psu_abundt1999.csv' 
+psu_abundt2000_csv = 'RVC/psu_abundt2000.csv'
+psu_abundt2004_csv = 'RVC/psu_abundt2004.csv' 
+psu_abundt2006_csv = 'RVC/psu_abundt2006.csv'
+psu_abundt2008_csv = 'RVC/psu_abundt2008.csv' 
+psu_abundt2010_csv = 'RVC/psu_abundt2010.csv'
+psu_abundt2012_csv = 'RVC/psu_abundt2012.csv'
+psu_abundt2014_csv = 'RVC/psu_abundt2014.csv'
+psu_abundt2016_csv = 'RVC/psu_abundt2016.csv'
+
+if (!all(file.exists(c('*psu_abun'))){ #if files don't exist then compute abundance and write files by domain and year (will take awhile)
+
+fk1999<- getRvcData(1999, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')    
+psu_abunfk1999 <- getPSUAbundance(fk1999, spp_list, merge_protected = F)
+write_csv(psu_abunfk1999, 'psu_abunfk1999.csv') #1999
+
+fk2000<- getRvcData(2000, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')    
+psu_abunfk2000 <- getPSUAbundance(fk2000, spp_list, merge_protected = F)  
+write_csv(psu_abunfk2000, 'psu_abunfk2000.csv') #2000
+
+fk2001<- getRvcData(2001, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')    
+psu_abunfk2001 <- getPSUAbundance(fk2001, spp_list, merge_protected = F) 
+write_csv(psu_abunfk2001, 'psu_abunfk2001.csv') #2001
+
+fk2002<- getRvcData(2002, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')    
+psu_abunfk2002 <- getPSUAbundance(fk2002, spp_list, merge_protected = F) 
+write_csv(psu_abunfk2002, 'psu_abunfk2002.csv') #2002
+
+fk2003<- getRvcData(2003, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')   
+psu_abunfk2003 <- getPSUAbundance(fk2003, spp_list, merge_protected = F) 
+write_csv(psu_abunfk2003, 'psu_abunfk2003.csv') #2003
+
+fk2004<- getRvcData(2004, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')  
+psu_abunfk2004 <- getPSUAbundance(fk2004, spp_list, merge_protected = F)
+write_csv(psu_abunfk2004, 'psu_abunfk2004.csv') #2004
+
+fk2005<- getRvcData(2005, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+psu_abunfk2005 <- getPSUAbundance(fk2005, spp_list, merge_protected = F) 
+write_csv(psu_abunfk2005, 'psu_abunfk2005.csv') #2005
+
+fk2006<- getRvcData(2006, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+psu_abunfk2006 <- getPSUAbundance(fk2006, spp_list, merge_protected = F) 
+write_csv(psu_abunfk2006, 'psu_abunfk2006.csv') #2006
+
+fk2007<- getRvcData(2007, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+psu_abunfk2007 <- getPSUAbundance(fk2007, spp_list, merge_protected = F) 
+write_csv(psu_abunfk2007, 'psu_abunfk2007.csv') #2007
+
+fk2008<- getRvcData(2008, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+psu_abunfk2008 <- getPSUAbundance(fk2008, spp_list, merge_protected = F) 
+write_csv(psu_abunfk2008, 'psu_abunfk2008.csv') #2008
+
+fk2009<- getRvcData(2009, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+psu_abunfk2009 <- getPSUAbundance(fk2009, spp_list, merge_protected = F) 
+write_csv(psu_abunfk2009, 'abunfk2009.csv') #2009 
+
+fk2010<- getRvcData(2010, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+psu_abunfk2010 <- getPSUAbundance(fk2010, spp_list, merge_protected = F) 
+write_csv(psu_abunfk2010, 'psu_abunfk2010.csv') #2010
+
+fk2012<- getRvcData(2012, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+psu_abunfk2012 <- getPSUAbundance(fk2012, spp_list, merge_protected = F)
+write_csv(psu_abunfk2012, 'psu_abunfk2012.csv') #2012
+
+fk2014<- getRvcData(2014, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+psu_abunfk2014 <- getPSUAbundance(fk2014, spp_list, merge_protected = F) 
+write_csv(psu_abunfk2014, 'psu_abunfk2014.csv') #2014
+
+fk2016<- getRvcData(2016, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+psu_abunfk2016 <- getPSUAbundance(fk2016, spp_list, merge_protected = F) 
+  write_csv(psu_abunfk2016, 'psu_abunfk2016.csv') #2016
+
+dt1999<- getRvcData(1999, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+psu_abundt1999 <- getPSUAbundance(dt1999, spp_list, merge_protected = F)  
+write_csv(psu_abundt1999, 'psu_abundt1999.csv') #1999
+
+dt2000<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+psu_abundt2000 <- getPSUAbundance(dt2000, spp_list, merge_protected = F)  
+write_csv(psu_abundt2000, 'psu_abundt2000.csv')#2000 
+
+dt2004<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+psu_abundt2004 <- getPSUAbundance(dt2004, spp_list, merge_protected = F)  
+write_csv(psu_abundt2004, 'psu_abundt2004.csv')#2004 
+
+dt2006<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+psu_abundt2006 <- getPSUAbundance(dt2006, spp_list, merge_protected = F) 
+write_csv(psu_abundt2006, 'psu_abundt2006.csv')#2006
+
+dt2008<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+psu_abundt2008 <- getPSUAbundance(dt2008, spp_list, merge_protected = F)  
+write_csv(psu_abundt2008, 'psu_abundt2008.csv')#2008 
+
+dt2010<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+psu_abundt2010 <- getPSUAbundance(dt2010, spp_list, merge_protected = F) 
+write_csv(psu_abundt2010, 'psu_abundt2010.csv')#2010 
+
+dt2012<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+psu_abundt2012 <- getPSUAbundance(dt2012, spp_list, merge_protected = F) 
+write_csv(psu_abundt2012, 'psu_abundt2012.csv')#2012 
+
+dt2014<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+psu_abundt2014 <- getPSUAbundance(dt2014, spp_list, merge_protected = F) 
+write_csv(psu_abundt2014, 'psu_abundt2014.csv')#2014
+
+dt2016<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+psu_abundt2016 <- getPSUAbundance(dt2016, spp_list, merge_protected = F) 
+  write_csv(psu_abundt2016, 'psu_abundt2016.csv')#2016
+  
+}
+
+```
+
+
+```{r bind strata abundance csv files, eval = F}
+
+```
+
+```{r fetch abundance data by year and domain, eval = F}
+#csv files to read (since time consuming to compute weighted abundance values)
+
+#FK 
+abunfk1999_csv = 'RVC/abunfk1999.csv' 
+abunfk2000_csv = 'RVC/abunfk2000.csv' 
+abunfk2001_csv = 'RVC/abunfk2001.csv' 
+abunfk2002_csv = 'RVC/abunfk2002.csv' 
+abunfk2003_csv = 'RVC/abunfk2003.csv' 
+abunfk2004_csv = 'RVC/abunfk2004.csv' 
+abunfk2005_csv = 'RVC/abunfk2005.csv' 
+abunfk2006_csv = 'RVC/abunfk2006.csv' 
+abunfk2007_csv = 'RVC/abunfk2007.csv' 
+abunfk2008_csv = 'RVC/abunfk2008.csv' 
+abunfk2009_csv = 'RVC/abunfk2009.csv' 
+abunfk2010_csv = 'RVC/abunfk2010.csv'
+abunfk2012_csv = 'RVC/abunfk2012.csv'
+abunfk2014_csv = 'RVC/abunfk2014.csv'
+abunfk2016_csv = 'RVC/abunfk2016.csv'
+
+#DT 
+abundt1999_csv = 'RVC/abundt1999.csv' 
+abundt2000_csv = 'RVC/abundt2000.csv'
+abundt2004_csv = 'RVC/abundt2004.csv' 
+abundt2006_csv = 'RVC/abundt2006.csv'
+abundt2008_csv = 'RVC/abundt2008.csv' 
+abundt2010_csv = 'RVC/abundt2010.csv'
+abundt2012_csv = 'RVC/abundt2012.csv'
+abundt2014_csv = 'RVC/abundt2014.csv'
+abundt2016_csv = 'RVC/abundt2016.csv'
+
+if (!all(file.exists(c('*abun'))){ #if files don't exist then compute abundance and write files by domain and year (will take awhile)
+
+fk1999<- getRvcData(1999, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')    
+abunfk1999 <- getDomainAbundance(fk1999, spp_list, merge_protected = F)
+write_csv(abunfk1999, 'abunfk1999.csv') #1999
+
+fk2000<- getRvcData(2000, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')    
+abunfk2000 <- getDomainAbundance(fk2000, spp_list, merge_protected = F)  
+write_csv(abunfk2000, 'abunfk2000.csv') #2000
+
+fk2001<- getRvcData(2001, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')    
+abunfk2001 <- getDomainAbundance(fk2001, spp_list, merge_protected = F) 
+write_csv(abunfk2001, 'abunfk2001.csv') #2001
+
+fk2002<- getRvcData(2002, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')    
+abunfk2002 <- getDomainAbundance(fk2002, spp_list, merge_protected = F) 
+write_csv(abunfk2002, 'abunfk2002.csv') #2002
+
+fk2003<- getRvcData(2003, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')   
+abunfk2003 <- getDomainAbundance(fk2003, spp_list, merge_protected = F) 
+write_csv(abunfk2003, 'abunfk2003.csv') #2003
+
+fk2004<- getRvcData(2004, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')  
+abunfk2004 <- getDomainAbundance(fk2004, spp_list, merge_protected = F)
+write_csv(abunfk2004, 'abunfk2004.csv') #2004
+
+fk2005<- getRvcData(2005, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+abunfk2005 <- getDomainAbundance(fk2005, spp_list, merge_protected = F) 
+write_csv(abunfk2005, 'abunfk2005.csv') #2005
+
+fk2006<- getRvcData(2006, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+abunfk2006 <- getDomainAbundance(fk2006, spp_list, merge_protected = F) 
+write_csv(abunfk2006, 'abunfk2006.csv') #2006
+
+fk2007<- getRvcData(2007, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+abunfk2007 <- getDomainAbundance(fk2007, spp_list, merge_protected = F) 
+write_csv(abunfk2007, 'abunfk2007.csv') #2007
+
+fk2008<- getRvcData(2008, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+abunfk2008 <- getDomainAbundance(fk2008, spp_list, merge_protected = F) 
+write_csv(abunfk2008, 'abunfk2008.csv') #2008
+
+fk2009<- getRvcData(2009, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+abunfk2009 <- getDomainAbundance(fk2009, spp_list, merge_protected = F) 
+write_csv(abunfk2009, 'abunfk2009.csv') #2009 
+
+fk2010<- getRvcData(2010, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+abunfk2010 <- getDomainAbundance(fk2010, spp_list, merge_protected = F) 
+write_csv(abunfk2010, 'abunfk2010.csv') #2010
+
+fk2012<- getRvcData(2012, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+abunfk2012 <- getDomainAbundance(fk2012, spp_list, merge_protected = F)
+write_csv(abunfk2012, 'abunfk2012.csv') #2012
+
+fk2014<- getRvcData(2014, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+abunfk2014 <- getDomainAbundance(fk2014, spp_list, merge_protected = F) 
+write_csv(abunfk2014, 'abunfk2014.csv') #2014
+
+fk2016<- getRvcData(2016, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+abunfk2016 <- getDomainAbundance(fk2016, spp_list, merge_protected = F) 
+write_csv(abunfk2016, 'abunfk2016.csv') #2016
+
+dt1999<- getRvcData(1999, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+abundt1999 <- getDomainAbundance(dt1999, spp_list, merge_protected = F)  
+write_csv(abundt1999, 'abundt1999.csv') #1999
+
+dt2000<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+abundt2000 <- getDomainAbundance(dt2000, spp_list, merge_protected = F)  
+write_csv(abundt2000, 'abundt2000.csv')#2000 
+
+dt2004<- getRvcData(2004, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+abundt2004 <- getDomainAbundance(dt2004, spp_list, merge_protected = F)  
+write_csv(abundt2004, 'abundt2004.csv')#2004 
+
+dt2006<- getRvcData(2006, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+abundt2006 <- getDomainAbundance(dt2006, spp_list, merge_protected = F) 
+write_csv(abundt2006, 'abundt2006.csv')#2006
+
+dt2008<- getRvcData(2008, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+abundt2008 <- getDomainAbundance(dt2008, spp_list, merge_protected = F)  
+write_csv(abundt2008, 'abundt2008.csv')#2008 
+
+dt2010<- getRvcData(2010, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+abundt2010 <- getDomainAbundance(dt2010, spp_list, merge_protected = F) 
+write_csv(abundt2010, 'abundt2010.csv')#2010 
+
+dt2012<- getRvcData(2012, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+abundt2012 <- getDomainAbundance(dt2012, spp_list, merge_protected = F) 
+write_csv(abundt2012, 'abundt2012.csv')#2012 
+
+dt2014<- getRvcData(2014, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+abundt2014 <- getDomainAbundance(dt2014, spp_list, merge_protected = F) 
+write_csv(abundt2014, 'abundt2014.csv')#2014 
+
+dt2016<- getRvcData(2016, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+abundt2016 <- getDomainAbundance(dt2016, spp_list, merge_protected = F) 
+write_csv(abundt2016, 'abundt2016.csv')#2016
+
+}
+```
+
+```{r bind domain abundance csv files, eval = F}
+
+
+
+```
+
+```{r fetch abundance data by year and strata, eval = F}
+#csv files to read (since time consuming to compute weighted abundance values)
+
+#FK 
+strata_abunfk1999_csv = 'RVC/strata_abunfk1999.csv' 
+strata_abunfk2000_csv = 'RVC/strata_abunfk2000.csv' 
+strata_abunfk2001_csv = 'RVC/strata_abunfk2001.csv' 
+strata_abunfk2002_csv = 'RVC/strata_abunfk2002.csv' 
+strata_abunfk2003_csv = 'RVC/strata_abunfk2003.csv' 
+strata_abunfk2004_csv = 'RVC/strata_abunfk2004.csv' 
+strata_abunfk2005_csv = 'RVC/strata_abunfk2005.csv' 
+strata_abunfk2006_csv = 'RVC/strata_abunfk2006.csv' 
+strata_abunfk2007_csv = 'RVC/strata_abunfk2007.csv' 
+strata_abunfk2008_csv = 'RVC/strata_abunfk2008.csv' 
+strata_abunfk2009_csv = 'RVC/strata_abunfk2009.csv' 
+strata_abunfk2010_csv = 'RVC/strata_abunfk2010.csv'
+strata_abunfk2012_csv = 'RVC/strata_abunfk2012.csv'
+strata_abunfk2014_csv = 'RVC/strata_abunfk2014.csv'
+strata_abunfk2016_csv = 'RVC/strata_abunfk2016.csv'
+
+#DT 
+strata_abundt1999_csv = 'RVC/abundt1999.csv' 
+strata_abundt2000_csv = 'RVC/abundt2000.csv'
+strata_abundt2004_csv = 'RVC/abundt2004.csv' 
+strata_abundt2006_csv = 'RVC/abundt2006.csv'
+strata_abundt2008_csv = 'RVC/abundt2008.csv' 
+strata_abundt2010_csv = 'RVC/abundt2010.csv'
+strata_abundt2012_csv = 'RVC/abundt2012.csv'
+strata_abundt2014_csv = 'RVC/abundt2014.csv'
+strata_abundt2016_csv = 'RVC/abundt2016.csv'
+
+if (!all(file.exists(c('*strata_abun'))){ #if files don't exist then compute abundance and write files by domain and year (will take awhile)
+
+#fk1999<- getRvcData(1999, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')    
+strata_abunfk1999 <- getStratumAbundance(fk1999, spp_list, merge_protected = F)
+write_csv(strata_abunfk1999, 'strata_abunfk1999') #1999
+
+#fk2000<- getRvcData(2000, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')    
+strata_abunfk2000 <- getStratumAbundance(fk2000, spp_list, merge_protected = F)  
+write_csv(strata_abunfk2000, 'strata_abunfk2000') #2000
+
+#fk2001<- getRvcData(2001, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')    
+strata_abunfk2001 <- getStratumAbundance(fk2001, spp_list, merge_protected = F) 
+write_csv(strata_abunfk2001, 'strata_abunfk2001') #2001
+
+#fk2002<- getRvcData(2002, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')    
+strata_abunfk2002 <- getStratumAbundance(fk2002, spp_list, merge_protected = F) 
+write_csv(strata_abunfk2002, 'strata_abunfk2002') #2002
+
+#fk2003<- getRvcData(2003, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')   
+strata_abunfk2003 <- getStratumAbundance(fk2003, spp_list, merge_protected = F) 
+write_csv(strata_abunfk2003, 'strata_abunfk2003') #2003
+
+#fk2004<- getRvcData(2004, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')  
+strata_abunfk2004 <- getStratumAbundance(fk2004, spp_list, merge_protected = F)
+write_csv(strata_abunfk2004, 'strata_abunfk2004') #2004
+
+#fk2005<- getRvcData(2005, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+strata_abunfk2005 <- getStratumAbundance(fk2005, spp_list, merge_protected = F) 
+write_csv(strata_abunfk2005, 'strata_abunfk2005') #2005
+
+#fk2006<- getRvcData(2006, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+strata_abunfk2006 <- getStratumAbundance(fk2006, spp_list, merge_protected = F) 
+write_csv(strata_abunfk2006, 'strata_abunfk2006') #2006
+
+#fk2007<- getRvcData(2007, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+strata_abunfk2007 <- getStratumAbundance(fk2007, spp_list, merge_protected = F) 
+write_csv(strata_abunfk2007, 'strata_abunfk2007') #2007
+
+#fk2008<- getRvcData(2008, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+strata_abunfk2008 <- getStratumAbundance(fk2008, spp_list, merge_protected = F) 
+write_csv(strata_abunfk2008, 'strata_abunfk2008') #2008
+
+#fk2009<- getRvcData(2009, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+strata_abunfk2009 <- getStratumAbundance(fk2009, spp_list, merge_protected = F) 
+write_csv(strata_abunfk2009, 'strata_abunfk2009') #2009 
+
+#fk2010<- getRvcData(2010, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+strata_abunfk2010 <- getStratumAbundance(fk2010, spp_list, merge_protected = F) 
+write_csv(strata_abunfk2010, 'strata_abunfk2010') #2010
+
+#fk2012<- getRvcData(2012, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+strata_abunfk2012 <- getStratumAbundance(fk2012, spp_list, merge_protected = F)
+write_csv(strata_abunfk2012, 'strata_abunfk2012') #2012
+
+#fk2014<- getRvcData(2014, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+strata_abunfk2014 <- getStratumAbundance(fk2014, spp_list, merge_protected = F) 
+write_csv(strata_abunfk2014, 'strata_abunfk2014') #2014
+
+#fk2016<- getRvcData(2016, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+strata_abunfk2016 <- getStratumAbundance(fk2016, spp_list, merge_protected = F) 
+  write_csv(strata_abunfk2016, 'strata_abunfk2016') #2016
+
+#dt1999<- getRvcData(1999, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+strata_abundt1999 <- getStratumAbundance(dt1999, spp_list, merge_protected = F)  
+write_csv(strata_abundt1999, 'strata_abundt1999') #1999
+
+#dt2000<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+strata_abundt2000 <- getStratumAbundance(dt2000, spp_list, merge_protected = F)  
+write_csv(strata_abundt2000, 'strata_abundt2000')#2000 
+
+#dt2004<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+strata_abundt2004 <- getStratumAbundance(dt2004, spp_list, merge_protected = F)  
+write_csv(strata_abundt2004, 'strata_abundt2004')#2004 
+
+#dt2006<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+strata_abundt2006 <- getStratumAbundance(dt2006, spp_list, merge_protected = F) 
+write_csv(strata_abundt2006, 'strata_abundt2006')#2006
+
+#dt2008<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+strata_abundt2008 <- getStratumAbundance(dt2008, spp_list, merge_protected = F)  
+write_csv(strata_abundt2008, 'strata_abundt2008')#2008 
+
+#dt2010<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+strata_abundt2010 <- getStratumAbundance(dt2010, spp_list, merge_protected = F) 
+write_csv(strata_abundt2010, 'strata_abundt2010')#2010 
+
+#dt2012<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+strata_abundt2012 <- getStratumAbundance(dt2012, spp_list, merge_protected = F) 
+write_csv(strata_abundt2012, 'strata_abundt2012')#2012 
+
+#dt2014<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+strata_abundt2014 <- getStratumAbundance(dt2014, spp_list, merge_protected = F) 
+write_csv(strata_abundt2014, 'strata_abundt2014')#2014
+
+#dt2016<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+strata_abundt2016 <- getStratumAbundance(dt2016, spp_list, merge_protected = F) 
+write_csv(strata_abundt2016, 'strata_abundt2016')#2016
+}
+  
+```
+
+```{r bind strata abundance csv files, eval = F}
+
+```
+
+```{r fetch abundance data by year and primary sampling unit, eval = F}
+#csv files to read (since time consuming to compute weighted abundance values)
+
+#FK 
+psu_abunfk1999_csv = 'RVC/psu_abunfk1999.csv' 
+psu_abunfk2000_csv = 'RVC/psu_abunfk2000.csv' 
+psu_abunfk2001_csv = 'RVC/psu_abunfk2001.csv' 
+psu_abunfk2002_csv = 'RVC/psu_abunfk2002.csv' 
+psu_abunfk2003_csv = 'RVC/psu_abunfk2003.csv' 
+psu_abunfk2004_csv = 'RVC/psu_abunfk2004.csv' 
+psu_abunfk2005_csv = 'RVC/psu_abunfk2005.csv' 
+psu_abunfk2006_csv = 'RVC/psu_abunfk2006.csv' 
+psu_abunfk2007_csv = 'RVC/psu_abunfk2007.csv' 
+psu_abunfk2008_csv = 'RVC/psu_abunfk2008.csv' 
+psu_abunfk2009_csv = 'RVC/psu_abunfk2009.csv' 
+psu_abunfk2010_csv = 'RVC/psu_abunfk2010.csv'
+psu_abunfk2012_csv = 'RVC/psu_abunfk2012.csv'
+psu_abunfk2014_csv = 'RVC/psu_abunfk2014.csv'
+psu_abunfk2016_csv = 'RVC/psu_abunfk2016.csv'
+
+#DT 
+psu_abundt1999_csv = 'RVC/psu_abundt1999.csv' 
+psu_abundt2000_csv = 'RVC/psu_abundt2000.csv'
+psu_abundt2004_csv = 'RVC/psu_abundt2004.csv' 
+psu_abundt2006_csv = 'RVC/psu_abundt2006.csv'
+psu_abundt2008_csv = 'RVC/psu_abundt2008.csv' 
+psu_abundt2010_csv = 'RVC/psu_abundt2010.csv'
+psu_abundt2012_csv = 'RVC/psu_abundt2012.csv'
+psu_abundt2014_csv = 'RVC/psu_abundt2014.csv'
+psu_abundt2016_csv = 'RVC/psu_abundt2016.csv'
+
+if (!all(file.exists(c('*psu_abun'))){ #if files don't exist then compute abundance and write files by domain and year (will take awhile)
+
+fk1999<- getRvcData(1999, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')    
+psu_abunfk1999 <- getPSUAbundance(fk1999, spp_list, merge_protected = F)
+write_csv(psu_abunfk1999, 'psu_abunfk1999.csv') #1999
+
+fk2000<- getRvcData(2000, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')    
+psu_abunfk2000 <- getPSUAbundance(fk2000, spp_list, merge_protected = F)  
+write_csv(psu_abunfk2000, 'psu_abunfk2000.csv') #2000
+
+fk2001<- getRvcData(2001, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')    
+psu_abunfk2001 <- getPSUAbundance(fk2001, spp_list, merge_protected = F) 
+write_csv(psu_abunfk2001, 'psu_abunfk2001.csv') #2001
+
+fk2002<- getRvcData(2002, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')    
+psu_abunfk2002 <- getPSUAbundance(fk2002, spp_list, merge_protected = F) 
+write_csv(psu_abunfk2002, 'psu_abunfk2002.csv') #2002
+
+fk2003<- getRvcData(2003, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')   
+psu_abunfk2003 <- getPSUAbundance(fk2003, spp_list, merge_protected = F) 
+write_csv(psu_abunfk2003, 'psu_abunfk2003.csv') #2003
+
+fk2004<- getRvcData(2004, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')  
+psu_abunfk2004 <- getPSUAbundance(fk2004, spp_list, merge_protected = F)
+write_csv(psu_abunfk2004, 'psu_abunfk2004.csv') #2004
+
+fk2005<- getRvcData(2005, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+psu_abunfk2005 <- getPSUAbundance(fk2005, spp_list, merge_protected = F) 
+write_csv(psu_abunfk2005, 'psu_abunfk2005.csv') #2005
+
+fk2006<- getRvcData(2006, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+psu_abunfk2006 <- getPSUAbundance(fk2006, spp_list, merge_protected = F) 
+write_csv(psu_abunfk2006, 'psu_abunfk2006.csv') #2006
+
+fk2007<- getRvcData(2007, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+psu_abunfk2007 <- getPSUAbundance(fk2007, spp_list, merge_protected = F) 
+write_csv(psu_abunfk2007, 'psu_abunfk2007.csv') #2007
+
+fk2008<- getRvcData(2008, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+psu_abunfk2008 <- getPSUAbundance(fk2008, spp_list, merge_protected = F) 
+write_csv(psu_abunfk2008, 'psu_abunfk2008.csv') #2008
+
+fk2009<- getRvcData(2009, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+psu_abunfk2009 <- getPSUAbundance(fk2009, spp_list, merge_protected = F) 
+write_csv(psu_abunfk2009, 'abunfk2009.csv') #2009 
+
+fk2010<- getRvcData(2010, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+psu_abunfk2010 <- getPSUAbundance(fk2010, spp_list, merge_protected = F) 
+write_csv(psu_abunfk2010, 'psu_abunfk2010.csv') #2010
+
+fk2012<- getRvcData(2012, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+psu_abunfk2012 <- getPSUAbundance(fk2012, spp_list, merge_protected = F)
+write_csv(psu_abunfk2012, 'psu_abunfk2012.csv') #2012
+
+fk2014<- getRvcData(2014, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+psu_abunfk2014 <- getPSUAbundance(fk2014, spp_list, merge_protected = F) 
+write_csv(psu_abunfk2014, 'psu_abunfk2014.csv') #2014
+
+fk2016<- getRvcData(2016, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+psu_abunfk2016 <- getPSUAbundance(fk2016, spp_list, merge_protected = F) 
+  write_csv(psu_abunfk2016, 'psu_abunfk2016.csv') #2016
+
+dt1999<- getRvcData(1999, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+psu_abundt1999 <- getPSUAbundance(dt1999, spp_list, merge_protected = F)  
+write_csv(psu_abundt1999, 'psu_abundt1999.csv') #1999
+
+dt2000<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+psu_abundt2000 <- getPSUAbundance(dt2000, spp_list, merge_protected = F)  
+write_csv(psu_abundt2000, 'psu_abundt2000.csv')#2000 
+
+dt2004<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+psu_abundt2004 <- getPSUAbundance(dt2004, spp_list, merge_protected = F)  
+write_csv(psu_abundt2004, 'psu_abundt2004.csv')#2004 
+
+dt2006<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+psu_abundt2006 <- getPSUAbundance(dt2006, spp_list, merge_protected = F) 
+write_csv(psu_abundt2006, 'psu_abundt2006.csv')#2006
+
+dt2008<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+psu_abundt2008 <- getPSUAbundance(dt2008, spp_list, merge_protected = F)  
+write_csv(psu_abundt2008, 'psu_abundt2008.csv')#2008 
+
+dt2010<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+psu_abundt2010 <- getPSUAbundance(dt2010, spp_list, merge_protected = F) 
+write_csv(psu_abundt2010, 'psu_abundt2010.csv')#2010 
+
+dt2012<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+psu_abundt2012 <- getPSUAbundance(dt2012, spp_list, merge_protected = F) 
+write_csv(psu_abundt2012, 'psu_abundt2012.csv')#2012 
+
+dt2014<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+psu_abundt2014 <- getPSUAbundance(dt2014, spp_list, merge_protected = F) 
+write_csv(psu_abundt2014, 'psu_abundt2014.csv')#2014
+
+dt2016<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+psu_abundt2016 <- getPSUAbundance(dt2016, spp_list, merge_protected = F) 
+  write_csv(psu_abundt2016, 'psu_abundt2016.csv')#2016
+  
+}
+
+```
+
+```{r bind strata abundance csv files, eval = F}
+
+```
