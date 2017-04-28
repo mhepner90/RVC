@@ -53,43 +53,44 @@ library(vegan) # biodiveristy functions for richness, simpson, and shannon
 
 ```
 
-### Fetch the RVC data from [NOAA's Southeast Fisheries Science Center server](https://grunt.sefsc.noaa.gov/rvc_analysis20/) using the [RVC package](https://github.com/jeremiaheb/rvc)
+## Fetch the RVC data from [NOAA's Southeast Fisheries Science Center server](https://grunt.sefsc.noaa.gov/rvc_analysis20/) using the [RVC package](https://github.com/jeremiaheb/rvc)
+- Fetched weighted abundance data by domain, strata, and level of protection with 
 
-#### Sample Data Variables: 
-- PRIMARY_SAMPLE_UNIT: A code indicating the primary sample unit in which a sample was collected)
-- YEAR 
-- MONTH 
-- DAY 
-- STATION_NR: secondary sampling unit - 7.5m)
-- LAT_DEGREES: Latitude of secondary sampling unit in decimal degrees)
-- LON_DEGREES: Longitude of secondary sampling unit in decimal degrees)
-- DEPTH: Average depth, in meters, of secondary sampling unit)
-- UNDERWATER_VISIBILITY: visibility, in meters, at secondary sampling unit
-- MAPGRID_NR: A number indicating the primary sample unit  
-- HABITAT_CD: A code indicating the habitat type 
+### Sample Data Variables: 
+- PRIMARY_SAMPLE_UNIT: A code indicating the primary sample unit in which a sample was collected.
+- YEAR: A number indicating the calendar year.
+- MONTH: A number indicating the month of the year.
+- DAY: A number indicating the day of the month (EST).
+- STATION_NR: A number indicating the secondary sampling unit within a given primary sample unit.
+- LAT_DEGREES: Latitude of secondary sampling unit in decimal degrees).
+- LON_DEGREES: Longitude of secondary sampling unit in decimal degrees).
+- DEPTH: Average depth, in meters, of secondary sampling unit).
+- UNDERWATER_VISIBILITY: visibility, in meters, at secondary sampling unit.
+- MAPGRID_NR: A number indicating the primary sample unit.  
+- HABITAT_CD: A code indicating the habitat type. 
 - ZONE_NR: A code indicating the distance offshore: 
     + 1 - Inshore
     + 2 - Midchannel
     + 3 - Offshore
     + 4 - Fore-reef
-- SUBREGION_NR 
+- SUBREGION_NR: A number indicating the subregion.
 - MPA_NR: A number identifying the marine protected area in which the sample was collected. Zero indicates unprotected status)
 - SPECIES_NR: A number indicating the species for a sample 
 - SPECIES_CD: A code indicating the species for a sample. Consists of the first three letters of the generic name and the first four of the specific name   
-- LEN      
+- LEN: The length, in cm, of a sample.      
 - NUM: The number of individuals of a given species and length observed in a secondary sampling unit 
-- TIME_SEEN 
+- TIME_SEEN: A number indicating when, during sampling, an individual was observed. 1: In the first five minutes, 2: From 5-10 minutes, 3: After 10 minutes. 
 - PROT: A boolean value indicating whether a sample was in a protected area or not 
     + 1 - protected area
     + 0 - not protected 
-- STRAT: A code indicating the stratum in which a sample was taken. Differs by region   
+- STRAT: A code indicating the stratum in which a sample was taken. Differs by region.   
     + FMLR
     + FSLR
     + HRRF
     + INPR
     + MCPR 
     + OFPR
-- REGION
+- REGION: A code indicating the region in which a sample was taken.
     + FLA KEYS (florida keys)
     + DRY TORT (dry tortugas)
 
@@ -132,7 +133,7 @@ library(vegan) # biodiveristy functions for richness, simpson, and shannon
 - PCT_OCTO: Percentage of biotic hardbottom that is octocoral.
 - PCT_SPONGE: Percentage of biotic hardbottom that is sponge.
 
-##### Function: getDomainDensity returns: 
+#### Function: getDomainDensity returns: 
 - YEAR
 - REGION
 - SPECIES_CD
@@ -145,7 +146,7 @@ library(vegan) # biodiveristy functions for richness, simpson, and shannon
 - length_class: The length class or bin. Only present if length_bins is not NULL. The notation, [lower, upper), is inclusive of the lower bound, but exclusive of the upper bound
 - protected_status: The protected status. Only present if merge_protected is FALSE
 
-```{r RVC data, eval = F}
+```{r fetch RVC data, eval = F}
 
 #getRvcData: Retrieves sample, stratum, and taxonomic data from server as list
 
@@ -156,8 +157,6 @@ dt1999_to_2016 <- getRvcData(1999:2016, "DRY TORT", server = 'https://www.sefsc.
 
 spp_list <- fk1999_to_2016$taxonomic_data$COMNAME #species list 
 
-#write.csv(fk1999_to_2016, file = "FK1999_2016.csv") #saved in Dropbox/github/RVC - Error in data.frame(sample_data = list(PRIMARY_SAMPLE_UNIT = c(1L, 1L,  : arguments imply differing number of rows: 4420893, 206, 402
-
 ```
 
 ```{r practice codes}
@@ -166,20 +165,96 @@ fk1999 <- getRvcData(1999, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_
 
 getDomainDensity(fk1999, "ocy chry", merge_protected = F ) # returns: YEAR, REGION, SPECIES_CD, density, var, n, nm, N, NM, protected_status
 
-getDomainDensity(fk1999, "ocy chry", is_protected = T) # returns: YEAR, REGION, SPECIES_CD, density, var, n, nm, N, NM for only protected areas 
+#getDomainDensity(fk1999, "ocy chry", is_protected = T) # returns: YEAR, REGION, SPECIES_CD, density, var, n, nm, N, NM for only protected areas 
 
-getDomainDensity(fk1999, "ocy chry", when_present = T)
+#getDomainDensity(fk1999, "ocy chry", when_present = T)
 
 abun1999 <- getDomainAbundance(fk1999, spp_list, merge_protected = F)
 
-write_csv(abun1999, abun1999.csv) #save domain abundance as csv 
+write_csv(abun1999, 'abunfk1999.csv') #save domain abundance as csv 
 
-abun_1999_tbl = abun1999 %>%
+div_1999_tbl = abun1999 %>%
   select(YEAR, REGION, SPECIES_CD, abundance, protected_status) %>%
   nest(-YEAR) %>% 
   mutate(
-    data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abundance, fill =0))) %>% 
+    data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abundance, fill =0)), 
     richness = map(
       data_wide, 
-      function(x) specnumber(x)))) 
+      function(x) specnumber(x %>% select(-REGION, protected_status))),
+    dom_simpson = map(
+      data_wide,
+      function(x) 1/(1 - diversity(x %>% select(-REGION, -protected_status), index = 'simpson'))),
+    dom_shannon = map( 
+      data_wide,
+      function(x) exp(diversity(x %>% select(-REGION, -protected_status), index = 'shannon'))))
 
+``` 
+
+```{r domain biodiversity}
+
+domain_diversity = domain_abun_1999_2016 %>%
+  group_by(YEAR, SPECIES_CD, abundance, protected_status)%>% 
+  nest(-YEAR) %>%
+  mutate(
+    data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abundance, fill =0)), 
+    richness = map( #species richness
+      data_wide, 
+      function(x) specnumber(x %>% select(-REGION, protected_status))),
+    dom_simpson = map( #simpson diversity as effective number of species 
+      data_wide,
+      function(x) 1/(1 - diversity(x %>% select(-REGION, -protected_status), index = 'simpson'))),
+    dom_shannon = map( #shannon diversity as effective number of species 
+      data_wide,
+      function(x) exp(diversity(x %>% select(-REGION, -protected_status), index = 'shannon'))))
+
+```
+
+```{r domain biodiversity plots}
+
+```
+
+```{r strata biodiversity}
+
+strata_diversity = strata_abun_1999_2016 %>%
+  group_by(YEAR, SPECIES_CD, abundance, protected_status)%>% 
+  nest(-YEAR) %>%
+  mutate(
+    data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abundance, fill =0)), 
+    richness = map( #species richness
+      data_wide, 
+      function(x) specnumber(x %>% select(-REGION, protected_status))),
+    dom_simpson = map( #simpson diversity as effective number of species 
+      data_wide,
+      function(x) 1/(1 - diversity(x %>% select(-REGION, -protected_status), index = 'simpson'))),
+    dom_shannon = map( #shannon diversity as effective number of species 
+      data_wide,
+      function(x) exp(diversity(x %>% select(-REGION, -protected_status), index = 'shannon'))))
+
+```
+
+```{r strata biodiversity plots}
+
+```
+
+```{r strata biodiversity}
+
+strata_diversity = strata_abun_1999_2016 %>%
+  group_by(YEAR, SPECIES_CD, abundance, protected_status)%>% 
+  nest(-YEAR) %>%
+  mutate(
+    data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abundance, fill =0)), 
+    richness = map( #species richness
+      data_wide, 
+      function(x) specnumber(x %>% select(-REGION, protected_status))),
+    dom_simpson = map( #simpson diversity as effective number of species 
+      data_wide,
+      function(x) 1/(1 - diversity(x %>% select(-REGION, -protected_status), index = 'simpson'))),
+    dom_shannon = map( #shannon diversity as effective number of species 
+      data_wide,
+      function(x) exp(diversity(x %>% select(-REGION, -protected_status), index = 'shannon'))))
+
+```
+
+```{r strata biodiversity plots and maps}
+
+```
