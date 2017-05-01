@@ -7,11 +7,13 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+#rm(list = ls()) #clears workspace
 
 install.packages('devtools')
 devtools::install_github('jeremiaheb/rvc')
 library(tidyverse)
 library(rvc)
+library(plyr)
 
 #getRvcData: Retrieves sample, stratum, and taxonomic data from server as list
 
@@ -145,14 +147,29 @@ write_csv(abundt2014, 'abundt2014.csv')#2014
 
 dt2016<- getRvcData(2016, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') abundt2016 <- getDomainAbundance(dt2016, spp_list, merge_protected = F) 
 write_csv(abundt2016, 'abundt2016.csv')#2016
-
 }
+
+  
 ```
 
 ```{r bind domain abundance csv files, eval = F}
+#Combine all files into one file
 
+cat("bind all csv's\n") #concatenate and print - character string naming the file to print to
+d = data_frame()
+for (f in list.files('/Users/debbiehepner/Dropbox/github/RVC/abundance_domain', pattern="\\.csv", full.names=T)){
+      cat(' ', f,'\n')
+      d_f = read_csv(
+        f, #path to a file 
+        progress=F, #progress: Display a progress bar
+        trim_ws=T, #trim_ws: leading and trailing whitespace are trimmed 
+        col_types = cols(
+          protected_status = col_character()))  #column specification - must contain one column specification for each column
+      d = bind_rows(d, d_f)
+    } 
 
-
+write_csv(d, 'domain_abun_1999_2016.csv')
+  
 ```
 
 ### Abundance data by strata 
@@ -284,11 +301,25 @@ write_csv(strata_abundt2014, 'strata_abundt2014.csv')#2014
 dt2016<- getRvcData(2016, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
 strata_abundt2016 <- getStratumAbundance(dt2016, spp_list, merge_protected = F) 
 write_csv(strata_abundt2016, 'strata_abundt2016.csv')#2016
-}
+
   
 ```
 
 ```{r bind strata abundance csv files, eval = F}
+
+cat("bind all csv's\n") #concatenate and print - character string naming the file to print to
+  d = data_frame()
+    for (f in list.files('/Users/debbiehepner/Dropbox/github/RVC/abundance_strata', pattern="*.csv", full.names=T)){
+      cat(' ', f,'\n')
+      d_f = read_csv(
+        f, #path to a file 
+        progress=F, #progress: Display a progress bar
+        trim_ws=T, #trim_ws: leading and trailing whitespace are trimmed 
+        col_types = cols(
+          protected_status = col_character()))  #column specification - must contain one column specification for each column
+      strata_abun_1999_2016 = bind_rows(d, d_f)
+write_csv(strata_abun_1999_2016, 'abundance_strata/strata_abun_1999_2016.csv')     
+    } 
 
 ```
 
@@ -417,6 +448,19 @@ write_csv(psu_abundt2016, 'psu_abundt2016.csv')#2016
 
 ```{r bind strata abundance csv files, eval = F}
 
+cat("bind all csv's\n") #concatenate and print - character string naming the file to print to
+  d = data_frame()
+    for (f in list.files('/Users/debbiehepner/Dropbox/github/RVC/abundance_psu', pattern="*.csv", full.names=T)){
+      cat(' ', f,'\n')
+      d_f = read_csv(
+        f, #path to a file 
+        progress=F, #progress: Display a progress bar
+        trim_ws=T, #trim_ws: leading and trailing whitespace are trimmed 
+        col_types = cols(
+          protected_status = col_character()))  #column specification - must contain one column specification for each column
+      psu_abun_1999_2016 = bind_rows(d, d_f)
+write_csv(psu_abun_1999_2016, 'abundance_psu/psu_abun_1999_2016.csv')     
+    } 
 ```
 
 ## Density 
