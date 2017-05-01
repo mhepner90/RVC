@@ -32,36 +32,6 @@ write_csv(spp_list, 'spp_list.csv') #is.data.frame(x) is not true
 ```{r fetch abundance data by year and domain, eval = F}
 #csv files to read (since time consuming to compute weighted abundance values)
 
-#FK 
-abunfk1999_csv = 'RVC/abunfk1999.csv' 
-abunfk2000_csv = 'RVC/abunfk2000.csv' 
-abunfk2001_csv = 'RVC/abunfk2001.csv' 
-abunfk2002_csv = 'RVC/abunfk2002.csv' 
-abunfk2003_csv = 'RVC/abunfk2003.csv' 
-abunfk2004_csv = 'RVC/abunfk2004.csv' 
-abunfk2005_csv = 'RVC/abunfk2005.csv' 
-abunfk2006_csv = 'RVC/abunfk2006.csv' 
-abunfk2007_csv = 'RVC/abunfk2007.csv' 
-abunfk2008_csv = 'RVC/abunfk2008.csv' 
-abunfk2009_csv = 'RVC/abunfk2009.csv' 
-abunfk2010_csv = 'RVC/abunfk2010.csv'
-abunfk2012_csv = 'RVC/abunfk2012.csv'
-abunfk2014_csv = 'RVC/abunfk2014.csv'
-abunfk2016_csv = 'RVC/abunfk2016.csv'
-
-#DT 
-abundt1999_csv = 'RVC/abundt1999.csv' 
-abundt2000_csv = 'RVC/abundt2000.csv'
-abundt2004_csv = 'RVC/abundt2004.csv' 
-abundt2006_csv = 'RVC/abundt2006.csv'
-abundt2008_csv = 'RVC/abundt2008.csv' 
-abundt2010_csv = 'RVC/abundt2010.csv'
-abundt2012_csv = 'RVC/abundt2012.csv'
-abundt2014_csv = 'RVC/abundt2014.csv'
-abundt2016_csv = 'RVC/abundt2016.csv'
-
-if (!all(file.exists(c('*abun'))){ #if files don't exist then compute abundance and write files by domain and year (will take awhile)
-
 fk1999<- getRvcData(1999, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 abunfk1999 <- getDomainAbundance(fk1999, spp_list, merge_protected = F)
 write_csv(abunfk1999, 'abunfk1999.csv') #1999
@@ -167,7 +137,6 @@ for (f in list.files('/Users/debbiehepner/Dropbox/github/RVC/abundance_domain', 
           protected_status = col_character()))  #column specification - must contain one column specification for each column
       d = bind_rows(d, d_f)
     } 
-
 write_csv(d, 'domain_abun_1999_2016.csv')
   
 ```
@@ -175,36 +144,6 @@ write_csv(d, 'domain_abun_1999_2016.csv')
 ### Abundance data by strata 
 ```{r fetch abundance data by year and strata, eval = F}
 #csv files to read (since time consuming to compute weighted abundance values)
-
-#FK 
-strata_abunfk1999_csv = 'RVC/strata_abunfk1999.csv' 
-strata_abunfk2000_csv = 'RVC/strata_abunfk2000.csv' 
-strata_abunfk2001_csv = 'RVC/strata_abunfk2001.csv' 
-strata_abunfk2002_csv = 'RVC/strata_abunfk2002.csv' 
-strata_abunfk2003_csv = 'RVC/strata_abunfk2003.csv' 
-strata_abunfk2004_csv = 'RVC/strata_abunfk2004.csv' 
-strata_abunfk2005_csv = 'RVC/strata_abunfk2005.csv' 
-strata_abunfk2006_csv = 'RVC/strata_abunfk2006.csv' 
-strata_abunfk2007_csv = 'RVC/strata_abunfk2007.csv' 
-strata_abunfk2008_csv = 'RVC/strata_abunfk2008.csv' 
-strata_abunfk2009_csv = 'RVC/strata_abunfk2009.csv' 
-strata_abunfk2010_csv = 'RVC/strata_abunfk2010.csv'
-strata_abunfk2012_csv = 'RVC/strata_abunfk2012.csv'
-strata_abunfk2014_csv = 'RVC/strata_abunfk2014.csv'
-strata_abunfk2016_csv = 'RVC/strata_abunfk2016.csv'
-
-#DT 
-strata_abundt1999_csv = 'RVC/abundt1999.csv' 
-strata_abundt2000_csv = 'RVC/abundt2000.csv'
-strata_abundt2004_csv = 'RVC/abundt2004.csv' 
-strata_abundt2006_csv = 'RVC/abundt2006.csv'
-strata_abundt2008_csv = 'RVC/abundt2008.csv' 
-strata_abundt2010_csv = 'RVC/abundt2010.csv'
-strata_abundt2012_csv = 'RVC/abundt2012.csv'
-strata_abundt2014_csv = 'RVC/abundt2014.csv'
-strata_abundt2016_csv = 'RVC/abundt2016.csv'
-
-if (!all(file.exists(c('*strata_abun'))){ #if files don't exist then compute abundance and write files by domain and year (will take awhile)
 
 fk1999<- getRvcData(1999, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')   
 strata_abunfk1999 <- getStratumAbundance(fk1999, spp_list, merge_protected = F)
@@ -317,8 +256,8 @@ cat("bind all csv's\n") #concatenate and print - character string naming the fil
         trim_ws=T, #trim_ws: leading and trailing whitespace are trimmed 
         col_types = cols(
           protected_status = col_character()))  #column specification - must contain one column specification for each column
-      strata_abun_1999_2016 = bind_rows(d, d_f)
-write_csv(strata_abun_1999_2016, 'abundance_strata/strata_abun_1999_2016.csv')     
+      d = bind_rows(d, d_f)
+write_csv(d, 'abundance_strata/strata_abun_1999_2016.csv')     
     } 
 
 ```
@@ -326,36 +265,6 @@ write_csv(strata_abun_1999_2016, 'abundance_strata/strata_abun_1999_2016.csv')
 ### Abundance data by primary sampling unit 
 ```{r fetch abundance data by year and primary sampling unit, eval = F}
 #csv files to read (since time consuming to compute weighted abundance values)
-
-#FK 
-psu_abunfk1999_csv = 'RVC/psu_abunfk1999.csv' 
-psu_abunfk2000_csv = 'RVC/psu_abunfk2000.csv' 
-psu_abunfk2001_csv = 'RVC/psu_abunfk2001.csv' 
-psu_abunfk2002_csv = 'RVC/psu_abunfk2002.csv' 
-psu_abunfk2003_csv = 'RVC/psu_abunfk2003.csv' 
-psu_abunfk2004_csv = 'RVC/psu_abunfk2004.csv' 
-psu_abunfk2005_csv = 'RVC/psu_abunfk2005.csv' 
-psu_abunfk2006_csv = 'RVC/psu_abunfk2006.csv' 
-psu_abunfk2007_csv = 'RVC/psu_abunfk2007.csv' 
-psu_abunfk2008_csv = 'RVC/psu_abunfk2008.csv' 
-psu_abunfk2009_csv = 'RVC/psu_abunfk2009.csv' 
-psu_abunfk2010_csv = 'RVC/psu_abunfk2010.csv'
-psu_abunfk2012_csv = 'RVC/psu_abunfk2012.csv'
-psu_abunfk2014_csv = 'RVC/psu_abunfk2014.csv'
-psu_abunfk2016_csv = 'RVC/psu_abunfk2016.csv'
-
-#DT 
-psu_abundt1999_csv = 'RVC/psu_abundt1999.csv' 
-psu_abundt2000_csv = 'RVC/psu_abundt2000.csv'
-psu_abundt2004_csv = 'RVC/psu_abundt2004.csv' 
-psu_abundt2006_csv = 'RVC/psu_abundt2006.csv'
-psu_abundt2008_csv = 'RVC/psu_abundt2008.csv' 
-psu_abundt2010_csv = 'RVC/psu_abundt2010.csv'
-psu_abundt2012_csv = 'RVC/psu_abundt2012.csv'
-psu_abundt2014_csv = 'RVC/psu_abundt2014.csv'
-psu_abundt2016_csv = 'RVC/psu_abundt2016.csv'
-
-if (!all(file.exists(c('*psu_abun'))){ #if files don't exist then compute abundance and write files by domain and year (will take awhile)
 
 fk1999<- getRvcData(1999, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 psu_abunfk1999 <- getPSUAbundance(fk1999, spp_list, merge_protected = F)
@@ -458,9 +367,10 @@ cat("bind all csv's\n") #concatenate and print - character string naming the fil
         trim_ws=T, #trim_ws: leading and trailing whitespace are trimmed 
         col_types = cols(
           protected_status = col_character()))  #column specification - must contain one column specification for each column
-      psu_abun_1999_2016 = bind_rows(d, d_f)
-write_csv(psu_abun_1999_2016, 'abundance_psu/psu_abun_1999_2016.csv')     
+      d = bind_rows(d, d_f)
     } 
+write_csv(d, 'abundance_psu/psu_abun_1999_2016.csv') 
+
 ```
 
 ## Density 
