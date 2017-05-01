@@ -146,16 +146,9 @@ library(vegan) # biodiveristy functions for richness, simpson, and shannon
 - length_class: The length class or bin. Only present if length_bins is not NULL. The notation, [lower, upper), is inclusive of the lower bound, but exclusive of the upper bound
 - protected_status: The protected status. Only present if merge_protected is FALSE
 
-```{r fetch RVC data, eval = F}
+```{r abundance dataframe}
 
-#getRvcData: Retrieves sample, stratum, and taxonomic data from server as list
-
-fk1999_to_2016 <- getRvcData(1999:2016, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
-# no data in 2013, 2015 
-
-dt1999_to_2016 <- getRvcData(1999:2016, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') #no data for 2001, 2002, 2003, 2005, 2007, 2009, 2011, 2013, 2015 
-
-spp_list <- fk1999_to_2016$taxonomic_data$COMNAME #species list 
+#read in abudance dataframe by domain, strata, and primary sampling unit 
 
 ```
 
@@ -178,7 +171,7 @@ div_1999_tbl = abun1999 %>%
   nest(-YEAR) %>% 
   mutate(
     data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abundance, fill =0)), 
-    richness = map(
+    dom_richness = map(
       data_wide, 
       function(x) specnumber(x %>% select(-REGION, protected_status))),
     dom_simpson = map(
@@ -197,7 +190,7 @@ domain_diversity = domain_abun_1999_2016 %>%
   nest(-YEAR) %>%
   mutate(
     data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abundance, fill =0)), 
-    richness = map( #species richness
+    dom_richness = map( #species richness
       data_wide, 
       function(x) specnumber(x %>% select(-REGION, protected_status))),
     dom_simpson = map( #simpson diversity as effective number of species 
