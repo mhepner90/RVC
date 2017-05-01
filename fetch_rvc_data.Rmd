@@ -291,6 +291,7 @@ write_csv(strata_abundt2016, 'strata_abundt2016.csv')#2016
 ```{r bind strata abundance csv files, eval = F}
 csvs = list.files('.', 'strata_abun.*\\.csv')
 d = bind_rows(lapply(csvs, read_csv))
+write_csv(d, 'strata_abun_all.csv')
 ```
 
 ### Abundance data by primary sampling unit 
