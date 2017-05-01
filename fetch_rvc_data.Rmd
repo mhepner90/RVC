@@ -8,8 +8,8 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-install.packages('devtools')
-devtools::install_github('jeremiaheb/rvc')
+#install.packages('devtools')
+#devtools::install_github('jeremiaheb/rvc')
 library(tidyverse)
 library(rvc)
 
@@ -150,7 +150,7 @@ write_csv(abundt2016, 'abundt2016.csv')#2016
 ```
 
 ```{r bind domain abundance csv files, eval = F}
-
+list.files('*.\\.csv')
 
 
 ```
@@ -289,7 +289,8 @@ write_csv(strata_abundt2016, 'strata_abundt2016.csv')#2016
 ```
 
 ```{r bind strata abundance csv files, eval = F}
-
+csvs = list.files('.', 'strata_abun.*\\.csv')
+d = bind_rows(lapply(csvs, read_csv))
 ```
 
 ### Abundance data by primary sampling unit 
