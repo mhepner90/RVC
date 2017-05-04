@@ -70,6 +70,10 @@ library(vegan) # biodiveristy functions for richness, simpson, and shannon
 
 fk1999 <- getRvcData(1999, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
 
+spp_list <- fk1999$taxonomic_data$COMNAME
+sp_list <- as.data.frame(spp_list, row.names = F)
+write_csv(sp_list, "spp_list.csv") 
+
 trial <- getDomainAbundance(fk1999, "ocy chry", merge_protected = F ) # returns: YEAR, REGION, SPECIES_CD, density, var, n, nm, N, NM, protected_status
 
 getDomainDensity(fk1999, "ocy chry", merge_protected = F ) # returns: YEAR, REGION, SPECIES_CD, density, var, n, nm, N, NM, protected_status
@@ -101,8 +105,8 @@ div_1999_tbl = abun1999 %>%
 
 ## Functional distance trait based matrix (from Lefcheck et al.,)
 
-```{r Functional distance matrix}
-rvc_grp = read_csv('data/rvc_spp_grouped.csv')
+```{r Functional distance matrix, eval = F}
+#rvc_grp = read_csv('data/rvc_spp_grouped.csv')
 
 # wide: common_name x traits
 d_traits = rvc_grp %>% 
@@ -333,11 +337,6 @@ fk_domain_abun_diversity = domain_fk_abun %>% #15,771 * 10
       data_wide,
       function(x) exp(diversity(x, index = 'shannon')))) %>%
   unnest(dom_richness, dom_simpson, dom_shannon)
-
-domain_fk_abun_diversity = fk_domain_abun_diversity %>%
-  select(YEAR, protected_status, dom_richness, dom_simpson, dom_shannon) 
-
-write_csv(domain_fk_abun_diversity, 'abundance_domain/domain_fk_abun_diversity.csv')
   
 ```
 
@@ -350,7 +349,7 @@ protected_status_names <- c(
   )
 
 #richness, simpson, shannon for domain FKNMS  
-ggplot(data = fk_domain_abun_diversity, aes(x = YEAR)) +
+FK_abun_RShSim <- ggplot(data = fk_domain_abun_diversity, aes(x = YEAR)) +
   geom_point(aes(y = dom_richness, color = "dom_richness")) +
   geom_point(aes(y = dom_simpson, color = "dom_simpson")) +
   geom_point(aes(y = dom_shannon, color = "dom_shannon")) +
@@ -367,7 +366,7 @@ ggplot(data = fk_domain_abun_diversity, aes(x = YEAR)) +
 
 
 #simpson, shannon by protected status for domain FKNMS
-ggplot(data = fk_domain_abun_diversity, aes(x = YEAR)) +
+FK_abun_ShSim <-ggplot(data = fk_domain_abun_diversity, aes(x = YEAR)) +
   geom_point(aes(y = dom_simpson, color = "dom_simpson")) +
   geom_point(aes(y = dom_shannon, color = "dom_shannon")) +
   geom_line(aes(y = dom_simpson, color = "dom_simpson")) +
@@ -381,7 +380,7 @@ ggplot(data = fk_domain_abun_diversity, aes(x = YEAR)) +
   scale_y_continuous(limits= c(0, 250), breaks = c(5,10,15,20,25,30,35,40,45,50))
 
 #species richness by protected status for domain FKNMS
-ggplot(data = fk_domain_abun_diversity, aes(x = YEAR)) +
+FK_abun_Rich <- ggplot(data = fk_domain_abun_diversity, aes(x = YEAR)) +
   geom_point(aes(y = dom_richness, color = "dom_richness"),color = "darkturquoise") +
   geom_line(aes(y = dom_richness, color = "dom_richness"), color = "darkturquoise") +
   facet_grid(protected_status ~ ., labeller = as_labeller(protected_status_names)) +
@@ -393,7 +392,7 @@ ggplot(data = fk_domain_abun_diversity, aes(x = YEAR)) +
 ## wonky 
 
 #shannon by protected status for domain FKNMS
-ggplot(data = fk_domain_abun_diversity, aes(x = YEAR)) +
+FK_abun_Shan <- ggplot(data = fk_domain_abun_diversity, aes(x = YEAR)) +
   geom_point(aes(y = dom_shannon, color = "dom_shannon"),color = "magenta") +
   geom_line(aes(y = dom_shannon, color = "dom_shannon"), color = "magenta") +
   facet_grid(protected_status ~ ., labeller = as_labeller(protected_status_names)) +
@@ -405,7 +404,7 @@ ggplot(data = fk_domain_abun_diversity, aes(x = YEAR)) +
   scale_y_continuous(limits= c(0, 50), breaks = c(5,10,15,20,25,30,35,40,45,50))
 
 #simpson by protected status for domain FKNMS
-ggplot(data = fk_domain_abun_diversity, aes(x = YEAR)) +
+FK_abun_Simp <- ggplot(data = fk_domain_abun_diversity, aes(x = YEAR)) +
   geom_point(aes(y = dom_simpson, color = "dom_simpson"),color = "blue") +
   geom_line(aes(y = dom_simpson, color = "dom_simpson"), color = "blue") +
   facet_grid(protected_status ~ ., labeller = as_labeller(protected_status_names)) +
@@ -806,7 +805,7 @@ write_csv(domain_fk_density_diversity, 'density_domain/domain_fk_density_diversi
   
 ```
 
-```{r FK domain biodiversity plots}
+```{r FK domain biodiversity plots - density}
 
 #simpson, shannon by protected status for domain FKNMS
 ggplot(data = domain_fk_density, aes(x = YEAR)) +
@@ -868,13 +867,13 @@ write_csv(domain_dt_density_diversity, 'density_domain/domain_dt_density_diversi
 #TODO: why does DT have 4 options underprotected status?? 0,1,2,all 
 ```
 
-```{r DT domain biodiversity plots}
+```{r DT domain biodiversity plots - density}
 
 ```
 
 ### Florida Keys strata 
 
-```{r FK strata biodiversity}
+```{r FK strata biodiversity - density}
 
 ## FK's density by strata 
 strata_fkdensity_1999_2016 <- read_csv("C:/Users/Megan Hepner/Dropbox/github_csv_files/RVC_project/density_strata/strata_fkdensity_1999_2016.csv",
@@ -909,13 +908,13 @@ fk_strata_diversity = strata_fkdensity_1999_2016 %>% #133,762 * 12
 
 ```
 
-```{r FK strata biodiversity plots, eval = F}
+```{r FK strata biodiversity plots - density, eval = F}
 
 
 ```
 
 ### Dry Tortugas strata 
-```{r DT strata biodiversity, eval = F}
+```{r DT strata biodiversity - density, eval = F}
 
 ## DT's density by strata 
 strata_dtdensity_1999_2016 <- read_csv("C:/Users/Megan Hepner/Dropbox/github_csv_files/RVC_project/density_strata/strata_dtdensity_1999_2016.csv",
@@ -954,12 +953,12 @@ strata_dt_density_diversity = dt_strata_diversity %>%
 write_csv(strata_dt_density_diversity, "density_strata/strata_dt_density_diversity")
 ```
 
-```{r DT  strata biodiversity plots}
+```{r DT  strata biodiversity plots - density}
 
 ```
 
 ### Florida Keys PSU 
-```{r FK psu biodiversity, eval = F}
+```{r FK psu biodiversity - density, eval = F}
 
 psu_fkdensity_1999_2016 <- read_csv("C:/Users/Megan Hepner/Dropbox/github_csv_files/RVC_project/density_psu/psu_fkdensity_1999_2016.csv",
 col_types = cols(
@@ -992,12 +991,12 @@ fk_strata_diversity = strata_fkdensity_1999_2016 %>%
 
 ```
 
-```{r FK psu biodiversity plots and maps}
+```{r FK psu biodiversity plots and maps - density}
 
 ```
 
 ### Dry Tortugas PSU 
-```{r DT psu biodiversity, eval = F}
+```{r DT psu biodiversity - density, eval = F}
 
 psu_dtdensity_1999_2016 <- read_csv("C:/Users/Megan Hepner/Dropbox/github_csv_files/RVC_project/density_psu/psu_dtdensity_1999_2016.csv",
 col_types = cols(
@@ -1030,7 +1029,7 @@ dt_strata_diversity = strata_dtdensity_1999_2016 %>%
 
 ```
 
-```{r DT psu biodiversity plots and maps}
+```{r DT psu biodiversity plots and maps - density}
 
 ```
 
