@@ -548,7 +548,7 @@ ggplot(data = dt_domain_abun_diversity, aes(x = YEAR)) +
 3. HRRF
 4. INPR - patch reef
 5. MCPR - mid channel
-6. OFPR
+6. OFPR - patch reef
 7. FDLR 
 
 ```{r FK strata biodiversity}
