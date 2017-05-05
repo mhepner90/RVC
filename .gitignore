@@ -1,4 +1,13 @@
+<<<<<<< HEAD
 .Rproj.user
 .Rhistory
 .RData
 .Ruserdata
+=======
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+big_csv
+>>>>>>> df6bdd6922a35718dbd5f0350543cec7d7d9a514

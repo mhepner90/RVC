@@ -7,20 +7,25 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+#rm(list = ls()) #clears workspace
 
 #install.packages('devtools')
 #devtools::install_github('jeremiaheb/rvc')
 library(tidyverse)
 library(rvc)
+library(plyr)
 
 #getRvcData: Retrieves sample, stratum, and taxonomic data from server as list
 
-fk1999_to_2016 <- getRvcData(1999:2016, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+#fk1999_to_2016 <- getRvcData(1999:2016, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 # no data in 2013, 2015 
 
 #dt1999_to_2016 <- getRvcData(1999:2016, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') #no data for 2001, 2002, 2003, 2005, 2007, 2009, 2011, 2013, 2015 
 
-spp_list <- fk1999_to_2016$taxonomic_data$COMNAME #species list 
+spp_list<- fk1999_to_2016$taxonomic_data$COMNAME #species list #399/400
+
+spp_list<- fk2009$taxonomic_data$COMNAME
+
 write_csv(spp_list, 'spp_list.csv') #is.data.frame(x) is not true 
 ```
 
@@ -29,36 +34,6 @@ write_csv(spp_list, 'spp_list.csv') #is.data.frame(x) is not true
 ### Abundance data by domain 
 ```{r fetch abundance data by year and domain, eval = F}
 #csv files to read (since time consuming to compute weighted abundance values)
-
-#FK 
-abunfk1999_csv = 'RVC/abunfk1999.csv' 
-abunfk2000_csv = 'RVC/abunfk2000.csv' 
-abunfk2001_csv = 'RVC/abunfk2001.csv' 
-abunfk2002_csv = 'RVC/abunfk2002.csv' 
-abunfk2003_csv = 'RVC/abunfk2003.csv' 
-abunfk2004_csv = 'RVC/abunfk2004.csv' 
-abunfk2005_csv = 'RVC/abunfk2005.csv' 
-abunfk2006_csv = 'RVC/abunfk2006.csv' 
-abunfk2007_csv = 'RVC/abunfk2007.csv' 
-abunfk2008_csv = 'RVC/abunfk2008.csv' 
-abunfk2009_csv = 'RVC/abunfk2009.csv' 
-abunfk2010_csv = 'RVC/abunfk2010.csv'
-abunfk2012_csv = 'RVC/abunfk2012.csv'
-abunfk2014_csv = 'RVC/abunfk2014.csv'
-abunfk2016_csv = 'RVC/abunfk2016.csv'
-
-#DT 
-abundt1999_csv = 'RVC/abundt1999.csv' 
-abundt2000_csv = 'RVC/abundt2000.csv'
-abundt2004_csv = 'RVC/abundt2004.csv' 
-abundt2006_csv = 'RVC/abundt2006.csv'
-abundt2008_csv = 'RVC/abundt2008.csv' 
-abundt2010_csv = 'RVC/abundt2010.csv'
-abundt2012_csv = 'RVC/abundt2012.csv'
-abundt2014_csv = 'RVC/abundt2014.csv'
-abundt2016_csv = 'RVC/abundt2016.csv'
-
-if (!all(file.exists(c('*abun'))){ #if files don't exist then compute abundance and write files by domain and year (will take awhile)
 
 fk1999<- getRvcData(1999, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 abunfk1999 <- getDomainAbundance(fk1999, spp_list, merge_protected = F)
@@ -100,8 +75,9 @@ fk2008<- getRvcData(2008, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_a
 abunfk2008 <- getDomainAbundance(fk2008, spp_list, merge_protected = F) 
 write_csv(abunfk2008, 'abunfk2008.csv') #2008
 
-fk2009<- getRvcData(2009, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') abunfk2009 <- getDomainAbundance(fk2009, spp_list, merge_protected = F) 
-write_csv(abunfk2009, 'abunfk2009.csv') #2009 
+fk2009<- getRvcData(2009, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+abunfk2009 <- getDomainAbundance(fk2009, spp_list, merge_protected = F) 
+write_csv(abunfk2009, 'abundance_domain/abunfk2009.csv') #2009 
 
 fk2010<- getRvcData(2010, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 abunfk2010 <- getDomainAbundance(fk2010, spp_list, merge_protected = F) 
@@ -145,71 +121,75 @@ write_csv(abundt2014, 'abundt2014.csv')#2014
 
 dt2016<- getRvcData(2016, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') abundt2016 <- getDomainAbundance(dt2016, spp_list, merge_protected = F) 
 write_csv(abundt2016, 'abundt2016.csv')#2016
-
 }
+
+  
 ```
 
 ```{r bind domain abundance csv files, eval = F}
-list.files('*.\\.csv')
+#Combine all files into one file
+
+## FK abundance by domain
+cat("bind all csv's\n") #concatenate and print - character string naming the file to print to
+d_fk = data_frame()
+for (f in list.files('/Users/debbiehepner/Dropbox/github/RVC/abundance_domain/FK', pattern="\\.csv", full.names=T)){
+      cat(' ', f,'\n')
+      d_f = read_csv(
+        f, #path to a file 
+        progress=F, #progress: Display a progress bar
+        trim_ws=T, #trim_ws: leading and trailing whitespace are trimmed 
+        col_types = cols(
+          protected_status = col_character()))  #column specification - must contain one column specification for each column
+      d_fk = bind_rows(d_fk, d_f)
+} 
+
+write_csv(d_fk, 'abundance_domain/domain_fk_abun.csv')
 
 
+## DT abundance by domain 
+cat("bind all csv's\n") #concatenate and print - character string naming the file to print to
+d_dt = data_frame()
+for (f in list.files('/Users/debbiehepner/Dropbox/github/RVC/abundance_domain/DT', pattern="\\.csv", full.names=T)){
+      cat(' ', f,'\n')
+      d_f_dt = read_csv(
+        f, #path to a file 
+        progress=F, #progress: Display a progress bar
+        trim_ws=T, #trim_ws: leading and trailing whitespace are trimmed 
+        col_types = cols(
+          protected_status = col_character()))  #column specification - must contain one column specification for each column
+      d_dt = bind_rows(d_dt, d_f_dt)
+} 
+
+write_csv(d_dt, 'abundance_domain/domain_dt_abun.csv')
+  
+>>>>>>> df6bdd6922a35718dbd5f0350543cec7d7d9a514
 ```
 
 ### Abundance data by strata 
 ```{r fetch abundance data by year and strata, eval = F}
 #csv files to read (since time consuming to compute weighted abundance values)
 
-#FK 
-strata_abunfk1999_csv = 'RVC/strata_abunfk1999.csv' 
-strata_abunfk2000_csv = 'RVC/strata_abunfk2000.csv' 
-strata_abunfk2001_csv = 'RVC/strata_abunfk2001.csv' 
-strata_abunfk2002_csv = 'RVC/strata_abunfk2002.csv' 
-strata_abunfk2003_csv = 'RVC/strata_abunfk2003.csv' 
-strata_abunfk2004_csv = 'RVC/strata_abunfk2004.csv' 
-strata_abunfk2005_csv = 'RVC/strata_abunfk2005.csv' 
-strata_abunfk2006_csv = 'RVC/strata_abunfk2006.csv' 
-strata_abunfk2007_csv = 'RVC/strata_abunfk2007.csv' 
-strata_abunfk2008_csv = 'RVC/strata_abunfk2008.csv' 
-strata_abunfk2009_csv = 'RVC/strata_abunfk2009.csv' 
-strata_abunfk2010_csv = 'RVC/strata_abunfk2010.csv'
-strata_abunfk2012_csv = 'RVC/strata_abunfk2012.csv'
-strata_abunfk2014_csv = 'RVC/strata_abunfk2014.csv'
-strata_abunfk2016_csv = 'RVC/strata_abunfk2016.csv'
-
-#DT 
-strata_abundt1999_csv = 'RVC/abundt1999.csv' 
-strata_abundt2000_csv = 'RVC/abundt2000.csv'
-strata_abundt2004_csv = 'RVC/abundt2004.csv' 
-strata_abundt2006_csv = 'RVC/abundt2006.csv'
-strata_abundt2008_csv = 'RVC/abundt2008.csv' 
-strata_abundt2010_csv = 'RVC/abundt2010.csv'
-strata_abundt2012_csv = 'RVC/abundt2012.csv'
-strata_abundt2014_csv = 'RVC/abundt2014.csv'
-strata_abundt2016_csv = 'RVC/abundt2016.csv'
-
-if (!all(file.exists(c('*strata_abun'))){ #if files don't exist then compute abundance and write files by domain and year (will take awhile)
-
-fk1999<- getRvcData(1999, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')   
+fk1999<- getRvcData(1999, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 strata_abunfk1999 <- getStratumAbundance(fk1999, spp_list, merge_protected = F)
 write_csv(strata_abunfk1999, 'strata_abunfk1999.csv') #1999
 
-fk2000<- getRvcData(2000, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')    
+fk2000<- getRvcData(2000, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 strata_abunfk2000 <- getStratumAbundance(fk2000, spp_list, merge_protected = F)  
 write_csv(strata_abunfk2000, 'strata_abunfk2000.csv') #2000
 
-fk2001<- getRvcData(2001, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')    
+fk2001<- getRvcData(2001, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
 strata_abunfk2001 <- getStratumAbundance(fk2001, spp_list, merge_protected = F) 
 write_csv(strata_abunfk2001, 'strata_abunfk2001.csv') #2001
 
-fk2002<- getRvcData(2002, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')    
+fk2002<- getRvcData(2002, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 strata_abunfk2002 <- getStratumAbundance(fk2002, spp_list, merge_protected = F) 
 write_csv(strata_abunfk2002, 'strata_abunfk2002.csv') #2002
 
-fk2003<- getRvcData(2003, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')   
+fk2003<- getRvcData(2003, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 strata_abunfk2003 <- getStratumAbundance(fk2003, spp_list, merge_protected = F) 
 write_csv(strata_abunfk2003, 'strata_abunfk2003.csv') #2003
 
-fk2004<- getRvcData(2004, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')  
+fk2004<- getRvcData(2004, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
 strata_abunfk2004 <- getStratumAbundance(fk2004, spp_list, merge_protected = F)
 write_csv(strata_abunfk2004, 'strata_abunfk2004.csv') #2004
 
@@ -241,7 +221,7 @@ fk2012<- getRvcData(2012, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_a
 strata_abunfk2012 <- getStratumAbundance(fk2012, spp_list, merge_protected = F)
 write_csv(strata_abunfk2012, 'strata_abunfk2012.csv') #2012
 
-fk2014<- getRvcData(2014, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+fk2014<- getRvcData(2014, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 strata_abunfk2014 <- getStratumAbundance(fk2014, spp_list, merge_protected = F) 
 write_csv(strata_abunfk2014, 'strata_abunfk2014.csv') #2014
 
@@ -250,14 +230,14 @@ strata_abunfk2016 <- getStratumAbundance(fk2016, spp_list, merge_protected = F)
 write_csv(strata_abunfk2016, 'strata_abunfk2016.csv') #2016
 
 dt1999<- getRvcData(1999, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
-strata_abundt1999 <- getStratumAbundance(dt1999, spp_list, merge_protected = F) 
+strata_abundt1999 <- getStratumAbundance(dt1999, spp_list, merge_protected = F) #Error in `$<-.data.frame`(`*tmp*`, "protected_status", value = c("all",  : replacement has 2712 rows, data has 5763
 write_csv(strata_abundt1999, 'strata_abundt1999.csv') #1999
 
-dt2000<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+dt2000<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 strata_abundt2000 <- getStratumAbundance(dt2000, spp_list, merge_protected = F)  
 write_csv(strata_abundt2000, 'strata_abundt2000.csv')#2000 
 
-dt2004<- getRvcData(2004, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+dt2004<- getRvcData(2004, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 strata_abundt2004 <- getStratumAbundance(dt2004, spp_list, merge_protected = F)  #Error in `$<-.data.frame`(`*tmp*`, "protected_status", value = c("all",  : replacement has 2920 rows, data has 6205
 write_csv(strata_abundt2004, 'strata_abundt2004.csv')#2004 
 
@@ -265,26 +245,26 @@ dt2006<- getRvcData(2006, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_a
 strata_abundt2006 <- getStratumAbundance(dt2006, spp_list, merge_protected = F) 
 write_csv(strata_abundt2006, 'strata_abundt2006.csv')#2006
 
-dt2008<- getRvcData(2008, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+dt2008<- getRvcData(2008, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 strata_abundt2008 <- getStratumAbundance(dt2008, spp_list, merge_protected = F)  #Error in `$<-.data.frame`(`*tmp*`, "protected_status", value = c("all",  : replacement has 2912 rows, data has 6188
 write_csv(strata_abundt2008, 'strata_abundt2008.csv')#2008 
 
-dt2010<- getRvcData(2010, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+dt2010<- getRvcData(2010, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 strata_abundt2010 <- getStratumAbundance(dt2010, spp_list, merge_protected = F) #Error in `$<-.data.frame`(`*tmp*`, "protected_status", value = c("all",  : replacement has 2920 rows, data has 6205
 write_csv(strata_abundt2010, 'strata_abundt2010.csv')#2010 
 
-dt2012<- getRvcData(2012, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+dt2012<- getRvcData(2012, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 strata_abundt2012 <- getStratumAbundance(dt2012, spp_list, merge_protected = F) 
 write_csv(strata_abundt2012, 'strata_abundt2012.csv')#2012 Error in `$<-.data.frame`(`*tmp*`, "protected_status", value = c("all",  : replacement has 3040 rows, data has 6460
 
-dt2014<- getRvcData(2014, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+dt2014<- getRvcData(2014, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 strata_abundt2014 <- getStratumAbundance(dt2014, spp_list, merge_protected = F) #Error in `$<-.data.frame`(`*tmp*`, "protected_status", value = c("all",  : replacement has 3208 rows, data has 6817
 write_csv(strata_abundt2014, 'strata_abundt2014.csv')#2014
 
-dt2016<- getRvcData(2016, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+dt2016<- getRvcData(2016, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 strata_abundt2016 <- getStratumAbundance(dt2016, spp_list, merge_protected = F) 
 write_csv(strata_abundt2016, 'strata_abundt2016.csv')#2016
-}
+
   
 ```
 
@@ -292,41 +272,43 @@ write_csv(strata_abundt2016, 'strata_abundt2016.csv')#2016
 csvs = list.files('.', 'strata_abun.*\\.csv')
 d = bind_rows(lapply(csvs, read_csv))
 write_csv(d, 'strata_abun_all.csv')
+
+# FK species abundance values by strata 
+cat("bind all csv's\n") #concatenate and print - character string naming the file to print to
+  d_strat = data_frame()
+    for (f in list.files('/Users/debbiehepner/Dropbox/github/RVC/abundance_strata/FK', pattern="*.csv", full.names=T)){
+      cat(' ', f,'\n')
+      d_f = read_csv(
+        f, #path to a file 
+        progress=F, #progress: Display a progress bar
+        trim_ws=T, #trim_ws: leading and trailing whitespace are trimmed 
+        col_types = cols(
+          protected_status = col_character()))  #column specification - must contain one column specification for each column
+      d_strat = bind_rows(d_strat, d_f)
+    } 
+
+write_csv(d_strat, 'abundance_strata/strata_fk_abun.csv')  
+
+# DT species abundance values by strata 
+cat("bind all csv's\n") #concatenate and print - character string naming the file to print to
+  d_strat = data_frame()
+    for (f in list.files('/Users/debbiehepner/Dropbox/github/RVC/abundance_strata/DT', pattern="*.csv", full.names=T)){
+      cat(' ', f,'\n')
+      d_f = read_csv(
+        f, #path to a file 
+        progress=F, #progress: Display a progress bar
+        trim_ws=T, #trim_ws: leading and trailing whitespace are trimmed 
+        col_types = cols(
+          protected_status = col_character()))  #column specification - must contain one column specification for each column
+      d_strat = bind_rows(d_strat, d_f)
+    } 
+
+write_csv(d_strat, 'abundance_strata/strata_dt_abun.csv')  
 ```
 
 ### Abundance data by primary sampling unit 
 ```{r fetch abundance data by year and primary sampling unit, eval = F}
 #csv files to read (since time consuming to compute weighted abundance values)
-
-#FK 
-psu_abunfk1999_csv = 'RVC/psu_abunfk1999.csv' 
-psu_abunfk2000_csv = 'RVC/psu_abunfk2000.csv' 
-psu_abunfk2001_csv = 'RVC/psu_abunfk2001.csv' 
-psu_abunfk2002_csv = 'RVC/psu_abunfk2002.csv' 
-psu_abunfk2003_csv = 'RVC/psu_abunfk2003.csv' 
-psu_abunfk2004_csv = 'RVC/psu_abunfk2004.csv' 
-psu_abunfk2005_csv = 'RVC/psu_abunfk2005.csv' 
-psu_abunfk2006_csv = 'RVC/psu_abunfk2006.csv' 
-psu_abunfk2007_csv = 'RVC/psu_abunfk2007.csv' 
-psu_abunfk2008_csv = 'RVC/psu_abunfk2008.csv' 
-psu_abunfk2009_csv = 'RVC/psu_abunfk2009.csv' 
-psu_abunfk2010_csv = 'RVC/psu_abunfk2010.csv'
-psu_abunfk2012_csv = 'RVC/psu_abunfk2012.csv'
-psu_abunfk2014_csv = 'RVC/psu_abunfk2014.csv'
-psu_abunfk2016_csv = 'RVC/psu_abunfk2016.csv'
-
-#DT 
-psu_abundt1999_csv = 'RVC/psu_abundt1999.csv' 
-psu_abundt2000_csv = 'RVC/psu_abundt2000.csv'
-psu_abundt2004_csv = 'RVC/psu_abundt2004.csv' 
-psu_abundt2006_csv = 'RVC/psu_abundt2006.csv'
-psu_abundt2008_csv = 'RVC/psu_abundt2008.csv' 
-psu_abundt2010_csv = 'RVC/psu_abundt2010.csv'
-psu_abundt2012_csv = 'RVC/psu_abundt2012.csv'
-psu_abundt2014_csv = 'RVC/psu_abundt2014.csv'
-psu_abundt2016_csv = 'RVC/psu_abundt2016.csv'
-
-if (!all(file.exists(c('*psu_abun'))){ #if files don't exist then compute abundance and write files by domain and year (will take awhile)
 
 fk1999<- getRvcData(1999, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 psu_abunfk1999 <- getPSUAbundance(fk1999, spp_list, merge_protected = F)
@@ -368,18 +350,19 @@ write_csv(psu_abunfk2008, 'psu_abunfk2008.csv') #2008
 
 fk2009<- getRvcData(2009, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 psu_abunfk2009 <- getPSUAbundance(fk2009, spp_list, merge_protected = F) 
-write_csv(psu_abunfk2009, 'abunfk2009.csv') #2009 
+write_csv(psu_abunfk2009, 'abundance_psu/FK/psu_abunfk2009.csv') #2009 
 
 fk2010<- getRvcData(2010, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 psu_abunfk2010 <- getPSUAbundance(fk2010, spp_list, merge_protected = F) 
-write_csv(psu_abunfk2010, 'psu_abunfk2010.csv') #2010
+write_csv(psu_abunfk2010, 'abundance_psu/FK/psu_abunfk2010.csv') #2010
 
 fk2012<- getRvcData(2012, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 psu_abunfk2012 <- getPSUAbundance(fk2012, spp_list, merge_protected = F)
-write_csv(psu_abunfk2012, 'psu_abunfk2012.csv') #2012
+write_csv(psu_abunfk2012, 'abundance_psu/FK/psu_abunfk2012.csv') #2012
 
-fk2014<- getRvcData(2014, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') psu_abunfk2014 <- getPSUAbundance(fk2014, spp_list, merge_protected = F) 
-write_csv(psu_abunfk2014, 'psu_abunfk2014.csv') #2014
+fk2014<- getRvcData(2014, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+psu_abunfk2014 <- getPSUAbundance(fk2014, spp_list, merge_protected = F) 
+write_csv(psu_abunfk2014, 'abundance_psu/FK/psu_abunfk2014.csv') #2014
 
 fk2016<- getRvcData(2016, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 psu_abunfk2016 <- getPSUAbundance(fk2016, spp_list, merge_protected = F) 
@@ -389,10 +372,12 @@ dt1999<- getRvcData(1999, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_a
 psu_abundt1999 <- getPSUAbundance(dt1999, spp_list, merge_protected = F)  
 write_csv(psu_abundt1999, 'psu_abundt1999.csv') #1999
 
-dt2000<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') psu_abundt2000 <- getPSUAbundance(dt2000, spp_list, merge_protected = F)  
+dt2000<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+psu_abundt2000 <- getPSUAbundance(dt2000, spp_list, merge_protected = F)  
 write_csv(psu_abundt2000, 'psu_abundt2000.csv')#2000 
 
-dt2004<- getRvcData(2004, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') psu_abundt2004 <- getPSUAbundance(dt2004, spp_list, merge_protected = F)  
+dt2004<- getRvcData(2004, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
+psu_abundt2004 <- getPSUAbundance(dt2004, spp_list, merge_protected = F)  
 write_csv(psu_abundt2004, 'psu_abundt2004.csv')#2004 
 
 dt2006<- getRvcData(2006, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
@@ -417,7 +402,37 @@ write_csv(psu_abundt2016, 'psu_abundt2016.csv')#2016
 ```
 
 
-```{r bind strata abundance csv files, eval = F}
+```{r bind psu abundance csv files, eval = F}
+
+##FK abundance psu 
+cat("bind all csv's\n") #concatenate and print - character string naming the file to print to
+  d = data_frame()
+    for (f in list.files('/Users/debbiehepner/Dropbox/github/RVC/abundance_psu/FK', pattern="*.csv", full.names=T)){
+      cat(' ', f,'\n')
+      d_f = read_csv(
+        f, #path to a file 
+        progress=F, #progress: Display a progress bar
+        trim_ws=T, #trim_ws: leading and trailing whitespace are trimmed 
+        col_types = cols(
+          protected_status = col_character()))  #column specification - must contain one column specification for each column
+      d = bind_rows(d, d_f)
+    } 
+write_csv(d, 'abundance_psu/psu_fk_abun.csv')
+
+## DT abundance psu 
+cat("bind all csv's\n") #concatenate and print - character string naming the file to print to
+  d = data_frame()
+    for (f in list.files('/Users/debbiehepner/Dropbox/github/RVC/abundance_psu/DT', pattern="*.csv", full.names=T)){
+      cat(' ', f,'\n')
+      d_f = read_csv(
+        f, #path to a file 
+        progress=F, #progress: Display a progress bar
+        trim_ws=T, #trim_ws: leading and trailing whitespace are trimmed 
+        col_types = cols(
+          protected_status = col_character()))  #column specification - must contain one column specification for each column
+      d = bind_rows(d, d_f)
+    } 
+write_csv(d, 'abundance_psu/psu_dt_abun.csv') 
 
 ```
 
@@ -429,105 +444,135 @@ write_csv(psu_abundt2016, 'psu_abundt2016.csv')#2016
 
 fk1999<- getRvcData(1999, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 densityfk1999 <- getDomainDensity(fk1999, spp_list, merge_protected = F)
-write_csv(densityfk1999, 'densityfk1999.csv') #1999
+write_csv(densityfk1999, 'density_domain/FK/density_domain_fk1999.csv') #1999
 
 fk2000<- getRvcData(2000, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 densityfk2000 <- getDomainDensity(fk2000, spp_list, merge_protected = F)  
-write_csv(densityfk2000, 'densityfk2000.csv') #2000
+write_csv(densityfk2000, 'density_domain/FK/density_domain_fk2000.csv') #2000
 
 fk2001<- getRvcData(2001, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 densityfk2001 <- getDomainDensity(fk2001, spp_list, merge_protected = F) 
-write_csv(densityfk2001, 'densityfk2001.csv') #2001
+write_csv(densityfk2001, 'density_domain/FK/density_domain_fk2001.csv') #2001
 
 fk2002<- getRvcData(2002, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 densityfk2002 <- getDomainDensity(fk2002, spp_list, merge_protected = F) 
-write_csv(densityfk2002, 'densityfk2002.csv') #2002
+write_csv(densityfk2002, 'density_domain/FK/density_domain_fk2002.csv') #2002
 
 fk2003<- getRvcData(2003, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')   
 densityfk2003 <- getDomainDensity(fk2003, spp_list, merge_protected = F) 
-write_csv(densityfk2003, 'densityfk2003.csv') #2003
+write_csv(densityfk2003, 'density_domain/FK/density_domain_fk2003.csv') #2003
 
 fk2004<- getRvcData(2004, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 densityfk2004 <- getDomainDensity(fk2004, spp_list, merge_protected = F)
-write_csv(densityfk2004, 'densityfk2004.csv') #2004
+write_csv(densityfk2004, 'density_domain/FK/density_domain_fk2004.csv') #2004
 
 fk2005<- getRvcData(2005, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 densityfk2005 <- getDomainDensity(fk2005, spp_list, merge_protected = F) 
-write_csv(densityfk2005, 'densityfk2005.csv') #2005
+write_csv(densityfk2005, 'density_domain/FK/density_domain_fk2005.csv') #2005
 
 fk2006<- getRvcData(2006, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 densityfk2006 <- getDomainDensity(fk2006, spp_list, merge_protected = F) 
-write_csv(densityfk2006, 'densityfk2006.csv') #2006
+write_csv(densityfk2006, 'density_domain/FK/density_domain_fk2006.csv') #2006
 
 fk2007<- getRvcData(2007, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 densityfk2007 <- getDomainDensity(fk2007, spp_list, merge_protected = F) 
-write_csv(densityfk2007, 'densityfk2007.csv') #2007
+write_csv(densityfk2007, 'density_domain/FK/density_domain_fk2007.csv') #2007
 
 fk2008<- getRvcData(2008, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 densityfk2008 <- getDomainDensity(fk2008, spp_list, merge_protected = F) 
-write_csv(densityfk2008, 'densityfk2008.csv') #2008
+write_csv(densityfk2008, 'density_domain/FK/density_domain_fk2008.csv') #2008
 
 fk2009<- getRvcData(2009, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 densityfk2009 <- getDomainDensity(fk2009, spp_list, merge_protected = F) 
-write_csv(densityfk2009, 'densityfk2009.csv') #2009 
+write_csv(densityfk2009, 'density_domain/FK/density_domain_fk2009.csv') #2009 
 
 fk2010<- getRvcData(2010, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 densityfk2010 <- getDomainDensity(fk2010, spp_list, merge_protected = F) 
-write_csv(densityfk2010, 'densityfk2010.csv') #2010
+write_csv(densityfk2010, 'density_domain/FK/density_domain_2010.csv') #2010
 
 fk2012<- getRvcData(2012, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 densityfk2012 <- getDomainDensity(fk2012, spp_list, merge_protected = F)
-write_csv(densityfk2012, 'densityfk2012.csv') #2012
+write_csv(densityfk2012, 'density_domain/FK/density_domain_fk2012.csv') #2012
 
 fk2014<- getRvcData(2014, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 densityfk2014 <- getDomainDensity(fk2014, spp_list, merge_protected = F) 
-write_csv(densityfk2014, 'densityfk2014.csv') #2014
+write_csv(densityfk2014, 'density_domain/FK/density_domain_fk2014.csv') #2014
 
 fk2016<- getRvcData(2016, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 densityfk2016 <- getDomainDensity(fk2016, spp_list, merge_protected = F) 
-write_csv(densityfk2016, 'densityfk2016.csv') #2016
+write_csv(densityfk2016, 'density_domain/FK/density_domain_fk2016.csv') #2016
 
 dt1999<- getRvcData(1999, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 densitydt1999 <- getDomainDensity(dt1999, spp_list, merge_protected = F)  
-write_csv(densitydt1999, 'densitydt1999.csv') #1999
+write_csv(densitydt1999, 'density_domain/DT/density_domain_dt1999.csv') #1999
 
 dt2000<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 densitydt2000 <- getDomainDensity(dt2000, spp_list, merge_protected = F)  
-write_csv(densitydt2000, 'densitydt2000.csv')#2000 
+write_csv(densitydt2000, 'density_domain/DT/density_domain_dt2000.csv')#2000 
 
 dt2004<- getRvcData(2004, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 densitydt2004 <- getDomainDensity(dt2004, spp_list, merge_protected = F)  
-write_csv(densitydt2004, 'densitydt2004.csv')#2004 
+write_csv(densitydt2004, 'density_domain/DT/density_domain_dt2004.csv')#2004 
 
 dt2006<- getRvcData(2006, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 densitydt2006 <- getDomainDensity(dt2006, spp_list, merge_protected = F) 
-write_csv(densitydt2006, 'densitydt2006.csv')#2006
+write_csv(densitydt2006, 'density_domain/DT/density_domain_dt2006.csv')#2006
 
 dt2008<- getRvcData(2008, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 densitydt2008 <- getDomainDensity(dt2008, spp_list, merge_protected = F)  
-write_csv(densitydt2008, 'densitydt2008.csv')#2008 
+write_csv(densitydt2008, 'density_domain/DT/density_domain_dt2008.csv')#2008 
 
 dt2010<- getRvcData(2010, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 densitydt2010 <- getDomainDensity(dt2010, spp_list, merge_protected = F) 
-write_csv(densitydt2010, 'densitydt2010.csv')#2010 
+write_csv(densitydt2010, 'density_domain/DT/density_domain_dt2010.csv')#2010 
 
 dt2012<- getRvcData(2012, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 densitydt2012 <- getDomainDensity(dt2012, spp_list, merge_protected = F) 
-write_csv(densitydt2012, 'densitydt2012.csv')#2012 
+write_csv(densitydt2012, 'density_domain/DT/density_domain_dt2012.csv')#2012 
 
 dt2014<- getRvcData(2014, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 densitydt2014 <- getDomainDensity(dt2014, spp_list, merge_protected = F) 
-write_csv(densitydt2014, 'densitydt2014.csv')#2014 
+write_csv(densitydt2014, 'density_domain/DT/density_domain_dt2014.csv')#2014 
 
 dt2016<- getRvcData(2016, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 densitydt2016 <- getDomainDensity(dt2016, spp_list, merge_protected = F) 
-write_csv(densitydt2016, 'densitydt2016.csv')#2016
+write_csv(densitydt2016, 'density_domain/DT/density_domain_dt2016.csv')#2016
 
 ```
 
 ```{r bind domain abundance csv files, eval = F}
 
+##FK density domain 
+cat("bind all csv's\n") #concatenate and print - character string naming the file to print to
+d = data_frame()
+for (f in list.files('/Users/debbiehepner/Dropbox/github/RVC/density_domain/FK', pattern="\\.csv", full.names=T)){
+      cat(' ', f,'\n')
+      d_f = read_csv(
+        f, #path to a file 
+        progress=F, #progress: Display a progress bar
+        trim_ws=T, #trim_ws: leading and trailing whitespace are trimmed 
+        col_types = cols(
+          protected_status = col_character()))  #column specification - must contain one column specification for each column
+      d = bind_rows(d, d_f)
+} 
 
+write_csv(d, 'density_domain/domain_fk_density.csv')
+
+##DT density domain 
+cat("bind all csv's\n") #concatenate and print - character string naming the file to print to
+d = data_frame()
+for (f in list.files('/Users/debbiehepner/Dropbox/github/RVC/density_domain/DT', pattern="\\.csv", full.names=T)){
+      cat(' ', f,'\n')
+      d_f = read_csv(
+        f, #path to a file 
+        progress=F, #progress: Display a progress bar
+        trim_ws=T, #trim_ws: leading and trailing whitespace are trimmed 
+        col_types = cols(
+          protected_status = col_character()))  #column specification - must contain one column specification for each column
+      d = bind_rows(d, d_f)
+} 
+
+write_csv(d, 'density_domain/domain_dt_density.csv')
 
 ```
 
@@ -537,207 +582,272 @@ write_csv(densitydt2016, 'densitydt2016.csv')#2016
 
 #fk1999<- getRvcData(1999, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')    
 strata_densityfk1999 <- getStratumDensity(fk1999, spp_list, merge_protected = F)
-write_csv(strata_densityfk1999, 'strata_densityfk1999') #1999
+write_csv(strata_densityfk1999, 'density_strata/FK/density_strata_fk1999.csv') #1999
 
 #fk2000<- getRvcData(2000, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')    
 strata_densityfk2000 <- getStratumDensity(fk2000, spp_list, merge_protected = F)  
-write_csv(strata_densityfk2000, 'strata_densityfk2000') #2000
+write_csv(strata_densityfk2000, 'density_strata/FK/density_strata_fk2000.csv') #2000
 
 #fk2001<- getRvcData(2001, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')    
 strata_densityfk2001 <- getStratumDensity(fk2001, spp_list, merge_protected = F) 
-write_csv(strata_densityfk2001, 'strata_densityfk2001') #2001
+write_csv(strata_densityfk2001, 'density_strata/FK/density_strata_fk2001.csv') #2001
 
 #fk2002<- getRvcData(2002, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')    
 strata_densityfk2002 <- getStratumDensity(fk2002, spp_list, merge_protected = F) 
-write_csv(strata_densityfk2002, 'strata_densityfk2002') #2002
+write_csv(strata_densityfk2002, 'density_strata/FK/density_strata_fk2002.csv') #2002
 
 #fk2003<- getRvcData(2003, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')   
 strata_densityfk2003 <- getStratumDensity(fk2003, spp_list, merge_protected = F) 
-write_csv(strata_densityfk2003, 'strata_densityfk2003') #2003
+write_csv(strata_densityfk2003, 'density_strata/FK/density_strata_fk2003.csv') #2003
 
 #fk2004<- getRvcData(2004, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')  
 strata_densityfk2004 <- getStratumDensity(fk2004, spp_list, merge_protected = F)
-write_csv(strata_densityfk2004, 'strata_densityfk2004') #2004
+write_csv(strata_densityfk2004, 'density_strata/FK/density_strata_fk2004.csv') #2004
 
 #fk2005<- getRvcData(2005, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
 strata_densityfk2005 <- getStratumDensity(fk2005, spp_list, merge_protected = F) 
-write_csv(strata_densityfk2005, 'strata_densityfk2005') #2005
+write_csv(strata_densityfk2005, 'density_strata/FK/density_strata_fk2005.csv') #2005
 
 #fk2006<- getRvcData(2006, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
 strata_densityfk2006 <- getStratumDensity(fk2006, spp_list, merge_protected = F) 
-write_csv(strata_densityfk2006, 'strata_densityfk2006') #2006
+write_csv(strata_densityfk2006, 'density_strata/FK/density_strata_fk2006.csv') #2006
 
 #fk2007<- getRvcData(2007, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
 strata_densityfk2007 <- getStratumDensity(fk2007, spp_list, merge_protected = F) 
-write_csv(strata_densityfk2007, 'strata_densityfk2007') #2007
+write_csv(strata_densityfk2007, 'density_strata/FK/density_strata_fk2007.csv') #2007
 
 #fk2008<- getRvcData(2008, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
 strata_densityfk2008 <- getStratumDensity(fk2008, spp_list, merge_protected = F) 
-write_csv(strata_densityfk2008, 'strata_densityfk2008') #2008
+write_csv(strata_densityfk2008, 'density_strata/FK/density_strata_fk2008.csv') #2008
 
 #fk2009<- getRvcData(2009, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
 strata_densityfk2009 <- getStratumDensity(fk2009, spp_list, merge_protected = F) 
-write_csv(strata_densityfk2009, 'strata_densityfk2009') #2009 
+write_csv(strata_densityfk2009, 'density_strata/FK/density_strata_fk2009.csv') #2009 
 
 #fk2010<- getRvcData(2010, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 strata_densityfk2010 <- getStratumDensity(fk2010, spp_list, merge_protected = F) 
-write_csv(strata_densityfk2010, 'strata_densityfk2010') #2010
+write_csv(strata_densityfk2010, 'density_strata/FK/density_strata_fk2010.csv') #2010
 
 #fk2012<- getRvcData(2012, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
 strata_densityfk2012 <- getStratumDensity(fk2012, spp_list, merge_protected = F)
-write_csv(strata_densityfk2012, 'strata_densityfk2012') #2012
+write_csv(strata_densityfk2012, 'density_strata/FK/density_strata_fk2012.csv') #2012
 
 #fk2014<- getRvcData(2014, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
 strata_densityfk2014 <- getStratumDensity(fk2014, spp_list, merge_protected = F) 
-write_csv(strata_densityfk2014, 'strata_densityfk2014') #2014
+write_csv(strata_densityfk2014, 'density_strata/FK/density_strata_fk2014.csv') #2014
 
 #fk2016<- getRvcData(2016, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 strata_densityfk2016 <- getStratumDensity(fk2016, spp_list, merge_protected = F) 
-  write_csv(strata_densityfk2016, 'strata_densityfk2016') #2016
+write_csv(strata_densityfk2016, 'density_strata/FK/density_strata_fk2016.csv') #2016
 
 #dt1999<- getRvcData(1999, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 strata_densitydt1999 <- getStratumDensity(dt1999, spp_list, merge_protected = F)  
-write_csv(strata_densitydt1999, 'strata_densitydt1999') #1999
+write_csv(strata_densitydt1999, 'density_strata/DT/density_strata_dt1999.csv') #1999
 
 #dt2000<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
 strata_densitydt2000 <- getStratumDensity(dt2000, spp_list, merge_protected = F)  
-write_csv(strata_densitydt2000, 'strata_densitydt2000')#2000 
+write_csv(strata_densitydt2000, 'density_strata/DT/density_strata_dt2000.csv')#2000 
 
 #dt2004<- getRvcData(2004, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
 strata_densitydt2004 <- getStratumDensity(dt2004, spp_list, merge_protected = F)  
-write_csv(strata_densitydt2004, 'strata_densitydt2004')#2004 
+write_csv(strata_densitydt2004, 'density_strata/DT/density_strata_dt2004.csv')#2004 
 
 #dt2006<- getRvcData(2006, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 strata_densitydt2006 <- getStratumDensity(dt2006, spp_list, merge_protected = F) 
-write_csv(strata_densitydt2006, 'strata_densitydt2006')#2006
+write_csv(strata_densitydt2006, 'density_strata/DT/density_strata_dt2006.csv')#2006
 
 #dt2008<- getRvcData(2008, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
 strata_densitydt2008 <- getStratumDensity(dt2008, spp_list, merge_protected = F)  
-write_csv(strata_densitydt2008, 'strata_densitydt2008')#2008 
+write_csv(strata_densitydt2008, 'density_strata/DT/density_strata_dt2008.csv')#2008 
 
 #dt2010<- getRvcData(2010, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
 strata_densitydt2010 <- getStratumDensity(dt2010, spp_list, merge_protected = F) 
-write_csv(strata_densitydt2010, 'strata_densitydt2010')#2010 
+write_csv(strata_densitydt2010, 'density_strata/DT/density_strata_dt2010.csv')#2010 
 
 #dt2012<- getRvcData(2012, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
 strata_densitydt2012 <- getStratumDensity(dt2012, spp_list, merge_protected = F) 
-write_csv(strata_densitydt2012, 'strata_densitydt2012')#2012 
+write_csv(strata_densitydt2012, 'density_strata/DT/density_strata_dt2012.csv')#2012 
 
 #dt2014<- getRvcData(2014, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
 strata_densitydt2014 <- getStratumDensity(dt2014, spp_list, merge_protected = F) 
-write_csv(strata_densitydt2014, 'strata_densitydt2014')#2014
+write_csv(strata_densitydt2014, 'density_strata/DT/density_strata_dt2014.csv')#2014
 
 #dt2016<- getRvcData(2016, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
 strata_densitydt2016 <- getStratumDensity(dt2016, spp_list, merge_protected = F) 
-write_csv(strata_densitydt2016, 'strata_densitydt2016')#2016
+write_csv(strata_densitydt2016, 'density_strata/DT/density_strata_dt2016.csv')#2016
   
 ```
 
 ```{r bind strata abundance csv files, eval = F}
+
+#FK species density by strata
+cat("bind all csv's\n") #concatenate and print - character string naming the file to print to
+d = data_frame()
+for (f in list.files('/Users/debbiehepner/Dropbox/github/RVC/density_strata/FK', pattern="\\.csv", full.names=T)){
+      cat(' ', f,'\n')
+      d_f = read_csv(
+        f, #path to a file 
+        progress=F, #progress: Display a progress bar
+        trim_ws=T, #trim_ws: leading and trailing whitespace are trimmed 
+        col_types = cols(
+          protected_status = col_character()))  #column specification - must contain one column specification for each column
+      d = bind_rows(d, d_f)
+    } 
+write_csv(d, 'density_strata/strata_fk_density.csv')
+
+#DT species density by strata
+cat("bind all csv's\n") #concatenate and print - character string naming the file to print to
+d = data_frame()
+for (f in list.files('/Users/debbiehepner/Dropbox/github/RVC/density_strata/DT', pattern="\\.csv", full.names=T)){
+      cat(' ', f,'\n')
+      d_f = read_csv(
+        f, #path to a file 
+        progress=F, #progress: Display a progress bar
+        trim_ws=T, #trim_ws: leading and trailing whitespace are trimmed 
+        col_types = cols(
+          protected_status = col_character()))  #column specification - must contain one column specification for each column
+      d = bind_rows(d, d_f)
+    } 
+write_csv(d, 'density_strata/strata_dt_density.csv')
 
 ```
 
 ### Density data by primary sampling unit 
 ```{r fetch density data by year and primary sampling unit, eval = F}
 
-fk1999<- getRvcData(1999, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+#fk1999<- getRvcData(1999, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 psu_abunfk1999 <- getPSUDensity(fk1999, spp_list, merge_protected = F)
-write_csv(psu_abunfk1999, 'psu_abunfk1999.csv') #1999
+write_csv(psu_abunfk1999, 'density_psu/FK/density_psu_fk1999.csv') #1999
 
-fk2000<- getRvcData(2000, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+#fk2000<- getRvcData(2000, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 psu_abunfk2000 <- getPSUDensity(fk2000, spp_list, merge_protected = F)  
-write_csv(psu_abunfk2000, 'psu_abunfk2000.csv') #2000
+write_csv(psu_abunfk2000, 'density_psu/FK/density_psu_fk2000.csv') #2000
 
-fk2001<- getRvcData(2001, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+#fk2001<- getRvcData(2001, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 psu_abunfk2001 <- getPSUDensity(fk2001, spp_list, merge_protected = F) 
-write_csv(psu_abunfk2001, 'psu_abunfk2001.csv') #2001
+write_csv(psu_abunfk2001, 'density_psu/FK/density_psu_fk2001.csv') #2001
 
-fk2002<- getRvcData(2002, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+#fk2002<- getRvcData(2002, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 psu_abunfk2002 <- getPSUDensity(fk2002, spp_list, merge_protected = F) 
-write_csv(psu_abunfk2002, 'psu_abunfk2002.csv') #2002
+write_csv(psu_abunfk2002, 'density_psu/FK/density_psu_fk2002.csv') #2002
 
-fk2003<- getRvcData(2003, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/' 
+#fk2003<- getRvcData(2003, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/' 
 psu_abunfk2003 <- getPSUDensity(fk2003, spp_list, merge_protected = F) 
-write_csv(psu_abunfk2003, 'psu_abunfk2003.csv') #2003
+write_csv(psu_abunfk2003, 'density_psu/FK/density_psu_fk2003.csv') #2003
 
-fk2004<- getRvcData(2004, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+#fk2004<- getRvcData(2004, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 psu_abunfk2004 <- getPSUDensity(fk2004, spp_list, merge_protected = F)
-write_csv(psu_abunfk2004, 'psu_abunfk2004.csv') #2004
+write_csv(psu_abunfk2004, 'density_psu/FK/density_psu_fk2004.csv') #2004
 
-fk2005<- getRvcData(2005, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+#fk2005<- getRvcData(2005, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 psu_abunfk2005 <- getPSUDensity(fk2005, spp_list, merge_protected = F) 
-write_csv(psu_abunfk2005, 'psu_abunfk2005.csv') #2005
+write_csv(psu_abunfk2005, 'density_psu/FK/density_psu_fk2005.csv') #2005
+#Warning message:
+#In UseMethod("depth") :
+  #no applicable method for 'depth' applied to an object of class "NULL"
 
-fk2006<- getRvcData(2006, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+#fk2006<- getRvcData(2006, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 psu_abunfk2006 <- getPSUDensity(fk2006, spp_list, merge_protected = F) 
-write_csv(psu_abunfk2006, 'psu_abunfk2006.csv') #2006
+write_csv(psu_abunfk2006, 'density_psu/FK/density_psu_fk2006.csv') #2006
 
-fk2007<- getRvcData(2007, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+#fk2007<- getRvcData(2007, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 psu_abunfk2007 <- getPSUDensity(fk2007, spp_list, merge_protected = F) 
-write_csv(psu_abunfk2007, 'psu_abunfk2007.csv') #2007
+write_csv(psu_abunfk2007, 'density_psu/FK/density_psu_fk2007.csv') #2007
 
-fk2008<- getRvcData(2008, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+#fk2008<- getRvcData(2008, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 psu_abunfk2008 <- getPSUDensity(fk2008, spp_list, merge_protected = F) 
-write_csv(psu_abunfk2008, 'psu_abunfk2008.csv') #2008
+write_csv(psu_abunfk2008, 'density_psu/FK/density_psu_fk2008.csv') #2008
 
-fk2009<- getRvcData(2009, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+#fk2009<- getRvcData(2009, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 psu_abunfk2009 <- getPSUDensity(fk2009, spp_list, merge_protected = F) 
-write_csv(psu_abunfk2009, 'abunfk2009.csv') #2009 
+write_csv(psu_abunfk2009, 'density_psu/FK/density_psu_fk2009.csv') #2009 
 
-fk2010<- getRvcData(2010, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+#fk2010<- getRvcData(2010, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 psu_abunfk2010 <- getPSUDensity(fk2010, spp_list, merge_protected = F) 
-write_csv(psu_abunfk2010, 'psu_abunfk2010.csv') #2010
+write_csv(psu_abunfk2010, 'density_psu/FK/density_psu_fk2010.csv') #2010
 
-fk2012<- getRvcData(2012, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+#fk2012<- getRvcData(2012, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 psu_abunfk2012 <- getPSUDensity(fk2012, spp_list, merge_protected = F)
-write_csv(psu_abunfk2012, 'psu_abunfk2012.csv') #2012
+write_csv(psu_abunfk2012, 'density_psu/FK/density_psu_fk2012.csv') #2012
 
-fk2014<- getRvcData(2014, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+#fk2014<- getRvcData(2014, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 psu_abunfk2014 <- getPSUDensity(fk2014, spp_list, merge_protected = F) 
-write_csv(psu_abunfk2014, 'psu_abunfk2014.csv') #2014
+write_csv(psu_abunfk2014, 'density_psu/FK/density_psu_fk2014.csv') #2014
 
-fk2016<- getRvcData(2016, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+#fk2016<- getRvcData(2016, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 psu_abunfk2016 <- getPSUDensity(fk2016, spp_list, merge_protected = F) 
-write_csv(psu_abunfk2016, 'psu_abunfk2016.csv') #2016
+write_csv(psu_abunfk2016, 'density_psu/FK/density_psu_fk2016.csv') #2016
 
-dt1999<- getRvcData(1999, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+#dt1999<- getRvcData(1999, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 psu_abundt1999 <- getPSUDensity(dt1999, spp_list, merge_protected = F)  
-write_csv(psu_abundt1999, 'psu_abundt1999.csv') #1999
+write_csv(psu_abundt1999, 'density_psu/DT/density_psu_dt1999.csv') #1999
+#Error in `$<-.data.frame`(`*tmp*`, "protected_status", value = c("all",  : 
+  #replacement has 26442 rows, data has 57630
 
-dt2000<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+#dt2000<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 psu_abundt2000 <- getPSUDensity(dt2000, spp_list, merge_protected = F)  
-write_csv(psu_abundt2000, 'psu_abundt2000.csv')#2000 
+write_csv(psu_abundt2000, 'density_psu/DT/density_psu_dt2000.csv')#2000 
 
-dt2004<- getRvcData(2004, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+#dt2004<- getRvcData(2004, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 psu_abundt2004 <- getPSUDensity(dt2004, spp_list, merge_protected = F)  
-write_csv(psu_abundt2004, 'psu_abundt2004.csv')#2004 
+write_csv(psu_abundt2004, 'density_psu/DT/density_psu_dt2004.csv')#2004 
 
-dt2006<- getRvcData(2006, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+#dt2006<- getRvcData(2006, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 psu_abundt2006 <- getPSUDensity(dt2006, spp_list, merge_protected = F) 
-write_csv(psu_abundt2006, 'psu_abundt2006.csv')#2006
+write_csv(psu_abundt2006, 'density_psu/DT/density_psu_dt2006.csv')#2006
 
-dt2008<- getRvcData(2008, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+#dt2008<- getRvcData(2008, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 psu_abundt2008 <- getPSUDensity(dt2008, spp_list, merge_protected = F)  
-write_csv(psu_abundt2008, 'psu_abundt2008.csv')#2008 
+write_csv(psu_abundt2008, 'density_psu/DT/density_psu_dt2008.csv')#2008 
 
-dt2010<- getRvcData(2010, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+#dt2010<- getRvcData(2010, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 psu_abundt2010 <- getPSUDensity(dt2010, spp_list, merge_protected = F) 
-write_csv(psu_abundt2010, 'psu_abundt2010.csv')#2010 
+write_csv(psu_abundt2010, 'density_psu/DT/density_psu_dt2010.csv')#2010 
 
-dt2012<- getRvcData(2012, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+#dt2012<- getRvcData(2012, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 psu_abundt2012 <- getPSUDensity(dt2012, spp_list, merge_protected = F) 
-write_csv(psu_abundt2012, 'psu_abundt2012.csv')#2012 
+write_csv(psu_abundt2012, 'density_psu/DT/density_psu_dt2012.csv')#2012 
 
-dt2014<- getRvcData(2014, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+#dt2014<- getRvcData(2014, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 psu_abundt2014 <- getPSUDensity(dt2014, spp_list, merge_protected = F) 
-write_csv(psu_abundt2014, 'psu_abundt2014.csv')#2014
+write_csv(psu_abundt2014, 'density_psu/DT/density_psu_dt2014.csv')#2014
 
-dt2016<- getRvcData(2016, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+#dt2016<- getRvcData(2016, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 psu_abundt2016 <- getPSUDensity(dt2016, spp_list, merge_protected = F) 
-  write_csv(psu_abundt2016, 'psu_abundt2016.csv')#2016
+  write_csv(psu_abundt2016, 'density_psu/DT/density_psu_dt2016.csv')#2016
 
 ```
 
 ```{r bind strata abundance csv files, eval = F}
+
+## FK species density by psu 
+cat("bind all csv's\n") #concatenate and print - character string naming the file to print to
+d = data_frame()
+for (f in list.files('/Users/debbiehepner/Dropbox/github/RVC/density_psu/FK', pattern="\\.csv", full.names=T)){
+      cat(' ', f,'\n')
+      d_f = read_csv(
+        f, #path to a file 
+        progress=F, #progress: Display a progress bar
+        trim_ws=T, #trim_ws: leading and trailing whitespace are trimmed 
+        col_types = cols(
+          protected_status = col_character()))  #column specification - must contain one column specification for each column
+      d = bind_rows(d, d_f)
+    } 
+write_csv(d, 'density_psu/psu_fk_density.csv')
+
+## DT species density by psu 
+cat("bind all csv's\n") #concatenate and print - character string naming the file to print to
+d = data_frame()
+for (f in list.files('/Users/debbiehepner/Dropbox/github/RVC/density_psu/DT', pattern="\\.csv", full.names=T)){
+      cat(' ', f,'\n')
+      d_f = read_csv(
+        f, #path to a file 
+        progress=F, #progress: Display a progress bar
+        trim_ws=T, #trim_ws: leading and trailing whitespace are trimmed 
+        col_types = cols(
+          protected_status = col_character()))  #column specification - must contain one column specification for each column
+      d = bind_rows(d, d_f)
+    } 
+write_csv(d, 'density_psu/psu_dt_density.csv')
 
 ```
