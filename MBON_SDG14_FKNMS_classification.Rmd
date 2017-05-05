@@ -5,15 +5,50 @@ date: "May 5, 2017"
 output: html_document
 ---
 
-## FKNMS 
+## Sustainable Development Goal 
+
+SDG14: Conserve and sustainably use the oceans, seas and marine resources
+    + SDG14.2:VBy 2020, sustainably manage, and protect marine and coastal ecosystems to avoid significant adverse impacts, including by strengthening their resilience and take action for their restoration, to achieve healthy and productive oceans
+
+## National Marine Sanctuary Condition Report Questions 
+
+### Water Quality 
+1. What is the eutrophic condition of the sanctuary waters and how is it changing?
+2. Do sanctuary waters pose risks to human health and how are they changing?
+3. Have recent changes in climate alter water conditions and how are they changing?
+4. Are other stressors, individually or in combination, affecting water quality, and how are they changing?
+
+### Habitat Resources 
+5. What is the integrity of major habitat types and how are they changing?
+6. What are contaminant concentrations in sanctuary habitats and how are they changing?
+
+### Living Resources 
+7. What is the status and trend of keystone and foundation species and how is it changing?
+8. What is the status and trend of other focal species and how is it changing?
+9. What is the status of non-indigenous species and how is it changing?
+10. What is the status of biodiversity and how is it changing?
+
+### Maritime Archeological Resources  
+11. What is the archaeological integrity of known maritime archaeological resources and how is it changing? 
+12. Do known maritime archaeological resources pose an environmental hazard and how is this threat changing?
+
+### Human Demensions 
+13. What are the levels of human activities that may adversely influence water quality and how are they changing? 
+14. What are the levels of human activities that may adversely influence habitats and how are they changing?
+15. What are the levels of human activities that may adversely influence living resource quality and how are they changing? 
+16. What are the levels of human activities that may adversely influence maritime archaeological resource quality and how are they changing?
+17. What are the states of influential human drivers and how are they changing?
+
+
+## FKNMS Infographic data 
 
 | Sanctuary Classification level | Icon                   | Metric                  | Dataset |  
 |:-------------------------------|:-----------------------|:------------------------|:--------|
 | Invasive species               | Lionfish               | abundance               | RVC     |
 | Foundation species             | Stony coral            | percent cover & diseased| CREMP   |
 |                                | Sea fan                | percent cover & diseased| CREMP   |
-|                                | Macroalgae             | percent cover & diseased| CREMP   |              
-|                                | Sponges                | percent cover & diseased| CREMP   |              
+|                                | Macroalgae             | percent cover & diseased| CREMP   |             
+|                                | Sponges                | percent cover & diseased| CREMP   |             
 | Keystone species               | Long-spinned sea urchin| abundance               |         |
 | Focal species                  | Caribbean spiny lobster| abundance               |         |
 |                                | Queen Conch            | abundance               |         |
@@ -21,7 +56,6 @@ output: html_document
 |                                | Herbivores             | abundance               | RVC     |
 |                                | Exploited reef fish    | abundance               | RVC     |
 |                                | Reef fish biodiversity | diversity index         | RVC     |
-
 
 
     
@@ -39,7 +73,9 @@ library(rvc)
 RVCdata_FK <- getRvcData(1999:2016, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 RVCdata_DT <- getRvcData(1999:2016, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 
-species_list <- RVCdata_FK$taxonomic_data
+species_list <- RVCdata_FK$taxonomic_data %>%
+  select(SPECIES_CD,FAMILY, SCINAME, COMNAME) %>%
+  arrange(desc(FAMILY))
 
 species_family_list <- unique(RVCdata_FK$taxonomic_data$FAMILY)
 species_family_list[order(species_family_list)]
@@ -110,7 +146,23 @@ exploited_abun <- getDomainDensity(RVCdata_DT, species = exploited_spp_list, mer
 
 ```{r herbivores: parrotfish}
 
-herbivore_spp_list= c() 
+herbivore_spp_list= c(
+  "CRY ROSE", #Bluelip Parrotfish
+  "NIC USTA", #Emerald Parrotfish
+  "SCA COEL", #Midnight Parrotfish
+  "SCA COER", #Blue Parrotfish
+  "SCA GUAC", #Rainbow Parrotfish
+  "SCA ISER", #Striped Parrotfish
+  "SCA SPE.", #Parrotfish Species
+  "SCA TAEN", #Princess Parrotfish
+  "SCA VETU", #Queen Parrotfish
+  "SPA ATOM", #Greenblotch Parrotfish
+  "SPA AURO", #Redband Parrotfish
+  "SPA CHRY", #Redtail Parrotfish
+  "SPA RADI", #Bucktooth Parrotfish
+  "SPA RUBR", #Yellowtail Parrotfish
+  "SPA SPE."  #Parrotfish Species
+  ) 
 
 herbivore_abun_fk <- getDomainAbundance(RVCdata_FK, species = herbivore_spp_list)
 
@@ -119,5 +171,10 @@ herbivore_density_fk <- getDomainDensity(RVCdata_FK, species = herbivore_spp_lis
 ```
 
 ```{r reef fish biodiversity}
+
+```
+
+```{r trophic levels}
+#potential visualize as a stacked chart 
 
 ```
