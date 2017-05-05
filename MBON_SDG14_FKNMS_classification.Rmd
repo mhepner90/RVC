@@ -7,12 +7,44 @@ output: html_document
 
 ## FKNMS 
 
-- Invasive species
-- Foundation species 
-- Keystone species 
-- Focal species 
+1. Invasive species
+    + Lionfish
+1. Foundation species 
+    + Stony coral
+    + Sea fan
+    + Macroalgae
+    + Vase sponge 
+    + Seagrass 
+    + Mangroves 
+1. Keystone species 
+    + Long-spinned black sea urchin
+1. Focal species 
+    + Caribbean spiny lobster
+    + Queen Conch
+    + Turtles 
+    + Herbivores 
+    + Exploited reef fish 
+    + Trophic levels 
+    + Reef fish biodiversity 
+    
+```{r librarys}
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+
 ```
 
+```{r invasive species: lionfish}
+
+```
+
+```{r exploited reef fish: grouper-snapper complex}
+
+```
+
+```{r herbivores: parrotfish}
+
+```
+
+```{r reef fish biodiversity}
+
+```
