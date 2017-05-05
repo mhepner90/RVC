@@ -7,42 +7,115 @@ output: html_document
 
 ## FKNMS 
 
-1. Invasive species
-    + Lionfish
-1. Foundation species 
-    + Stony coral
-    + Sea fan
-    + Macroalgae
-    + Vase sponge 
-    + Seagrass 
-    + Mangroves 
-1. Keystone species 
-    + Long-spinned black sea urchin
-1. Focal species 
-    + Caribbean spiny lobster
-    + Queen Conch
-    + Turtles 
-    + Herbivores 
-    + Exploited reef fish 
-    + Trophic levels 
-    + Reef fish biodiversity 
+| Sanctuary Classification level | Icon                   | Metric                  | Dataset |  
+|:-------------------------------|:-----------------------|:------------------------|:--------|
+| Invasive species               | Lionfish               | abundance               | RVC     |
+| Foundation species             | Stony coral            | percent cover & diseased| CREMP   |
+|                                | Sea fan                | percent cover & diseased| CREMP   |
+|                                | Macroalgae             | percent cover & diseased| CREMP   |              
+|                                | Sponges                | percent cover & diseased| CREMP   |              
+| Keystone species               | Long-spinned sea urchin| abundance               |         |
+| Focal species                  | Caribbean spiny lobster| abundance               |         |
+|                                | Queen Conch            | abundance               |         |
+|                                | Sea turtles            | abundance               |         |
+|                                | Herbivores             | abundance               | RVC     |
+|                                | Exploited reef fish    | abundance               | RVC     |
+|                                | Reef fish biodiversity | diversity index         | RVC     |
+
+
+
     
 ```{r librarys}
 
+library(knitr)
 library(tidyverse)
+library(rvc)
+#library(rfishbase)
+
+```
+
+```{r call RVC data}
+
+RVCdata_FK <- getRvcData(1999:2016, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+RVCdata_DT <- getRvcData(1999:2016, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+
+species_list <- RVCdata_FK$taxonomic_data
+
+species_family_list <- unique(RVCdata_FK$taxonomic_data$FAMILY)
+species_family_list[order(species_family_list)]
+
+
 
 ```
 
 ```{r invasive species: lionfish}
 
+lionfish_abun_fk <- getDomainAbundance(RVCdata_FK, species = "Red Lionfish", merge_protected = F) 
+lionfish_den_fk <- getDomainDensity(RVCdata_FK, species = "Red Lionfish", merge_protected = F) 
+
+lionfish_abun_fk_all <- getDomainAbundance(RVCdata_FK, species = "Red Lionfish")
+lionfish_den_fk_all <- getDomainDensity(RVCdata_FK, species = "Red Lionfish") 
+
+lionfish_abun_dt <- getDomainAbundance(RVCdata_DT, species = "Red Lionfish", merge_protected = F) 
+lionfish_den_dt <- getDomainDensity(RVCdata_DT, species = "Red Lionfish", merge_protected = F)
+
+ggplot(data = lionfish_abun_fk_all, aes(x = YEAR, y = abundance))+
+  geom_point()+
+  geom_line() +
+  labs(x = "Year", y = "Abundance")+
+  ggtitle("Lionfish Abundance in the FKNMS") +
+  theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 12))+
+  scale_x_continuous(breaks = c(1999:2016)) 
+  
+ggplot(data = lionfish_den_fk_all, aes(x = YEAR, y = density))+
+  geom_point()+
+  geom_line() +
+  labs(x = "Year", y = "Density")+
+  ggtitle("Lionfish Density in the FKNMS") +
+  theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 12))+
+  scale_x_continuous(breaks = c(1999:2016)) 
+
 ```
 
 ```{r exploited reef fish: grouper-snapper complex}
+
+exploited_spp_list= c(
+    "LUT ANAL", #Mutton Snapper
+    "LUT GRIS", #Gray Snapper        
+    "OCY CHRY", #Yellowtail Snapper 
+    "LUT SYNA", #Lane Snapper
+    "LUT APOD", #Schoolmaster Snapper 
+    "LAC MAXI", #Hogfish
+    "EPI ADSC", #Rockhind
+    "CEP CRUE", #Graysby
+    "EPI GUTT", #Red Hind
+    "EPI ITAJ", #Goliath Grouper 
+    "EPI MORI", #Red Grouper
+    "EPI STRI", #Nassau Grouper 
+    "MYC BONA", #Black Grouper
+    "MYC VENE", #Yellowfin Grouper
+    "MYC PHEN", #Scamp
+    "HAE AURO", #Tomtate
+    "HAE MELA", #Cottonwick
+    "HAE PLUM", #White Grunt
+    "HAE SCIU", #Bluestriped 
+    "MYC MICR" #Gag 
+    )
+
+exploited_abun <- getDomainDensity(RVCdata_FK, species = exploited_spp_list, merge_protected = F)
+
+exploited_abun <- getDomainDensity(RVCdata_DT, species = exploited_spp_list, merge_protected = F)
 
 ```
 
 ```{r herbivores: parrotfish}
 
+herbivore_spp_list= c() 
+
+herbivore_abun_fk <- getDomainAbundance(RVCdata_FK, species = herbivore_spp_list)
+
+herbivore_density_fk <- getDomainDensity(RVCdata_FK, species = herbivore_spp_list)
+  
 ```
 
 ```{r reef fish biodiversity}
