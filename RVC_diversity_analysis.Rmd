@@ -420,7 +420,7 @@ FK_abun_Simp <- ggplot(data = fk_domain_abun_diversity, aes(x = YEAR)) +
 ### Dry Tortugas domain
 ```{r DT domain biodiversity}
 
-domain_dt_abun <- read_csv('big_csv/abundance/abundance_domain/domain_dt_abun.csv', 
+domain_dt_abun <- read_csv('big_csv/abundance_domain/domain_dt_abun.csv', 
 col_types = cols(
   YEAR = col_integer(),
   REGION = col_character(),
@@ -542,13 +542,13 @@ ggplot(data = dt_domain_abun_diversity, aes(x = YEAR)) +
 
 
 ###Florida Keys strata's:
-1. FMLR - low relief 
-2. FSLR
-3. HRRF
-4. INPR - patch reef
-5. MCPR - mid channel
-6. OFPR - patch reef
-7. FDLR 
+1. FMLR - Forereef Midchannel Linear Reef
+2. FSLR - Forereef Shallow Linear Reef
+3. HRRF - High Relief Reef (Spur and Groove)
+4. INPR - Inshore patch reef
+5. MCPR - Midchannel Patch Reef 
+6. OFPR - Offshore Patch Reef
+7. FDLR - Forereef Deep Linear Reef 
 
 ```{r FK strata biodiversity}
 
@@ -568,47 +568,64 @@ col_types = cols(
 ))
 
 fk_strata_abun_diversity = strata_fk_abun %>% #133,762 * 12
-  filter(protected_status!='all') %>%
-  select(YEAR, STRAT, protected_status, SPECIES_CD, abundance)  %>% 
-  group_by(YEAR, STRAT, protected_status) %>% #294 groups (15 years *7 strata *3prot = 315)?? why 294  groups ##should be 315 groups
+  filter(protected_status!='all') %>% #66,881 * 12
+  select(YEAR, STRAT, protected_status, SPECIES_CD, abundance) %>% #66,881 * 5
+  group_by(YEAR, STRAT, protected_status) %>% #294 groups (15 years *7 strata *3prot = 315)??
   nest() %>%  # 294 * 4 
   mutate(
     data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abundance, fill =0)), 
-    #when removed select above then data_wide[1] 135 × 372 --- why are there 135 rows?1 should be 1
-    #when I have select above as an option I encounter an error: Error in mutate_impl(.data, dots) : Duplicate identifiers for rows ?! 
     strata_richness = map( #species richness
       data_wide, 
-      function(x) specnumber(x %>% select(-REGION, -PROT, -var, -n, -nm, -N, -NM))),
+      function(x) specnumber(x)),
     strata_simpson = map( #simpson diversity as effective number of species 
       data_wide,
-      function(x) 1/(1 - diversity(x %>% select(-REGION, -PROT, -var, -n, -nm, -N, -NM), index = 'simpson'))),
+      function(x) 1/(1 - diversity(x, index = 'simpson'))),
     strata_shannon = map( #shannon diversity as effective number of species 
       data_wide,
-      function(x) exp(diversity(x %>% select(-REGION, -PROT, -var, -n, -nm, -N, -NM), index = 'shannon')))) %>%
+      function(x) exp(diversity(x, index = 'shannon')))) %>%
   unnest(strata_richness, strata_simpson, strata_shannon)
-
-#fk_strata_abun_plot = fk_strata_abun_diversity %>%
-  #gather(YEAR, STRAT, strata_simpson)
-
-# strata_fk_abun_diversity = fk_strata_abun_diversity %>%
-#   select(YEAR, STRAT, protected_status, strata_richness, strata_simpson, strata_shannon) 
-# 
-# write_csv(strata_fk_abun_diversity, 'abundance_strata/strata_fk_abun_diversity.csv')
 
 ```
 
 ```{r FK strata biodiversity plots, eval = F}
 
-labeller = as_labeller(protected_status_names)
+# strata_names <- c(
+#  "FMLR" = "Forereef Midchannel Linear Reef",
+#  "FSLR" = "Forereef Shallow Linear Reef",
+#  "HRRF" = "High Relief Reef", #(Spur and Groove)
+#  "INPR" = "Inshore patch reef",
+#  "MCPR" = "Midchannel Patch Reef",
+#  "OFPR" = "Offshore Patch Reef",
+#  "FDLR" = "Forereef Deep Linear Reef")
+
+strata_names <- c(
+ "FMLR" = "FMLR",
+ "FSLR" = "FSLR",
+ "HRRF" = "HRRF", #(Spur and Groove)
+ "INPR" = "INPR",
+ "MCPR" = "MCPR",
+ "OFPR" = "OFPR",
+ "FDLR" = "FDLR")
 
 #simpson by protected status for domain FKNMS
 ggplot(data = fk_strata_abun_diversity, aes(x = YEAR)) +
   geom_point(aes(y = strata_simpson, color = "strata_simpson"),color = "blue") +
   geom_line(aes(y = strata_simpson, color = "strata_simpson"), color = "blue") +
-  facet_grid(STRAT ~ protected_status) +
+  facet_grid(STRAT ~ protected_status, 
+             labeller = labeller(.rows = strata_names, .cols = protected_status_names)) +
+             #labeller(strata_names = label_wrap_gen(3))) + 
+  labs(x = "Year", y = "Effective Number of Species") +
+  ggtitle("Simpson Diveristy of Reef Fish in the Florida Keys") + 
+  theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 12)) +
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(1999:2016)) +
+  scale_y_continuous(limits= c(0, 25), breaks = c(5,10,15,20,25))
+
+ggplot(data = fk_strata_abun_diversity, aes(x = YEAR)) +
+  geom_point(aes(y = strata_shannon, color = "strata_shannon"), color = "magenta") +
+  geom_line(aes(y = strata_shannon, color = "strata_shannon"), color = "magenta") +
+  facet_grid(STRAT ~ protected_status, labeller = as_labeller(protected_status_names)) +
   labs(x = "Year", y = "Effective Number of Species", color = "Level of protection") +
-  scale_colour_manual(values = c("darkturquoise", "magenta", "blue"),labels=c("Unprotected", "Protected", "All")) +
-  ggtitle("Simpson Diveristy of Reef Fish in the Florida Keys by Strata") + 
+  ggtitle("Shannon Diveristy of Reef Fish in the Florida Keys by Strata") + 
   theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 12))+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(1999:2016)) +
   scale_y_continuous(limits= c(0, 25), breaks = c(5,10,15,20,25))
@@ -879,7 +896,7 @@ write_csv(domain_dt_density_diversity, 'density_domain/domain_dt_density_diversi
 ```{r FK strata biodiversity - density}
 
 ## FK's density by strata 
-strata_fkdensity_1999_2016 <- read_csv("big_csv/density_strata/strata_fkdensity_1999_2016.csv",
+strata_fkdensity_1999_2016 <- read_csv("big_csv/density_strata/strata_fk_density.csv",
 col_types = cols(
   YEAR = col_integer(),
   REGION = col_character(),
@@ -893,26 +910,39 @@ col_types = cols(
   protected_status = col_character()
 ))
 
-fk_strata_diversity = strata_fkdensity_1999_2016 %>% #133,762 * 12
-  group_by(YEAR, STRAT, protected_status) %>% #294 groups (15 years *7 strata *3prot = 315)?? why 294 groups 
-  nest(-YEAR) %>%
-  mutate(
+fk_strata_density_diversity = strata_fkdensity_1999_2016 %>% #133,762 * 12
+  filter(protected_status!='all') %>% #66,881 * 12
+  select(YEAR, STRAT, protected_status, SPECIES_CD, density) %>% #66,881 * 5
+  group_by(YEAR, STRAT, protected_status) %>% #294 groups (15 years *7 strata *3prot = 315)??
+  nest() %>%
+   mutate(
     data_wide = map(data, ~ spread(data=.x, SPECIES_CD, density, fill =0)), 
     strata_richness = map( #species richness
       data_wide, 
-      function(x) specnumber(x %>% select(-REGION, -PROT, -var, -n, -nm, -N, -NM))),
+      function(x) specnumber(x)),
     strata_simpson = map( #simpson diversity as effective number of species 
       data_wide,
-      function(x) 1/(1 - diversity(x %>% select(-REGION, -PROT, -var, -n, -nm, -N, -NM), index = 'simpson'))),
+      function(x) 1/(1 - diversity(x, index = 'simpson'))),
     strata_shannon = map( #shannon diversity as effective number of species 
       data_wide,
-      function(x) exp(diversity(x %>% select(-REGION, -PROT, -var, -n, -nm, -N, -NM), index = 'shannon')))) %>%
+      function(x) exp(diversity(x, index = 'shannon')))) %>%
   unnest(strata_richness, strata_simpson, strata_shannon)
 
 ```
 
 ```{r FK strata biodiversity plots - density, eval = F}
 
+ggplot(data = fk_strata_density_diversity, aes(x = YEAR)) +
+  geom_point(aes(y = strata_simpson, color = "strata_simpson"),color = "blue") +
+  geom_line(aes(y = strata_simpson, color = "strata_simpson"), color = "blue") +
+  facet_grid(STRAT ~ protected_status, 
+             labeller = labeller(.rows = strata_names, .cols = protected_status_names)) +
+             #labeller(strata_names = label_wrap_gen(3))) + 
+  labs(x = "Year", y = "Effective Number of Species") +
+  ggtitle("Simpson Diveristy of Reef Fish in the Florida Keys") + 
+  theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 12)) +
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(1999:2016)) +
+  scale_y_continuous(limits= c(0, 25), breaks = c(5,10,15,20,25))
 
 ```
 
