@@ -64,6 +64,7 @@ SDG14: Conserve and sustainably use the oceans, seas and marine resources
 library(knitr)
 library(tidyverse)
 library(rvc)
+library(vegan)
 #library(rfishbase)
 
 ```
@@ -80,36 +81,227 @@ species_list <- RVCdata_FK$taxonomic_data %>%
 species_family_list <- unique(RVCdata_FK$taxonomic_data$FAMILY)
 species_family_list[order(species_family_list)]
 
+```
 
+##Trophic groups
+- Forage fish 
+- Grouper
+- Grunts
+- Higher Level Reef Fish
+- Hogfish
+- Lionfish
+- Opportunists 
+- Parrotfish
+- Rays
+- Sea bass and Hamlets
+- Sharks
+- Small Reef Fish
+- Snapper
+
+#### Forage fish
+```{r Forage fish}
+
+forage_fish_spp_list= c("HYP HARR", "ATH STIP", "JEN SPE.", "HAR JAGU", "ANC LYOL", "INE VITT", "HEM BRAS", "SAR AURI", "HAR HUME", "CHR ATHE")
+
+#abundance
+forage_fk_abun = getDomainAbundance(RVCdata_FK, forage_fish_spp_list, merge_protected = F)
+forage_dt_abun = getDomainAbundance(RVCdata_FK, forage_fish_spp_list, merge_protected = F)
+
+#density
+forage_fk_den = getDomainDensity(RVCdata_DT, forage_fish_spp_list, merge_protected = F)
+forage_dt_den = getDomainDensity(RVCdata_DT, forage_fish_spp_list, merge_protected = F)
+
+#shannon
+
+#simpson 
+```
+
+#### Grouper
+```{r Grouper}
+
+grouper_spp_list= c("CEP CRUE", "MYC BONA", "EPI MORI", "EPI STRI", "EPI ITAJ", "CEP FULV", "MYC MICR", "MYC PHEN", "MYC VENE", "MYC INTE", "MYC TIGR", "EPI FLAV", "DER INER", "SRR SPE.", "Epi nive", "Myc acut")
+
+#abundance
+grouper_fk_abun = getDomainAbundance(RVCdata_FK, grouper_spp_list, merge_protected = F)
+grouper_dt_abun = getDomainAbundance(RVCdata_FK, grouper_spp_list, merge_protected = F)
+
+#density
+grouper_fk_den = getDomainDensity(RVCdata_DT, grouper_spp_list, merge_protected = F)
+grouper_dt_den = getDomainDensity(RVCdata_DT, grouper_spp_list, merge_protected = F)
 
 ```
 
-```{r invasive species: lionfish}
+#### Grunts 
+```{r Grunts}
 
-lionfish_abun_fk <- getDomainAbundance(RVCdata_FK, species = "Red Lionfish", merge_protected = F) 
-lionfish_den_fk <- getDomainDensity(RVCdata_FK, species = "Red Lionfish", merge_protected = F) 
+grunt_spp_list = c("HAE SCIU", "HAE AURO", "HAE PLUM", "HAE SPE.", "HAE FLAV", "HAE CHRY", "ANI VIRG","HAE MELA", "HAE CARB", "HAE PARR", "HAE STRI", "HAE MACR", "ANI SURI", "HAE ALBU")
 
-lionfish_abun_fk_all <- getDomainAbundance(RVCdata_FK, species = "Red Lionfish")
-lionfish_den_fk_all <- getDomainDensity(RVCdata_FK, species = "Red Lionfish") 
+#abundance
+grunt_fk_abun = getDomainAbundance(RVCdata_FK, grunt_spp_list, merge_protected = F)
+grunt_dt_abun = getDomainAbundance(RVCdata_FK, grunt_spp_list, merge_protected = F)
 
-lionfish_abun_dt <- getDomainAbundance(RVCdata_DT, species = "Red Lionfish", merge_protected = F) 
-lionfish_den_dt <- getDomainDensity(RVCdata_DT, species = "Red Lionfish", merge_protected = F)
+#density
+grunt_fk_den = getDomainDensity(RVCdata_DT, grunt_spp_list, merge_protected = F)
+grunt_dt_den = getDomainDensity(RVCdata_DT, grunt_spp_list, merge_protected = F)
 
-ggplot(data = lionfish_abun_fk_all, aes(x = YEAR, y = abundance))+
-  geom_point()+
-  geom_line() +
-  labs(x = "Year", y = "Abundance")+
-  ggtitle("Lionfish Abundance in the FKNMS") +
-  theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 12))+
-  scale_x_continuous(breaks = c(1999:2016)) 
-  
-ggplot(data = lionfish_den_fk_all, aes(x = YEAR, y = density))+
-  geom_point()+
-  geom_line() +
-  labs(x = "Year", y = "Density")+
-  ggtitle("Lionfish Density in the FKNMS") +
-  theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 12))+
-  scale_x_continuous(breaks = c(1999:2016)) 
+```
+
+#### Higher Level Reef Fish
+```{r Higher Level Reef Fish}
+
+higher_reef_spp_list = c()
+
+#abundance
+higher_reef_fk_abun = getDomainAbundance(RVCdata_FK, higher_reef_spp_list, merge_protected = F)
+higher_reef_dt_abun = getDomainAbundance(RVCdata_FK, higher_reef_spp_list, merge_protected = F)
+get
+#density
+higher_reef_fk_den = getDomainDensity(RVCdata_DT, higher_reef_spp_list, merge_protected = F)
+higher_reef_dt_den = getDomainDensity(RVCdata_DT, higher_reef_spp_list, merge_protected = F)
+```
+
+#### Hogfish
+```{r Hogfish}
+
+hogfish_spp_list = c("LAC MAXI", "BOD RUFU", "BOD PULC")
+
+#abundance
+hogfish_fk_abun = getDomainAbundance(RVCdata_FK, hogfish_spp_list, merge_protected = F)
+hogfish_dt_abun = getDomainAbundance(RVCdata_FK, hogfish_spp_list, merge_protected = F)
+
+#density
+hogfish_fk_den = getDomainDensity(RVCdata_DT, hogfish_spp_list, merge_protected = F)
+hogfish_dt_den = getDomainDensity(RVCdata_DT, hogfish_spp_list, merge_protected = F)
+
+```
+
+#### Lionfish
+```{r Lionfish}
+
+#"PTE VOLI" - lionfish
+
+#abundance
+lionfish_fk_abun = getDomainAbundance(RVCdata_FK, "PTE VOLI", merge_protected = F)
+lionfish_dt_abun = getDomainAbundance(RVCdata_FK, "PTE VOLI", merge_protected = F)
+
+#density
+lionfish_fk_den = getDomainDensity(RVCdata_DT, "PTE VOLI", merge_protected = F)
+lionfish_dt_den = getDomainDensity(RVCdata_DT, "PTE VOLI", merge_protected = F)
+
+```
+
+#### Opportunists 
+```{r Opportunists}
+
+opportunists_spp_list = c("CAR RUBE", "SPH BARR", "ALE CILI","DEC PUNC", "DEC MACA", "CAR CRYS", "CAR BART", "SCO REGA","SPH PICU", "CAR LATU", "SEL VOME", "ELA BIPI", "CAR SPE.", "TRA FALC", "EUT ALLE", "SER RIVO", "SCO MACU", "SER DUME", "SCO CAVA", "SPH GUAC", "CAR LUGU", "OLI SAUR", "SER SPE.", "Rac cana", "Ser zona")
+
+#abundance
+opportunists_fk_abun = getDomainAbundance(RVCdata_FK, opportunists_spp_list, merge_protected = F)
+opportunists_dt_abun = getDomainAbundance(RVCdata_FK, opportunists_spp_list, merge_protected = F)
+
+#density
+opportunists_fk_den = getDomainDensity(RVCdata_DT, opportunists_spp_list, merge_protected = F)
+opportunists_dt_den = getDomainDensity(RVCdata_DT, opportunists_spp_list, merge_protected = F)
+
+```
+
+#### Parrotfish
+```{r Parrotfish}
+
+parrotfish_spp_list = c('SCA ISER', "SCA COEL", "SPA AURO", "SPA VIRI", "SPA ATOM", "SCA TAEN", 'SPA RUBR', "SPA CHRY", "SCA VETU", "SCA COER", "SCA GUAC", "CRY ROSE", "SPA RADI", "SCA SPE.", "NIC USTA", "SPA SPE.")
+
+#abundance
+parrotfish_fk_abun = getDomainAbundance(RVCdata_FK, parrotfish_spp_list, merge_protected = F)
+parrotfish_dt_abun = getDomainAbundance(RVCdata_FK, parrotfish_spp_list, merge_protected = F)
+
+#density
+parrotfish_fk_den = getDomainDensity(RVCdata_DT, parrotfish_spp_list, merge_protected = F)
+parrotfish_dt_den = getDomainDensity(RVCdata_DT, parrotfish_spp_list, merge_protected = F)
+
+```
+
+#### Rays
+```{r Rays}
+
+rays_spp_list = c("URO JAMA", "ECH NAUC", "DAS AMER", "AET NARI", "NAR BANC", "Rhi bona")
+
+#abundance
+rays_fk_abun = getDomainAbundance(RVCdata_FK, rays_spp_list, merge_protected = F)
+rays_dt_abun = getDomainAbundance(RVCdata_FK, rays_spp_list, merge_protected = F)
+
+#density
+rays_fk_den = getDomainDensity(RVCdata_DT, rays_spp_list, merge_protected = F)
+rays_dt_den = getDomainDensity(RVCdata_DT, rays_spp_list, merge_protected = F)
+
+```
+
+#### Sea bass and Hamlets
+```{r Sea bass and Hamlets}
+
+sea_bass_hamlet_spp_list = c("SER TIGR","HYP GEMM","HYP UNIC","SER TABA","SER BALD","HYP PUEL","EPI ADSC","SER TORT","EPI GUTT","HYP NIGR","DIP FORM","HYP SPE.","SCH BETA","HYP TANN", "RYP SAPO","PAR FURC","HYP INDI","HYP GUTT","ALP AFER","LIO EUKR","SER ANNU","LIO RUBE","HYP HYBR","HYP CHLO","PRI AQUI","RYP MACU","SER SUBL","CEN OCYU","CEN STRI","Epi drum","Lio mowb")
+
+#abundance
+seabass_fk_abun = getDomainAbundance(RVCdata_FK, sea_bass_hamlet_spp_list, merge_protected = F)
+seabass_dt_abun = getDomainAbundance(RVCdata_FK, sea_bass_hamlet_spp_list, merge_protected = F)
+
+#density
+seabass_fk_den = getDomainDensity(RVCdata_DT, sea_bass_hamlet_spp_list, merge_protected = F)
+seabass_dt_den = getDomainDensity(RVCdata_DT, sea_bass_hamlet_spp_list, merge_protected = F)
+
+```
+
+#### Sharks
+```{r Sharks}
+
+sharks_spp_list = c("GIN CIRR", "CAR PERE", "CAR LEUC", "CAR LIMB", "SPH MOKA", "SPH TIBU", "CAR FALC", "SPH LEWI", "CAR OBSC", "Neg brev", "CAR PLUM", 'Gal cuvi')
+
+#abundance
+sharks_fk_abun = getDomainAbundance(RVCdata_FK, sharks_spp_list, merge_protected = F)
+sharks_dt_abun = getDomainAbundance(RVCdata_FK, sharks_spp_list, merge_protected = F)
+
+#density
+sharks_fk_den = getDomainDensity(RVCdata_DT, sharks_spp_list, merge_protected = F)
+sharks_dt_den = getDomainDensity(RVCdata_DT, sharks_spp_list, merge_protected = F)
+
+```
+
+#### Small Reef Fish
+```{r Small Reef Fish}
+
+small_reef_fish_spp_list = c()
+
+#abundance
+small_reef_fk_abun = getDomainAbundance(RVCdata_FK, small_reef_fish_spp_list, merge_protected = F)
+small_reef_dt_abun = getDomainAbundance(RVCdata_FK, small_reef_fish_spp_list, merge_protected = F)
+
+#density
+small_reef_fk_den = getDomainDensity(RVCdata_DT, small_reef_fish_spp_list, merge_protected = F)
+small_reef_dt_den = getDomainDensity(RVCdata_DT, small_reef_fish_spp_list, merge_protected = F)
+
+```
+
+#### Snapper
+```{r Snapper}
+
+snapper_spp_list = c("OCY CHRY", "LUT GRIS", "LUT ANAL", "LUT APOD", "LUT SYNA", "LUT MAHO", "LUT JOCU", "LUT BUCC", 'LUT SPE.', "LUT CYAN", "RHO AURO", "Lut camp")
+
+#abundance
+snapper_fk_abun = getDomainAbundance(RVCdata_FK, snapper_spp_list, merge_protected = F)
+snapper_dt_abun = getDomainAbundance(RVCdata_FK, snapper_spp_list, merge_protected = F)
+
+#density
+snapper_fk_den = getDomainDensity(RVCdata_DT, snapper_spp_list, merge_protected = F)
+snapper_dt_den = getDomainDensity(RVCdata_DT, snapper_spp_list, merge_protected = F)
+
+```
+
+```{r reef fish biodiversity}
+
+```
+
+```{r trophic levels}
+#potential visualize as a stacked chart 
+read_csv('/big_csv/FKNMS_infographic_list.csv')
 
 ```
 
@@ -138,9 +330,9 @@ exploited_spp_list= c(
     "MYC MICR" #Gag 
     )
 
-exploited_abun <- getDomainDensity(RVCdata_FK, species = exploited_spp_list, merge_protected = F)
+exploited_den <- getDomainDensity(RVCdata_FK, species = exploited_spp_list, merge_protected = F)
 
-exploited_abun <- getDomainDensity(RVCdata_DT, species = exploited_spp_list, merge_protected = F)
+exploited_den <- getDomainDensity(RVCdata_DT, species = exploited_spp_list, merge_protected = F)
 
 ```
 
@@ -170,11 +362,3 @@ herbivore_density_fk <- getDomainDensity(RVCdata_FK, species = herbivore_spp_lis
   
 ```
 
-```{r reef fish biodiversity}
-
-```
-
-```{r trophic levels}
-#potential visualize as a stacked chart 
-
-```
