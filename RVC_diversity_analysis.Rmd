@@ -76,7 +76,7 @@ write_csv(sp_list, "spp_list.csv")
 
 trial <- getDomainAbundance(fk1999, "ocy chry", merge_protected = F ) # returns: YEAR, REGION, SPECIES_CD, density, var, n, nm, N, NM, protected_status
 
-getDomainDensity(fk1999, "ocy chry", merge_protected = F ) # returns: YEAR, REGION, SPECIES_CD, density, var, n, nm, N, NM, protected_status
+trial2 <- getDomainDensity(fk1999, "ocy chry", merge_protected = F ) # returns: YEAR, REGION, SPECIES_CD, density, var, n, nm, N, NM, protected_status
 
 #getDomainDensity(fk1999, "ocy chry", is_protected = T) # returns: YEAR, REGION, SPECIES_CD, density, var, n, nm, N, NM for only protected areas 
 
@@ -338,6 +338,8 @@ fk_domain_abun_diversity = domain_fk_abun %>% #15,771 * 10
       function(x) exp(diversity(x, index = 'shannon')))) %>%
   unnest(dom_richness, dom_simpson, dom_shannon)
   
+## TO DO: compute SD for each year, Confidence Interval, statistical differences between 
+
 ```
 
 ```{r FK domain biodiversity plots}
@@ -608,7 +610,7 @@ strata_names <- c(
  "FDLR" = "FDLR")
 
 #simpson by protected status for domain FKNMS
-ggplot(data = fk_strata_abun_diversity, aes(x = YEAR)) +
+FK_strata_ab_Sim <- ggplot(data = fk_strata_abun_diversity, aes(x = YEAR)) +
   geom_point(aes(y = strata_simpson, color = "strata_simpson"),color = "blue") +
   geom_line(aes(y = strata_simpson, color = "strata_simpson"), color = "blue") +
   facet_grid(STRAT ~ protected_status, 
@@ -739,33 +741,34 @@ write_csv(psu_fk_abun_diversity, "abundance_psu/psu_fk_abun_diversity.csv")
 
 ## have not run yet, need to get the rest of data from DT
 
-dt_psu_abun <- read_csv("big_csv/abundance/abundance_psu/psu_dt_abun.csv",
-col_types = cols(
-  YEAR = col_integer(),
-  REGION = col_character(),
-  STRAT = col_character(),
-  PROT = col_integer(),
-  PRIMARY_SAMPLE_UNIT = col_character(),
-  SPECIES_CD = col_character(),
-  m = col_integer(),
-  var = col_double(),
-  abundance = col_double(),
-  protected_status = col_character()))
+dt_psu_abun <- read_csv("big_csv/abundance_psu/psu_dt_abun.csv")
+# Parsed with column specification:
+# cols(
+#   YEAR = col_integer(),
+#   REGION = col_character(),
+#   STRAT = col_character(),
+#   PROT = col_integer(),
+#   PRIMARY_SAMPLE_UNIT = col_character(),
+#   SPECIES_CD = col_character(),
+#   m = col_integer(),
+#   var = col_double(),
+#   abundance = col_double()
+# )
 
-dt_psu_abun_diversity = dt_psu_abun %>% #3,134,710 × 10
-  group_by(YEAR, PRIMARY_SAMPLE_UNIT, protected_status)%>% #8,814 groups 
-  nest(-YEAR) %>%
+dt_psu_abun_diversity = dt_psu_abun %>% 
+  group_by(YEAR, PRIMARY_SAMPLE_UNIT, PROT)%>% 
+  nest(-YEAR) %>% #
   mutate(
     data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abundance, fill =0)), 
     psu_richness = map( #species richness
       data_wide, 
-      function(x) specnumber(x %>% select(-REGION, -STRAT, - PROT, -m, -var))),
+      function(x) specnumber(x %>% select(-REGION, -STRAT, -m, -var))),
     psu_simpson = map( #simpson diversity as effective number of species 
       data_wide,
-      function(x) 1/(1 - diversity(x %>% select(-REGION, -STRAT, - PROT, -m, -var), index = 'simpson'))),
+      function(x) 1/(1 - diversity(x %>% select(-REGION, -STRAT, -m, -var), index = 'simpson'))),
     psu_shannon = map( #shannon diversity as effective number of species 
       data_wide,
-      function(x) exp(diversity(x %>% select(-REGION, -STRAT, - PROT, -m, -var), index = 'shannon')))) %>% 
+      function(x) exp(diversity(x %>% select(-REGION, -STRAT, -m, -var), index = 'shannon')))) %>% 
   unnest(psu_richness,psu_simpson, psu_shannon)
  
 psu_dt_abun_diversity = dt_psu_abun_diversity %>%
