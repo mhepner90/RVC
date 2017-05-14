@@ -72,14 +72,17 @@ library(vegan)
 ```{r call RVC data}
 
 RVCdata_FK <- getRvcData(1999:2016, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+
+#write_csv(RVCdata_FK, 'big_csv/RVCdata_FK.csv')
+
 RVCdata_DT <- getRvcData(1999:2016, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 
-species_list <- RVCdata_FK$taxonomic_data %>%
-  select(SPECIES_CD,FAMILY, SCINAME, COMNAME) %>%
-  arrange(desc(FAMILY))
-
-species_family_list <- unique(RVCdata_FK$taxonomic_data$FAMILY)
-species_family_list[order(species_family_list)]
+# species_list <- RVCdata_FK$taxonomic_data %>%
+#   select(SPECIES_CD,FAMILY, SCINAME, COMNAME) %>%
+#   arrange(desc(FAMILY))
+# 
+# species_family_list <- unique(RVCdata_FK$taxonomic_data$FAMILY)
+# species_family_list[order(species_family_list)]
 
 ```
 
@@ -105,15 +108,43 @@ forage_fish_spp_list= c("HYP HARR", "ATH STIP", "JEN SPE.", "HAR JAGU", "ANC LYO
 
 #abundance
 forage_fk_abun = getDomainAbundance(RVCdata_FK, forage_fish_spp_list, merge_protected = F)
+write_csv(forage_fk_abun, "big_csv/trophic_groups/abundance/forage_fk_abun.csv")
+
 forage_dt_abun = getDomainAbundance(RVCdata_FK, forage_fish_spp_list, merge_protected = F)
+write_csv(forage_dt_abun, "big_csv/trophic_groups/abundance/forage_dt_abun.csv")
 
 #density
 forage_fk_den = getDomainDensity(RVCdata_DT, forage_fish_spp_list, merge_protected = F)
+write_csv(forage_fk_den, "big_csv/trophic_groups/density/forage_fk_den.csv")
+
 forage_dt_den = getDomainDensity(RVCdata_DT, forage_fish_spp_list, merge_protected = F)
+write_csv(forage_dt_den, "big_csv/trophic_groups/density/forage_dt_den.csv")
 
-#shannon
+#diversity metrics 
+forage_fk_abundance = forage_fk_abun %>% 
+  select(YEAR, protected_status, SPECIES_CD, abundance) %>%  
+  group_by(YEAR, protected_status) %>% #48 groups 
+  nest(-YEAR) %>%  
+  mutate(
+    data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abundance, fill = 0)), 
+     #species richness 
+    forage_richness = map(
+      data_wide, 
+      function(x) specnumber(x)),
+    #simpson diversity as effective number of species 
+    forage_simpson = map( 
+      data_wide,
+      function(x) 1/(1 - diversity(x, index = 'simpson'))),
+     #shannon diversity as effective number of species 
+    forage_shannon = map(
+      data_wide,
+      function(x) exp(diversity(x, index = 'shannon')))) %>%
+  unnest(forage_richness, forage_simpson, forage_shannon)
 
-#simpson 
+forage_fk_diversity = forage_fk_abundance %>%
+  select(YEAR, protected_status, forage_richness, forage_shannon, forage_simpson) 
+write_csv(forage_fk_diversity, "big_csv/trophic_groups/diveristy/forage_fk_diversity.csv")
+  
 ```
 
 #### Grouper
@@ -123,11 +154,42 @@ grouper_spp_list= c("CEP CRUE", "MYC BONA", "EPI MORI", "EPI STRI", "EPI ITAJ", 
 
 #abundance
 grouper_fk_abun = getDomainAbundance(RVCdata_FK, grouper_spp_list, merge_protected = F)
+write_csv(grouper_fk_abun, "big_csv/trophic_groups/abundance/grouper_fk_abun.csv")
+
 grouper_dt_abun = getDomainAbundance(RVCdata_FK, grouper_spp_list, merge_protected = F)
+write_csv(grouper_dt_abun, "big_csv/trophic_groups/abundance/grouper_dt_abun.csv")
 
 #density
 grouper_fk_den = getDomainDensity(RVCdata_DT, grouper_spp_list, merge_protected = F)
+write_csv(grouper_fk_den, "big_csv/trophic_groups/density/grouper_fk_den.csv")
+
 grouper_dt_den = getDomainDensity(RVCdata_DT, grouper_spp_list, merge_protected = F)
+write_csv(grouper_dt_den, "big_csv/trophic_groups/density/grouper_fk_den.csv")
+
+#diversity metrics 
+grouper_fk_abundance = forage_fk_abun %>% 
+  select(YEAR, protected_status, SPECIES_CD, abundance) %>%  
+  group_by(YEAR, protected_status) %>% 
+  nest(-YEAR) %>%  
+  mutate(
+    data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abundance, fill =0)), 
+     #species richness 
+    grouper_richness = map(
+      data_wide, 
+      function(x) specnumber(x)),
+    #simpson diversity as effective number of species 
+    grouper_simpson = map( 
+      data_wide,
+      function(x) 1/(1 - diversity(x, index = 'simpson'))),
+     #shannon diversity as effective number of species 
+    grouper_shannon = map(
+      data_wide,
+      function(x) exp(diversity(x, index = 'shannon')))) %>%
+  unnest(grouper_richness, grouper_simpson, grouper_shannon)
+
+grouper_fk_diversity = grouper_fk_abundance %>%
+  select(YEAR, protected_status, grouper_richness, grouper_shannon, grouper_simpson) 
+write_csv(grouper_fk_diversity, "big_csv/trophic_groups/diversity/grouper_fk_diversity.csv")
 
 ```
 
@@ -138,26 +200,39 @@ grunt_spp_list = c("HAE SCIU", "HAE AURO", "HAE PLUM", "HAE SPE.", "HAE FLAV", "
 
 #abundance
 grunt_fk_abun = getDomainAbundance(RVCdata_FK, grunt_spp_list, merge_protected = F)
+write_csv(grunt_fk_abun, "big_csv/trophic_groups/abundance/grunt_fk_abun.csv")
+
 grunt_dt_abun = getDomainAbundance(RVCdata_FK, grunt_spp_list, merge_protected = F)
+write_csv(grunt_dt_abun, "big_csv/trophic_groups/abundance/grunt_dt_abun.csv")
 
 #density
 grunt_fk_den = getDomainDensity(RVCdata_DT, grunt_spp_list, merge_protected = F)
+write_csv(grunt_fk_den, "big_csv/trophic_groups/density/grunt_fk_den.csv")
+
 grunt_dt_den = getDomainDensity(RVCdata_DT, grunt_spp_list, merge_protected = F)
+write_csv(grunt_dt_den, "big_csv/trophic_groups/density/grunt_dt_den.csv")
 
 ```
 
 #### Higher Level Reef Fish
 ```{r Higher Level Reef Fish}
 
-higher_reef_spp_list = c()
+higher_reef_spp_list = c("THA BIFA","STE PART","GYM MORI","PRI AREN","ABU SAXA","HAL BIVI","HAL GARN","HAL MACU","CHR MULT","CLE PARR","STE PLAN","CHR CYAN","MUL MART","MIC CHRY","STE ADUS","CHA CAPI","STE VARI","PEM SCHO","POM ARCU","CAN ROST","CHA OCEL","PSE MACU","HOL TRIC","CHR SCOT","HAL RADI","CAL CALA","CHA SEDE","XYR SPLE","STE LEUC","HOL CILI","POM PARU","AUL MACU","CHA STRI","OPI AURI","HAL POEY","CHR INSO","HOL ADSC","ODO DENT","STE DIEN","HOL BERM","CHA FABE","XYR MART","GER CINE","HOL RUFU","LAC TRIQ","PAR ACUM","ALU SCRI","BAL CAPR","MAL PLUM","CAN SUFF","CAN PULL","HET CRUE","OGC SPE.","XYR SPE.","ACA QUAD","CAL BAJO","MON TUCK","SPH SPEN","ARC RHOM","DIO HOLO","LAC BICA","XYR NOVA","BAL VETU","DIO HYST","HAL CYAN","GYM FUNE","DIP HOLB","APO PSEU","HOL TOWN","EQU PUNC","LAC TRIG","HAL PICT","MYR JACO","SAR VEXI","SYN INTE","HAL CAUD","AMB PINO","GYM MILI","ALU SCHO","ACA POLY","CAL PROR","CHI SCHO","HET LONG","SCO PLUM","CHR ENCH","CAL SPE.","APO MACU","CAN MACR","PAR UMBR","LAG RHOM","EQU LANC","CAL PENN","STE HISP","APO BINO","NEO MARI","ARC PROB","CHI ANTE","APO TOWN","DOR MEGA","REM REMO","OPI WHIT","CEN ARGI","SYN FOET","AST SPE.","CAR HIPP","SAR CORU","OPI MACR","GYM VICI","DIP ARGE","PAG PAGR","PAR BAIR","BOT LUNA","EUC ARGE","PRO ACUL","LAB GOBI","FIS TABA","ALU SPE.","GRA LORE","MON CILI","ECH NEUC","ALU MONO","BOT OCEL","BAL SPE.","PAR ALBI","STE SPE.","APO QUAD","ENC NIGR","GYM SAXI","OPI SPE.","ELO SAUR","MAN BIRO","APO AURO","SPH TEST","CAL NODO","DIO SPE.","SCO CARI","LAB FILA","AHL EGMO","ANT OCEL","AST GUTT","LAB SPE.","LAB SPE.","MUR RETI","AST STEL","EUC GULA","HOL SPE.","ORT CHRY","PRI OPHR","LAB BUCC","ACA SOLA","CAL LEUC","ENC CARY","GYM NIGR","MYR BREV","SAR BULL","TRA GOOD","TRA LATH","UMB CORO","EUC JONE","EUCLEFR","STY LATE","SYA MICR","SYN SCOV","APO PHEN","HIP REID","PHA XENU","AST PUNC","CHI ATIN","CHL CHRY","HIP EREC","OGC NASU","SER PHOE","SPH NEPH","MYR OCEL","PRI RUBI","RHI LENT","ALB VULP","DAC VOLI","RYP BIST","BRO BARB","HYP GUMM","OPS TAU_","EMM ATLA","UPE PARV","SYN SYNO")
 
 #abundance
 higher_reef_fk_abun = getDomainAbundance(RVCdata_FK, higher_reef_spp_list, merge_protected = F)
+write_csv(higher_reef_fk_abun, "big_csv/trophic_groups/abundance/higher_reef_fk_abun.csv")
+
 higher_reef_dt_abun = getDomainAbundance(RVCdata_FK, higher_reef_spp_list, merge_protected = F)
-get
+write_csv(higher_reef_dt_abun, "big_csv/trophic_groups/abundance/higher_reef_dt_abun.csv")
+
 #density
 higher_reef_fk_den = getDomainDensity(RVCdata_DT, higher_reef_spp_list, merge_protected = F)
+write_csv(higher_reef_fk_den, "big_csv/trophic_groups/density/higher_reef_fj_den.csv")
+
 higher_reef_dt_den = getDomainDensity(RVCdata_DT, higher_reef_spp_list, merge_protected = F)
+write_csv(higher_reef_dt_den, "big_csv/trophic_groups/density/higher_reef_dt_den.csv")
+
 ```
 
 #### Hogfish
@@ -167,11 +242,17 @@ hogfish_spp_list = c("LAC MAXI", "BOD RUFU", "BOD PULC")
 
 #abundance
 hogfish_fk_abun = getDomainAbundance(RVCdata_FK, hogfish_spp_list, merge_protected = F)
+write_csv(hogfish_fk_abun, "big_csv/trophic_groups/abundance/hogfish_fk_abun.csv")
+
 hogfish_dt_abun = getDomainAbundance(RVCdata_FK, hogfish_spp_list, merge_protected = F)
+write_csv(hogfish_dt_abun, "big_csv/trophic_groups/abundance/hogfish_dt_abun.csv")
 
 #density
 hogfish_fk_den = getDomainDensity(RVCdata_DT, hogfish_spp_list, merge_protected = F)
+write_csv(hogfish_fk_den, "big_csv/trophic_groups/density/hogfish_fk_den.csv")
+
 hogfish_dt_den = getDomainDensity(RVCdata_DT, hogfish_spp_list, merge_protected = F)
+write_csv(hogfish_dt_den, "big_csv/trophic_groups/density/hogfish_dt_den.csv")
 
 ```
 
@@ -182,11 +263,17 @@ hogfish_dt_den = getDomainDensity(RVCdata_DT, hogfish_spp_list, merge_protected 
 
 #abundance
 lionfish_fk_abun = getDomainAbundance(RVCdata_FK, "PTE VOLI", merge_protected = F)
+write_csv(lionfish_fk_abun, "big_csv/trophic_groups/abundance/lionfish_fk_abun.csv")
+
 lionfish_dt_abun = getDomainAbundance(RVCdata_FK, "PTE VOLI", merge_protected = F)
+write_csv(lionfish_dt_abun, "big_csv/trophic_groups/abundance/lionfish_dt_abun.csv")
 
 #density
 lionfish_fk_den = getDomainDensity(RVCdata_DT, "PTE VOLI", merge_protected = F)
+write_csv(lionfish_fk_den, "big_csv/trophic_groups/density/lionfish_fk_abun.csv")
+
 lionfish_dt_den = getDomainDensity(RVCdata_DT, "PTE VOLI", merge_protected = F)
+write_csv(lionfish_dt_den, "big_csv/trophic_groups/density/lionfish_fk_abun.csv")
 
 ```
 
@@ -197,11 +284,17 @@ opportunists_spp_list = c("CAR RUBE", "SPH BARR", "ALE CILI","DEC PUNC", "DEC MA
 
 #abundance
 opportunists_fk_abun = getDomainAbundance(RVCdata_FK, opportunists_spp_list, merge_protected = F)
+write_csv(opportunists_fk_abun, "big_csv/trophic_groups/abundance/opportunists_fk_abun.csv")
+
 opportunists_dt_abun = getDomainAbundance(RVCdata_FK, opportunists_spp_list, merge_protected = F)
+write_csv(opportunists_dt_abun, "big_csv/trophic_groups/abundance/opportunists_dt_abun.csv")
 
 #density
 opportunists_fk_den = getDomainDensity(RVCdata_DT, opportunists_spp_list, merge_protected = F)
+write_csv(opportunists_fk_den, "big_csv/trophic_groups/density/opportunists_fk_den.csv")
+
 opportunists_dt_den = getDomainDensity(RVCdata_DT, opportunists_spp_list, merge_protected = F)
+write_csv(opportunists_dt_den, "big_csv/trophic_groups/density/opportunists_dt_den.csv")
 
 ```
 
@@ -212,11 +305,17 @@ parrotfish_spp_list = c('SCA ISER', "SCA COEL", "SPA AURO", "SPA VIRI", "SPA ATO
 
 #abundance
 parrotfish_fk_abun = getDomainAbundance(RVCdata_FK, parrotfish_spp_list, merge_protected = F)
+write_csv(parrotfish_fk_abun, "big_csv/trophic_groups/abundance/parrotfish_fk_abun.csv")
+
 parrotfish_dt_abun = getDomainAbundance(RVCdata_FK, parrotfish_spp_list, merge_protected = F)
+write_csv(parrotfish_dt_abun, "big_csv/trophic_groups/abundance/parrotfish_dt_abun.csv")
 
 #density
 parrotfish_fk_den = getDomainDensity(RVCdata_DT, parrotfish_spp_list, merge_protected = F)
+write_csv(parrotfish_fk_den, "big_csv/trophic_groups/density/parrotfish_fk_den.csv")
+
 parrotfish_dt_den = getDomainDensity(RVCdata_DT, parrotfish_spp_list, merge_protected = F)
+write_csv(parrotfish_dt_den, "big_csv/trophic_groups/density/parrotfish_dt_den.csv")
 
 ```
 
@@ -227,11 +326,17 @@ rays_spp_list = c("URO JAMA", "ECH NAUC", "DAS AMER", "AET NARI", "NAR BANC", "R
 
 #abundance
 rays_fk_abun = getDomainAbundance(RVCdata_FK, rays_spp_list, merge_protected = F)
+write_csv(rays_fk_abun, "big_csv/trophic_groups/abundance/rays_fk_abun.csv")
+
 rays_dt_abun = getDomainAbundance(RVCdata_FK, rays_spp_list, merge_protected = F)
+write_csv(rays_dt_abun, "big_csv/trophic_groups/abundance/rays_dt_abun.csv")
 
 #density
 rays_fk_den = getDomainDensity(RVCdata_DT, rays_spp_list, merge_protected = F)
+write_csv(rays_fk_den, "big_csv/trophic_groups/density/rays_fk_den.csv")
+
 rays_dt_den = getDomainDensity(RVCdata_DT, rays_spp_list, merge_protected = F)
+write_csv(rays_dt_den, "big_csv/trophic_groups/density/rays_dt_den.csv")
 
 ```
 
@@ -242,11 +347,17 @@ sea_bass_hamlet_spp_list = c("SER TIGR","HYP GEMM","HYP UNIC","SER TABA","SER BA
 
 #abundance
 seabass_fk_abun = getDomainAbundance(RVCdata_FK, sea_bass_hamlet_spp_list, merge_protected = F)
+write_csv(seabass_fk_abun, "big_csv/trophic_groups/abundance/seabass_fk_den.csv")
+
 seabass_dt_abun = getDomainAbundance(RVCdata_FK, sea_bass_hamlet_spp_list, merge_protected = F)
+write_csv(seabass_dt_abun, "big_csv/trophic_groups/abundance/seabass_dt_den.csv")
 
 #density
 seabass_fk_den = getDomainDensity(RVCdata_DT, sea_bass_hamlet_spp_list, merge_protected = F)
+write_csv(seabass_fk_den, "big_csv/trophic_groups/density/seabass_fk_den.csv")
+
 seabass_dt_den = getDomainDensity(RVCdata_DT, sea_bass_hamlet_spp_list, merge_protected = F)
+write_csv(seabass_dt_den, "big_csv/trophic_groups/density/seabass_dt_den.csv")
 
 ```
 
@@ -257,26 +368,38 @@ sharks_spp_list = c("GIN CIRR", "CAR PERE", "CAR LEUC", "CAR LIMB", "SPH MOKA", 
 
 #abundance
 sharks_fk_abun = getDomainAbundance(RVCdata_FK, sharks_spp_list, merge_protected = F)
+write_csv(sharks_fk_abun, "big_csv/trophic_groups/abundance/sharks_fk_den.csv")
+
 sharks_dt_abun = getDomainAbundance(RVCdata_FK, sharks_spp_list, merge_protected = F)
+write_csv(sharks_dt_abun, "big_csv/trophic_groups/abundance/sharks_dt_den.csv")
 
 #density
 sharks_fk_den = getDomainDensity(RVCdata_DT, sharks_spp_list, merge_protected = F)
+write_csv(sharks_fk_den, "big_csv/trophic_groups/density/sharks_fk_den.csv")
+
 sharks_dt_den = getDomainDensity(RVCdata_DT, sharks_spp_list, merge_protected = F)
+write_csv(sharks_dt_den, "big_csv/trophic_groups/density/sharks_dt_den.csv")
 
 ```
 
 #### Small Reef Fish
 ```{r Small Reef Fish}
 
-small_reef_fish_spp_list = c()
+small_reef_fish_spp_list = c("COR PERS","ACA COER","KYP SECT","ACA BAHI","ACA CHIR","COR GLAU","ELA OCEA","GNA THOM","PTE CALL","ACA SPE.","MAL TRIA","COR DICR","PAR MARM","MAL MACR","OPH MACC","CTE SAEP","MIC CARR","PTE HELE","HEM SIMU","SCA CRIS","COR EIDO","GOB SPE.","TYL CROC","MIC MICR","ACA ASPE","COR SPE.","BLE SPE.","STR NOTA","MEL NIGE","HYP BERM","EMB PAND","ELA EVEL","ACA CHAP","EMB BAHA","COR LIPE","NES LONG","ENN BOEH","ACA MARI","LAB NUCH","MAL VERS","MAL GILL","ELA MACR","PRI HIPO","GOB DILE","ELA SAUC","ELA XANT","STR TIMU","MAL AURO","PAR MARN","CHA LIMB","OXY STIG","ELA HORS","PAR NIGR","COR PUNC","ACA SPIN","BOL BOQU","ElA RAND","LAB KALI","LAB NIGR","ENN ALTI")
 
 #abundance
 small_reef_fk_abun = getDomainAbundance(RVCdata_FK, small_reef_fish_spp_list, merge_protected = F)
+write_csv(small_reef_fk_abun, "big_csv/trophic_groups/abundance/small_reef_fk_abun.csv")
+
 small_reef_dt_abun = getDomainAbundance(RVCdata_FK, small_reef_fish_spp_list, merge_protected = F)
+write_csv(small_reef_dt_abun, "big_csv/trophic_groups/abundance/small_reef_dt_abun.csv")
 
 #density
 small_reef_fk_den = getDomainDensity(RVCdata_DT, small_reef_fish_spp_list, merge_protected = F)
+write_csv(small_reef_fk_den, "big_csv/trophic_groups/density/small_reef_fk_den.csv")
+
 small_reef_dt_den = getDomainDensity(RVCdata_DT, small_reef_fish_spp_list, merge_protected = F)
+write_csv(small_reef_dt_den, "big_csv/trophic_groups/density/small_reef_dt_den.csv")
 
 ```
 
@@ -287,18 +410,21 @@ snapper_spp_list = c("OCY CHRY", "LUT GRIS", "LUT ANAL", "LUT APOD", "LUT SYNA",
 
 #abundance
 snapper_fk_abun = getDomainAbundance(RVCdata_FK, snapper_spp_list, merge_protected = F)
+write_csv(snapper_fk_abun, "big_csv/trophic_groups/abundance/snapper_fk_abun.csv")
+
 snapper_dt_abun = getDomainAbundance(RVCdata_FK, snapper_spp_list, merge_protected = F)
+write_csv(snapper_dt_abun, "big_csv/trophic_groups/abundance/snapper_dt_abun.csv")
 
 #density
 snapper_fk_den = getDomainDensity(RVCdata_DT, snapper_spp_list, merge_protected = F)
+write_csv(snapper_fk_den, "big_csv/trophic_groups/density/snapper_dt_den.csv")
+
 snapper_dt_den = getDomainDensity(RVCdata_DT, snapper_spp_list, merge_protected = F)
+write_csv(snapper_dt_den, "big_csv/trophic_groups/density/snapper_dt_den.csv")
 
 ```
 
-```{r reef fish biodiversity}
-
-```
-
+### Trophic Level 
 ```{r trophic levels}
 #potential visualize as a stacked chart 
 read_csv('/big_csv/FKNMS_infographic_list.csv')
