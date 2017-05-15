@@ -64,6 +64,9 @@ library(rvc) #calls RVC data from SEFSC server
 library(tidyverse)
 library(vegan) # biodiveristy functions for richness, simpson, and shannon 
 
+spp_list <- read_csv('spp_list.csv') #402 species 
+
+
 ```
 
 ```{r practice codes, eval = F}
@@ -319,6 +322,16 @@ col_types = cols(
   NM = col_double(),
   protected_status = col_character()
 ))
+
+## Should I remove the species that are not identified to species level. Is this skewing my diversity indices? What percent of the abundance data is from species identified to the genius? 
+grep("SPE.$", domain_fk_abun$SPECIES_CD, value = T)
+
+totalabun = length(domain_fk_abun$abundance)
+
+if(grep("SPE.$", domain_fk_abun$SPECIES_CD, value = T)){
+    sppabun = length(abundance)}
+
+percent_spp = (sppabun/totalabun)*100 
 
 ## FK's domain abundance 
 fk_domain_abun_diversity = domain_fk_abun %>% #15,771 * 10
