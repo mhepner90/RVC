@@ -524,29 +524,16 @@ exploited_den <- getDomainDensity(RVCdata_DT, species = exploited_spp_list, merg
 
 ```
 
-```{r herbivores: parrotfish}
+## Reef Fish Biodiversity 
 
-herbivore_spp_list= c(
-  "CRY ROSE", #Bluelip Parrotfish
-  "NIC USTA", #Emerald Parrotfish
-  "SCA COEL", #Midnight Parrotfish
-  "SCA COER", #Blue Parrotfish
-  "SCA GUAC", #Rainbow Parrotfish
-  "SCA ISER", #Striped Parrotfish
-  "SCA SPE.", #Parrotfish Species
-  "SCA TAEN", #Princess Parrotfish
-  "SCA VETU", #Queen Parrotfish
-  "SPA ATOM", #Greenblotch Parrotfish
-  "SPA AURO", #Redband Parrotfish
-  "SPA CHRY", #Redtail Parrotfish
-  "SPA RADI", #Bucktooth Parrotfish
-  "SPA RUBR", #Yellowtail Parrotfish
-  "SPA SPE."  #Parrotfish Species
-  ) 
+```{r Biodiversity}
 
-herbivore_abun_fk <- getDomainAbundance(RVCdata_FK, species = herbivore_spp_list)
+domain_fk_abun_diversity = read_csv('big_csv/abundance_domain/domain_fk_abun_diversity.csv')
+domain_dt_abun_diversity = read_csv("big_csv/abundance_domain/domain_dt_abun_diversity.csv")
+strata_fk_abun_diversity = read_csv("big_csv/abundance_strata/strata_fk_abun_diversity.csv")
+strata_dt_abun_diversity = read_csv("big_csv/abundance_strata/strata_dt_abun_diversity.csv")
+psu_fk_abun_diversity = read_csv("big_csv/abundance_psu/psu_fk_abun_diversity.csv", 
+          col_types = cols(protected_status = col_character())) 
+psu_dt_abun_diversity = read_csv("big_csv/abundance_psu/psu_dt_abun_diversity.csv")
 
-herbivore_density_fk <- getDomainDensity(RVCdata_FK, species = herbivore_spp_list)
-  
 ```
-
