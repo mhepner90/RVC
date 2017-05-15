@@ -42,21 +42,30 @@ SDG14: Conserve and sustainably use the oceans, seas and marine resources
 
 ## FKNMS Infographic data 
 
-| Sanctuary Classification level | Icon                   | Metric                  | Dataset |  
-|:-------------------------------|:-----------------------|:------------------------|:--------|
-| Invasive species               | Lionfish               | abundance               | RVC     |
-| Foundation species             | Stony coral            | percent cover & diseased| CREMP   |
-|                                | Sea fan                | percent cover & diseased| CREMP   |
-|                                | Macroalgae             | percent cover & diseased| CREMP   |             
-|                                | Sponges                | percent cover & diseased| CREMP   |             
-| Keystone species               | Long-spinned sea urchin| abundance               |         |
-| Focal species                  | Caribbean spiny lobster| abundance               |         |
-|                                | Queen Conch            | abundance               |         |
-|                                | Sea turtles            | abundance               |         |
-|                                | Herbivores             | abundance               | RVC     |
-|                                | Exploited reef fish    | abundance               | RVC     |
-|                                | Reef fish biodiversity | diversity index         | RVC     |
-
+| Sanctuary Classification level | Icon                   | Metric                      | Dataset |  
+|:-------------------------------|:-----------------------|:----------------------------|:--------|
+| Foundation species             | Stony coral            | percent cover & diseased    | CREMP   |
+| Foundation species             | Sea fan                | percent cover & diseased    | CREMP   |
+| Foundation species             | Macroalgae             | percent cover & diseased    | CREMP   |         
+| Foundation species             | Sponges                | percent cover & diseased    | CREMP   |         
+| Keystone species               | Long-spinned sea urchin| abundance                   | TBD     |
+| Focal species                  | Caribbean spiny lobster| abundance                   | TBD     |
+| Focal species                  | Queen Conch            | abundance                   | TBD     |
+| Focal species (threatened)     | Sea turtles            | abundance                   | TBD     |
+| Biodiversity                   | Reef fish biodiversity | diversity index             | RVC     |
+| Trophic groups                 | Forage fish            | abundance, simpson, shannon | RVC     |
+| Trophic groups (exploited)     | Groupers               | abundance, simpson, shannon | RVC     |
+| Trophic groups                 | Grunts                 | abundance, simpson, shannon | RVC     |
+| Trophic groups                 | Higher level reef fish | abundance, simpson, shannon | RVC     |
+| Trophic groups (exploited)     | Hogfish                | abundance, simpson, shannon | RVC     |
+| Trophic groups (invasive)      | Lionfish               | abundance                   | RVC     |
+| Trophic groups                 | Opportunists           | abundance, simpson, shannon | RVC     |
+| Trophic groups (herbivores)    | Parrotfish             | abundance, simpson, shannon | RVC     |
+| Trophic groups                 | Rays                   | abundance, simpson, shannon | RVC     |
+| Trophic groups                 | Seabass and Hamlets    | abundance, simpson, shannon | RVC     |
+| Trophic groups (apex)          | Sharks                 | abundance, simpson, shannon | RVC     |
+| Trophic groups                 | Small reeffish         | abundance, simpson, shannon | RVC     |
+| Trophic groups (exploited)     | Snappers               | abundance, simpson, shannon | RVC     |
 
     
 ```{r librarys}
@@ -84,9 +93,19 @@ RVCdata_DT <- getRvcData(1999:2016, "FLA KEYS", server = 'https://www.sefsc.noaa
 # species_family_list <- unique(RVCdata_FK$taxonomic_data$FAMILY)
 # species_family_list[order(species_family_list)]
 
+trophic_group_abun_files = list.files('big_csv/trophic_groups/abundance/', pattern = "*.csv", full.names = TRUE)
+for(file in trophic_group_abun_files)
+{
+perpos <- which(strsplit(file, "")[[1]]==".")
+assign(
+gsub(" ","",substr(file, 1, perpos-1)), 
+read.csv(paste(path,file,sep="")))  
+}
+   
+
 ```
 
-##Trophic groups
+## Trophic groups
 - Forage fish 
 - Grouper
 - Grunts
@@ -211,6 +230,31 @@ write_csv(grunt_fk_den, "big_csv/trophic_groups/density/grunt_fk_den.csv")
 
 grunt_dt_den = getDomainDensity(RVCdata_DT, grunt_spp_list, merge_protected = F)
 write_csv(grunt_dt_den, "big_csv/trophic_groups/density/grunt_dt_den.csv")
+
+#diversity metrics 
+grunt_fk_abundance = grunt_fk_abun %>% 
+  select(YEAR, protected_status, SPECIES_CD, abundance) %>%  
+  group_by(YEAR, protected_status) %>% #48 groups 
+  nest(-YEAR) %>%  
+  mutate(
+    data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abundance, fill = 0)), 
+     #species richness 
+    grunt_richness = map(
+      data_wide, 
+      function(x) specnumber(x)),
+    #simpson diversity as effective number of species 
+    grunt_simpson = map( 
+      data_wide,
+      function(x) 1/(1 - diversity(x, index = 'simpson'))),
+     #shannon diversity as effective number of species 
+    grunt_shannon = map(
+      data_wide,
+      function(x) exp(diversity(x, index = 'shannon')))) %>%
+  unnest(grunt_richness, grunt_simpson, grunt_shannon)
+
+grunt_fk_diversity = grunt_fk_abundance %>%
+  select(YEAR, protected_status, grunt_richness, grunt_simpson, grunt_shannon) 
+write_csv(grunt_fk_diversity, "big_csv/trophic_groups/diveristy/grunt_fk_diversity.csv")
 
 ```
 
@@ -427,7 +471,25 @@ write_csv(snapper_dt_den, "big_csv/trophic_groups/density/snapper_dt_den.csv")
 ### Trophic Level 
 ```{r trophic levels}
 #potential visualize as a stacked chart 
-read_csv('/big_csv/FKNMS_infographic_list.csv')
+trophic_levels = read_csv('big_csv/FKNMS_infographic_list.csv')
+# Parsed with column specification:
+# cols(
+#   Ecological_classification = col_character(),
+#   Sanctuary_Classifcation_level = col_character(),
+#   Icons = col_character(),
+#   Latin_Name = col_character(),
+#   Common_Name = col_character(),
+#   RVC_CODE = col_character(),
+#   Trophic_Level = col_integer(),
+#   Representative_Species = col_character(),
+#   Dataset = col_character(),
+#   Metric = col_character(),
+#   Lead = col_character()
+# )
+
+trophic_levels = trophic_levels %>%
+  select(RVC_CODE, Trophic_Level) %>% 
+  group_by(Trophic_Level)%>%  #4 trophic levels, #421 species 
 
 ```
 
