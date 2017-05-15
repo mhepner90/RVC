@@ -324,12 +324,14 @@ col_types = cols(
 ))
 
 ## Should I remove the species that are not identified to species level. Is this skewing my diversity indices? What percent of the abundance data is from species identified to the genus? 
-grep("SPE.$", domain_fk_abun$SPECIES_CD, value = T)
+
+#grep("SPE.$", domain_fk_abun$SPECIES_CD, value = T)
 
 totalabun = sum(domain_fk_abun$abundance) #23,434,984,377 counts over 15 years in FK
 
 if(grep("SPE.$", domain_fk_abun$SPECIES_CD, value = T)){
-    sppabun = length(abundance)}
+    sppabun = sum(domain_fk_abun$abundance)
+    }
 
 percent_spp = (sppabun/totalabun)*100 
 
