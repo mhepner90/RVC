@@ -803,10 +803,30 @@ psu_dt_abun_diversity = read_csv("big_csv/abundance_psu/psu_dt_abun_diversity.cs
 
 ```
 
-Regular text for url 
+Adding 1990's RVC data and reweight by strata
 
 ```{r trial}
-#comment out 
+
+rvc_4tax = getRvcData(years = 1994:2012, region = "FLA KEYS")
+
+
+rvc98<-read.csv("fk1998_dat2.csv")
+rvc97<-read.csv("fk1997_dat2.csv")
+rvc96<-read.csv("fk1996_dat2.csv")
+rvc95<-read.csv("fk1995_dat2.csv")
+rvc94<-read.csv("fk1994_dat2.csv")
+
+
+rvc98t<-rbind(rvc_4tax$sample_data,rvc98,rvc97,rvc96,rvc95,rvc94)
+rvc_4tax$sample_data<-rvc98t
+
+#STRAT
+
+strat94<-read.csv("FKeys_NTOTS_Reweight_1994.csv")
+rvc_4tax$stratum_data<-strat94
+
+
+
 
 
 
