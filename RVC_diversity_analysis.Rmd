@@ -337,6 +337,10 @@ fk_domain_abun_diversity = domain_fk_abun %>% #15,771 * 10
       data_wide,
       function(x) exp(diversity(x, index = 'shannon')))) %>%
   unnest(dom_richness, dom_simpson, dom_shannon)
+
+fk_domain_abun_diversity = fk_domain_abun_diversity %>%
+  select(dom_richness,dom_simpson,dom_shannon)
+write_csv(fk_domain_abun_diversity, 'big_csv/abundance_domain/domain_fk_abun_diversity')
   
 ## TO DO: compute SD for each year, Confidence Interval, statistical differences between 
 
@@ -457,7 +461,6 @@ dt_domain_abun_diversity = domain_dt_abun %>% #12,140 * 10
 
 domain_dt_abun_diversity = dt_domain_abun_diversity %>%
   select(YEAR, protected_status, dom_richness, dom_simpson, dom_shannon) 
-
 write_csv(domain_dt_abun_diversity, 'abundance_domain/domain_dt_abun_diversity.csv')
 
 
@@ -587,6 +590,10 @@ fk_strata_abun_diversity = strata_fk_abun %>% #133,762 * 12
       function(x) exp(diversity(x, index = 'shannon')))) %>%
   unnest(strata_richness, strata_simpson, strata_shannon)
 
+fk_strata_abun_diversity = dt_domain_abun_diversity %>%
+  select(YEAR, STRATA, protected_status, dom_richness, dom_simpson, dom_shannon) 
+write_csv(fk_strata_abun_diversity, 'abundance_strata/strata_fk_abun_diversity.csv')
+
 ```
 
 ```{r FK strata biodiversity plots, eval = F}
@@ -647,46 +654,43 @@ ggplot(data = fk_strata_abun_diversity, aes(x = YEAR)) +
 
 ```{r DT strata biodiversity, eval = F}
 
-dir_dropbox = '~/Dropbox/RVC'
-
-
-## cant run til get the rest of DT strata data 
-
 ## DT's abundance by strata 
-strata_dt_abun <- read_csv(file.path(dir_dropbox, 'big_csv/abundance/abundance_strata/strata_dt_abun.csv'),
-col_types = cols(
-  YEAR = col_integer(),
-  REGION = col_character(),
-  SPECIES_CD = col_character(),
-  abundance = col_double(),
-  var = col_double(),
-  n = col_integer(),
-  nm = col_integer(),
-  N = col_double(),
-  NM = col_double(),
-  protected_status = col_character()
-))
+strata_dt_abun <- read_csv('big_csv/abundance_strata/strata_dt_abun.csv')
+# Parsed with column specification:
+# cols(
+#   YEAR = col_integer(),
+#   REGION = col_character(),
+#   STRAT = col_character(),
+#   PROT = col_integer(),
+#   SPECIES_CD = col_character(),
+#   abundance = col_double(),
+#   var = col_double(),
+#   n = col_integer(),
+#   nm = col_integer(),
+#   N = col_double(),
+#   NM = col_double()
+# )
 
 dt_strata_abun_diversity = strata_dt_abun %>% #133,762 * 12
-  group_by(YEAR, STRAT, protected_status) %>% #294 groups 
+  group_by(YEAR, STRAT, PROT) %>% #150 groups 
   nest(-YEAR) %>%
   mutate(
     data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abundance, fill =0)), 
     strata_richness = map( #species richness
       data_wide, 
-      function(x) specnumber(x %>% select(-PROT, -var, -n, -nm, -N, -NM))),
+      function(x) specnumber(x %>% select(-REGION, -var, -n, -nm, -N, -NM))),
     strata_simpson = map( #simpson diversity as effective number of species 
       data_wide,
-      function(x) 1/(1 - diversity(x %>% select(-PROT, -var, -n, -nm, -N, -NM), index = 'simpson'))),
+      function(x) 1/(1 - diversity(x %>% select(-REGION, -var, -n, -nm, -N, -NM), index = 'simpson'))),
     strata_shannon = map( #shannon diversity as effective number of species 
       data_wide,
-      function(x) exp(diversity(x %>% select(-PROT, -var, -n, -nm, -N, -NM), index = 'shannon')))) %>%
+      function(x) exp(diversity(x %>% select(-REGION, -var, -n, -nm, -N, -NM), index = 'shannon')))) %>%
   unnest(strata_richness, strata_simpson, strata_shannon)
 
 strata_dt_abun_diversity = dt_strata_abun_diversity %>%
-  select(YEAR, STRAT, protected_status, strata_richness, strata_simpson, strata_shannon)
+  select(YEAR, STRAT, PROT, strata_richness, strata_simpson, strata_shannon)
+write_csv(strata_dt_abun_diversity, "big_csv/abundance_strata/strata_dt_abun_diversity.csv")
 
-write_csv(strata_dt_abun_diversity, "abundance_strata/strata_dt_abun_diversity.csv")
 ```
 
 ```{r DT  strata biodiversity plots}
@@ -755,26 +759,27 @@ dt_psu_abun <- read_csv("big_csv/abundance_psu/psu_dt_abun.csv")
 #   abundance = col_double()
 # )
 
-dt_psu_abun_diversity = dt_psu_abun %>% 
-  group_by(YEAR, PRIMARY_SAMPLE_UNIT, PROT)%>% 
+dt_psu_abun_diversity = dt_psu_abun %>% #934,402 * 9 
+  select(YEAR, STRAT, PRIMARY_SAMPLE_UNIT, PROT, SPECIES_CD, abundance) %>% 
+  group_by(YEAR, PRIMARY_SAMPLE_UNIT)%>% #2,702 groups 
   nest(-YEAR) %>% #
   mutate(
     data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abundance, fill =0)), 
     psu_richness = map( #species richness
       data_wide, 
-      function(x) specnumber(x %>% select(-REGION, -STRAT, -m, -var))),
+      function(x) specnumber(x %>% select(-STRAT, -PROT))),
     psu_simpson = map( #simpson diversity as effective number of species 
       data_wide,
-      function(x) 1/(1 - diversity(x %>% select(-REGION, -STRAT, -m, -var), index = 'simpson'))),
+      function(x) 1/(1 - diversity(x %>% select(-STRAT, -PROT), index = 'simpson'))),
     psu_shannon = map( #shannon diversity as effective number of species 
       data_wide,
-      function(x) exp(diversity(x %>% select(-REGION, -STRAT, -m, -var), index = 'shannon')))) %>% 
+      function(x) exp(diversity(x %>% select(-STRAT, - PROT), index = 'shannon')))) %>% 
   unnest(psu_richness,psu_simpson, psu_shannon)
  
 psu_dt_abun_diversity = dt_psu_abun_diversity %>%
-  select(YEAR, PRIMARY_SAMPLE_UNIT, protected_status,psu_richness, psu_simpson, psu_shannon)
+  select(YEAR, PRIMARY_SAMPLE_UNIT, psu_richness, psu_simpson, psu_shannon)
 
-write_csv(psu_dt_abun_diversity, "abundance_psu/psu_dt_abun_diversity.csv") 
+write_csv(psu_dt_abun_diversity, "big_csv/abundance_psu/psu_dt_abun_diversity.csv") 
 
 ```
 
