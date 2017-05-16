@@ -64,6 +64,9 @@ library(rvc) #calls RVC data from SEFSC server
 library(tidyverse)
 library(vegan) # biodiveristy functions for richness, simpson, and shannon 
 
+spp_list <- read_csv('spp_list.csv') #402 species 
+
+
 ```
 
 ```{r practice codes, eval = F}
@@ -320,6 +323,18 @@ col_types = cols(
   protected_status = col_character()
 ))
 
+## Should I remove the species that are not identified to species level. Is this skewing my diversity indices? What percent of the abundance data is from species identified to the genus? 
+
+#grep("SPE.$", domain_fk_abun$SPECIES_CD, value = T)
+
+totalabun = sum(domain_fk_abun$abundance) #23,434,984,377 counts over 15 years in FK
+
+if(grep("SPE.$", domain_fk_abun$SPECIES_CD, value = T)){
+    sppabun = sum(domain_fk_abun$abundance)
+    }
+
+percent_spp = (sppabun/totalabun)*100 
+
 ## FK's domain abundance 
 fk_domain_abun_diversity = domain_fk_abun %>% #15,771 * 10
   select(YEAR, protected_status, SPECIES_CD, abundance) %>% #27,911 * 4 
@@ -340,14 +355,24 @@ fk_domain_abun_diversity = domain_fk_abun %>% #15,771 * 10
 
 fk_domain_abun_diversity = fk_domain_abun_diversity %>%
   select(dom_richness,dom_simpson,dom_shannon)
+
 write_csv(fk_domain_abun_diversity, 'big_csv/abundance_domain/domain_fk_abun_diversity')
-  
+
 ## TO DO: compute SD for each year, Confidence Interval, statistical differences between 
 
 ```
 
 ```{r FK domain biodiversity plots}
 
+domain_fk_abun_diversity = read_csv('big_csv/abundance_domain/domain_fk_abun_diversity.csv')
+# Parsed with column specification:
+# cols(
+#   YEAR = col_integer(),
+#   protected_status = col_character(),
+#   dom_richness = col_integer(),
+#   dom_simpson = col_double(),
+#   dom_shannon = col_double()
+# )
 protected_status_names <- c(
   "0" = "Unprotected",
   "1" = "Protected",
@@ -468,6 +493,8 @@ write_csv(domain_dt_abun_diversity, 'abundance_domain/domain_dt_abun_diversity.c
 ```
 
 ```{r DT domain biodiversity plots}
+
+domain_dt_abun_diversity = read_csv("big_csv/abundance_domain/domain_dt_abun_diversity.csv")
 
 dt_protected_status_names <- c(
   "0" = "0 - Unprotected",
@@ -598,6 +625,8 @@ write_csv(fk_strata_abun_diversity, 'abundance_strata/strata_fk_abun_diversity.c
 
 ```{r FK strata biodiversity plots, eval = F}
 
+strata_fk_abun_diversity = read_csv("big_csv/abundance_strata/strata_fk_abun_diversity.csv")
+
 # strata_names <- c(
 #  "FMLR" = "Forereef Midchannel Linear Reef",
 #  "FSLR" = "Forereef Shallow Linear Reef",
@@ -695,6 +724,8 @@ write_csv(strata_dt_abun_diversity, "big_csv/abundance_strata/strata_dt_abun_div
 
 ```{r DT  strata biodiversity plots}
 
+strata_dt_abun_diversity = read_csv("big_csv/abundance_strata/strata_dt_abun_diversity.csv")
+
 ```
 
 ### Florida Keys PSU 
@@ -732,18 +763,25 @@ fk_psu_abun_diversity = psu_fk_abun %>% #3,134,710 × 10
 psu_fk_abun_diversity = fk_psu_abun_diversity %>%
   select(YEAR, PRIMARY_SAMPLE_UNIT, protected_status,psu_richness, psu_simpson, psu_shannon)%>% 
 unnest(psu_richness,psu_simpson, psu_shannon) %>% 
-write_csv(psu_fk_abun_diversity, "abundance_psu/psu_fk_abun_diversity.csv") 
+write_csv(psu_fk_abun_diversity, "big_csv/abundance_psu/psu_fk_abun_diversity.csv") 
 
 ```
 
 ```{r FK psu biodiversity plots and maps}
 
+psu_fk_abun_diversity = read_csv("big_csv/abundance_psu/psu_fk_abun_diversity.csv", 
+          col_types = cols(
+            YEAR = col_integer(),
+            PRIMARY_SAMPLE_UNIT = col_character(),
+            protected_status = col_character(),
+            psu_richness = col_integer(),
+            psu_simpson = col_double(),
+            psu_shannon = col_double()))
+
 ```
 
 ### Dry Tortugas PSU 
 ```{r DT psu biodiversity, eval = F}
-
-## have not run yet, need to get the rest of data from DT
 
 dt_psu_abun <- read_csv("big_csv/abundance_psu/psu_dt_abun.csv")
 # Parsed with column specification:
@@ -785,14 +823,14 @@ write_csv(psu_dt_abun_diversity, "big_csv/abundance_psu/psu_dt_abun_diversity.cs
 
 ```{r DT psu biodiversity plots and maps}
 
+psu_dt_abun_diversity = read_csv("big_csv/abundance_psu/psu_dt_abun_diversity.csv")
+
 ```
 
 ## Biodiversity metrics by computed with weighted species density 
 
 ### Florida Keys domain
 ```{r FK domain biodiversity with density}
-
-#variables: YEAR, REGION SPECIES_CD, density, var, n, nm, N, NM, protected_status
 
 domain_fk_density <- read_csv("big_csv/abundance/density_domain/domain_fk_density.csv", 
 col_types = cols(
