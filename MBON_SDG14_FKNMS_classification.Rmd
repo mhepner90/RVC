@@ -949,17 +949,23 @@ trophic_levels = trophic_levels %>%
   group_by(Trophic_Level) #4 trophic levels, #421 species 
 trophic_levels
 
+
 tax<-RVCdata_FK$taxonomic_data
 names(tax)
 trophic_levels$SPECIES_CD<-trophic_levels$RVC_CODE
-
 taxgroup<-merge(tax,trophic_levels,by='SPECIES_CD')
-
 RVCdata_FK$taxonomic_data<-taxgroup
-names(lookup1)
+
+tax2<-RVCdata_FK$taxonomic_data
+tax2$Trophic_Level<-as.factor(tax2$Trophic_Level)
+RVCdata_FK$taxonomic_data<-tax2
+RVCdata_FK$taxonomic_data
 
 #
 lookup1
+
+lookup1=subset(rvc_4tax$taxonomic_data,Group.Name1 %in% c("Requiem Sharks"),select =c("RVC.Code.x","Group.Name1"))
+
 
 lookup1=subset(RVCdata_FK$taxonomic_data,Trophic_Level %in% c("1"),select =c("RVC_CODE","Trophic_Level"))
 lookup2=subset(RVCdata_FK$taxonomic_data,Trophic_Level %in% c("2"),select =c("RVC_CODE","Trophic_Level"))
