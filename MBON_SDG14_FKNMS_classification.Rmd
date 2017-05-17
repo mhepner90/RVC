@@ -170,11 +170,12 @@ for(file in files){
 
 ```{r Forage fish, eval = F}
 
-forage_fk_abun_csv = "big_csv/trophic_groups/abundance/forage_fk_abun.csv"
-forage_dt_abun_csv = "big_csv/trophic_groups/abundance/forage_dt_abun.csv"
-forage_fk_den_csv =  "big_csv/trophic_groups/density/forage_fk_den.csv"
-forage_dt_den_csv =  "big_csv/trophic_groups/density/forage_dt_den.csv"
-forage_fk_diversity_csv = "big_csv/trophic_groups/diveristy/forage_fk_diversity.csv"
+forage_fk_abun_csv     = "big_csv/trophic_groups/abundance/forage_fk_abun.csv"
+forage_dt_abun_csv     = "big_csv/trophic_groups/abundance/forage_dt_abun.csv"
+forage_fk_den_csv      = "big_csv/trophic_groups/density/forage_fk_den.csv"
+forage_dt_den_csv      = "big_csv/trophic_groups/density/forage_dt_den.csv"
+forage_fk_diversity_csv= "big_csv/trophic_groups/diveristy/forage_fk_diversity.csv"
+forage_dt_diversity_csv= "big_csv/trophic_groups/diveristy/forage_dt_diversity.csv"
 
 if(!all(file.exists(forage_fk_abun_csv,forage_dt_abun_csv,forage_fk_den_csv,forage_dt_den_csv, forage_fk_diversity_csv)){
   forage_fish_spp_list= c("HYP HARR", "ATH STIP", "JEN SPE.", "HAR JAGU", "ANC LYOL", "INE VITT", "HEM BRAS", "SAR AURI", "HAR HUME", "CHR ATHE")
@@ -187,8 +188,7 @@ if(!all(file.exists(forage_fk_abun_csv,forage_dt_abun_csv,forage_fk_den_csv,fora
   forage_fk_den = getDomainDensity(RVCdata_DT, forage_fish_spp_list, merge_protected = F)
   write_csv(forage_fk_den, "big_csv/trophic_groups/density/forage_fk_den.csv")
   forage_dt_den = getDomainDensity(RVCdata_DT, forage_fish_spp_list, merge_protected = F)
-  write_csv(forage_dt_den, "big_csv/trophic_groups/density/forage_dt_den.csv")}
-
+  write_csv(forage_dt_den, "big_csv/trophic_groups/density/forage_dt_den.csv")
 #diversity metrics 
 forage_fk_abundance = forage_fk_abun %>% 
   select(YEAR, protected_status, SPECIES_CD, abundance) %>%  
@@ -197,22 +197,44 @@ forage_fk_abundance = forage_fk_abun %>%
   mutate(
     data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abundance, fill = 0)), 
      #species richness 
-    forage_richness = map(
+    richness = map(
       data_wide, 
       function(x) specnumber(x)),
     #simpson diversity as effective number of species 
-    forage_simpson = map( 
+    simpson = map( 
       data_wide,
       function(x) 1/(1 - diversity(x, index = 'simpson'))),
      #shannon diversity as effective number of species 
-    forage_shannon = map(
+    shannon = map(
       data_wide,
       function(x) exp(diversity(x, index = 'shannon')))) %>%
-  unnest(forage_richness, forage_simpson, forage_shannon)
-
+  unnest(richness, simpson, shannon)
 forage_fk_diversity = forage_fk_abundance %>%
-  select(YEAR, protected_status, forage_richness, forage_shannon, forage_simpson) 
-write_csv(forage_fk_diversity, "big_csv/trophic_groups/diveristy/forage_fk_diversity.csv")
+  select(YEAR, protected_status, richness, shannon, simpson) 
+write_csv(forage_fk_diversity, "big_csv/trophic_groups/diversity/forage_fk_diversity.csv")
+
+forage_dt_abundance = forage_dt_abun %>% 
+  select(YEAR, protected_status, SPECIES_CD, abundance) %>%  
+  group_by(YEAR, protected_status) %>% #48 groups 
+  nest(-YEAR) %>%  
+  mutate(
+    data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abundance, fill = 0)), 
+     #species richness 
+    richness = map(
+      data_wide, 
+      function(x) specnumber(x)),
+    #simpson diversity as effective number of species 
+    simpson = map( 
+      data_wide,
+      function(x) 1/(1 - diversity(x, index = 'simpson'))),
+     #shannon diversity as effective number of species 
+    shannon = map(
+      data_wide,
+      function(x) exp(diversity(x, index = 'shannon')))) %>%
+  unnest(richness, simpson, shannon)
+forage_dt_diversity = forage_dt_abundance %>%
+  select(YEAR, protected_status, richness,shannon, simpson) 
+write_csv(forage_dt_diversity, "big_csv/trophic_groups/diversity/forage_dt_diversity.csv")} 
   
 ```
 
@@ -933,23 +955,17 @@ trophic_levels = trophic_levels %>%
   group_by(Trophic_Level) #4 trophic levels, #421 species 
 trophic_levels
 
-
 tax<-RVCdata_FK$taxonomic_data
 names(tax)
 trophic_levels$SPECIES_CD<-trophic_levels$RVC_CODE
-taxgroup<-merge(tax,trophic_levels,by='SPECIES_CD')
-RVCdata_FK$taxonomic_data<-taxgroup
 
-tax2<-RVCdata_FK$taxonomic_data
-tax2$Trophic_Level<-as.factor(tax2$Trophic_Level)
-RVCdata_FK$taxonomic_data<-tax2
-RVCdata_FK$taxonomic_data
+taxgroup<-merge(tax,trophic_levels,by='SPECIES_CD')
+
+RVCdata_FK$taxonomic_data<-taxgroup
+names(lookup1)
 
 #
 lookup1
-
-lookup1=subset(rvc_4tax$taxonomic_data,Group.Name1 %in% c("Requiem Sharks"),select =c("RVC.Code.x","Group.Name1"))
-
 
 lookup1=subset(RVCdata_FK$taxonomic_data,Trophic_Level %in% c("1"),select =c("RVC_CODE","Trophic_Level"))
 lookup2=subset(RVCdata_FK$taxonomic_data,Trophic_Level %in% c("2"),select =c("RVC_CODE","Trophic_Level"))
