@@ -70,6 +70,7 @@ SDG14: Conserve and sustainably use the oceans, seas and marine resources
     
 ```{r librarys}
 
+
 library(knitr)
 library(tidyverse)
 library(rvc)
@@ -805,7 +806,7 @@ psu_dt_abun_diversity = read_csv("big_csv/abundance_psu/psu_dt_abun_diversity.cs
 
 Adding 1990's RVC data and reweight by strata
 
-```{r trial}
+```{r 1990s RVC data}
 
 rvc_4tax = getRvcData(years = 1994:2012, region = "FLA KEYS")
 
