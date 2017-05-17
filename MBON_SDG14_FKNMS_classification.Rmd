@@ -947,6 +947,28 @@ trophic_levels = read_csv('big_csv/FKNMS_infographic_list.csv')
 trophic_levels = trophic_levels %>%
   select(RVC_CODE, Trophic_Level) %>% 
   group_by(Trophic_Level) #4 trophic levels, #421 species 
+trophic_levels
+
+tax<-RVCdata_FK$taxonomic_data
+names(tax)
+trophic_levels$SPECIES_CD<-trophic_levels$RVC_CODE
+
+taxgroup<-merge(tax,trophic_levels,by='SPECIES_CD')
+
+RVCdata_FK$taxonomic_data<-taxgroup
+names(lookup1)
+
+#
+lookup1
+
+lookup1=subset(RVCdata_FK$taxonomic_data,Trophic_Level %in% c("1"),select =c("RVC_CODE","Trophic_Level"))
+lookup2=subset(RVCdata_FK$taxonomic_data,Trophic_Level %in% c("2"),select =c("RVC_CODE","Trophic_Level"))
+lookup3=subset(RVCdata_FK$taxonomic_data,Trophic_Level %in% c("3"),select =c("RVC_CODE","Trophic_Level"))
+
+
+Biom1 = getDomainTotalBiomass(RVCdata_FK, species = lookup1$RVC_CODE, growth_parameters=RVCdata_FK$taxonomic_data, group = lookup1)
+
+
 
 ```
 
