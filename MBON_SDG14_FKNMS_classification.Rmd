@@ -74,25 +74,32 @@ library(knitr)
 library(tidyverse)
 library(rvc)
 library(vegan)
-#library(rfishbase)
 
 ```
 
 ```{r call RVC data}
 
-#RVCdata_FK <- getRvcData(1999:2016, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
-
+RVCdata_FK <- getRvcData(1999:2016, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 #write_csv(RVCdata_FK, 'big_csv/RVCdata_FK.csv')
 
-#RVCdata_DT <- getRvcData(1999:2016, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+RVCdata_DT <- getRvcData(1999:2016, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+#write_csv(RVCdata_DT, 'big_csv/RVCdata_DT.csv')
 
-# species_list <- RVCdata_FK$taxonomic_data %>%
-#   select(SPECIES_CD,FAMILY, SCINAME, COMNAME) %>%
-#   arrange(desc(FAMILY))
-# 
-# species_family_list <- unique(RVCdata_FK$taxonomic_data$FAMILY)
-# species_family_list[order(species_family_list)]
-   
+# add 1994 - 1998 RVC data and reweight by strata
+rvc98 <-read.csv("90srvc/fk1998_dat2.csv")
+rvc97 <-read.csv("90srvc/fk1997_dat2.csv")
+rvc96 <-read.csv("90srvc/fk1996_dat2.csv")
+rvc95 <-read.csv("90srvc/fk1995_dat2.csv")
+rvc94 <-read.csv("90srvc/fk1994_dat2.csv") #don't have 1994 
+
+rvc95_16 <- rbind(RVCdata_FK$sample_data, rvc98, rvc97, rvc96, rvc95) #,rvc94
+
+#STRAT
+strat94<-read.csv("FKeys_NTOTS_Reweight_1994.csv")#need csv file from luke 
+
+## NEED TO RERUN ALL DT data! - MH 5/17/17 
+## DT data prior to 1999? 
+
 ```
 
 #### Read in abundance and diversity csv files for trophic groups 
@@ -911,24 +918,3 @@ psu_dt_abun_diversity = read_csv("big_csv/abundance_psu/psu_dt_abun_diversity.cs
 
 ```
 
-Adding 1990's RVC data and reweight by strata
-
-```{r RVC 1994 to 199, eval = F}
-
-rvc_4tax = getRvcData(years = 1994:2012, region = "FLA KEYS")
-
-
-rvc98<-read.csv("90srvc/fk1998_dat2.csv")
-rvc97<-read.csv("90srvc/fk1997_dat2.csv")
-rvc96<-read.csv("90srvc/fk1996_dat2.csv")
-rvc95<-read.csv("90srvc/fk1995_dat2.csv")
-rvc94<-read.csv("90srvc/fk1994_dat2.csv")
-
-
-rvc98t <- rbind(rvc_4tax$sample_data,rvc98,rvc97,rvc96,rvc95,rvc94)
-rvc_4tax$sample_data<-rvc98t
-
-#STRAT
-
-strat94<-read.csv("FKeys_NTOTS_Reweight_1994.csv")
-rvc_4tax$stratum_data<-strat94
