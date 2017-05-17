@@ -329,6 +329,13 @@ col_types = cols(
 
 totalabun = sum(domain_fk_abun$abundance) #23,434,984,377 counts over 15 years in FK
 
+new<-subset("SPE.$", domain_fk_abun$SPECIES_CD, value = T)
+head(new)
+
+(grep("SPE.$", domain_fk_abun$SPECIES_CD))
+head(domain_fk_abun)
+grep("SPE.$", domain_fk_abun$SPECIES_CD, value = T)
+
 if(grep("SPE.$", domain_fk_abun$SPECIES_CD, value = T)){
     sppabun = sum(domain_fk_abun$abundance)
     }
