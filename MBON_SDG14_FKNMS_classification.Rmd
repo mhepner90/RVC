@@ -52,7 +52,7 @@ SDG14: Conserve and sustainably use the oceans, seas and marine resources
 | Focal species                  | Caribbean spiny lobster| abundance                   | TBD     |
 | Focal species                  | Queen Conch            | abundance                   | TBD     |
 | Focal species (threatened)     | Sea turtles            | abundance                   | TBD     |
-| Biodiversity                   | Reef fish biodiversity | diversity index             | RVC     |
+| Biodiversity                   | Reef fish biodiversity | richness, simpson, shannon  | RVC     |
 | Trophic groups                 | Forage fish            | abundance, simpson, shannon | RVC     |
 | Trophic groups (exploited)     | Groupers               | abundance, simpson, shannon | RVC     |
 | Trophic groups                 | Grunts                 | abundance, simpson, shannon | RVC     |
@@ -74,25 +74,32 @@ library(knitr)
 library(tidyverse)
 library(rvc)
 library(vegan)
-#library(rfishbase)
 
 ```
 
 ```{r call RVC data}
 
-#RVCdata_FK <- getRvcData(1999:2016, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
-
+RVCdata_FK <- getRvcData(1999:2016, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 #write_csv(RVCdata_FK, 'big_csv/RVCdata_FK.csv')
 
-#RVCdata_DT <- getRvcData(1999:2016, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+RVCdata_DT <- getRvcData(1999:2016, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+#write_csv(RVCdata_DT, 'big_csv/RVCdata_DT.csv')
 
-# species_list <- RVCdata_FK$taxonomic_data %>%
-#   select(SPECIES_CD,FAMILY, SCINAME, COMNAME) %>%
-#   arrange(desc(FAMILY))
-# 
-# species_family_list <- unique(RVCdata_FK$taxonomic_data$FAMILY)
-# species_family_list[order(species_family_list)]
-   
+# add 1994 - 1998 RVC data and reweight by strata
+rvc98 <-read.csv("90srvc/fk1998_dat2.csv")
+rvc97 <-read.csv("90srvc/fk1997_dat2.csv")
+rvc96 <-read.csv("90srvc/fk1996_dat2.csv")
+rvc95 <-read.csv("90srvc/fk1995_dat2.csv")
+rvc94 <-read.csv("90srvc/fk1994_dat2.csv") #don't have 1994 
+
+rvc95_16 <- rbind(RVCdata_FK$sample_data, rvc98, rvc97, rvc96, rvc95) #,rvc94
+
+#STRAT
+strat94<-read.csv("FKeys_NTOTS_Reweight_1994.csv")#need csv file from luke 
+
+## NEED TO RERUN ALL DT data! - MH 5/17/17 
+## DT data prior to 1999? 
+
 ```
 
 #### Read in abundance and diversity csv files for trophic groups 
@@ -137,6 +144,21 @@ read.csv(paste(path, file, sep= "")))
 - Snapper
 
 #### Forage fish
+
+| Scientific name               | Common name         | RVC code  |  
+|:------------------------------|:--------------------|:----------|
+|*Hypoatherina harringtonensis* | reef silverside	    | HYP HARR  |
+|*Atherinomorus stipes*	        | hardhead silverside	| ATH STIP  |
+|*Jenkinsia sp.*	              | herring species	    | JEN SPE.  |
+|*Harengula jaguana*	          | scaled sardine	    | HAR JAGU  |
+|*Anchoa lyolepis*	            | dusky anchovy	      | ANC LYOL  |
+|*Inermia vittata*	            | boga	              | INE VITT  |
+|*Hemiramphus brasiliensis*	    | ballyhoo	          | HEM BRAS  |
+|*Sardinella aurita*	          | spanish sardine	    | SAR AURI  |
+|*Harengula humeralis*	        | redear sardine	    | HAR HUME  |
+|*Chriodorus atherinoides*	    | hardhead halfbeak	  | CHR ATHE  |
+
+
 ```{r Forage fish, eval = F}
 
 forage_fish_spp_list= c("HYP HARR", "ATH STIP", "JEN SPE.", "HAR JAGU", "ANC LYOL", "INE VITT", "HEM BRAS", "SAR AURI", "HAR HUME", "CHR ATHE")
@@ -183,6 +205,27 @@ write_csv(forage_fk_diversity, "big_csv/trophic_groups/diveristy/forage_fk_diver
 ```
 
 #### Grouper
+
+| Scientific name               | Common name         | RVC code  |  
+|:------------------------------|:--------------------|:----------|
+|*Cephalopholis cruentata*      |	graysby	            | CEP CRUE  |
+|*Cephalopholis fulva*          |	coney	              | CEP FULV  |
+|*Dermatolepis inermis*         |	marbled grouper	    | DER INER  |
+|*Epinephelus flavolimbatus*    |	yellowedge grouper	| EPI FLAV  |
+|*Epinephelus itajara*          |	goliath grouper	    | EPI ITAJ  |
+|*Epinephelus morio*            |	red grouper	        | EPI MORI  |
+|*Epinephelus niveatus*	        | snowy grouper	      | EPI NIVE  |
+|*Epinephelus striatus*         |	nassau grouper	    | EPI STRI  |
+|*grouper-sea bass species*     |	grouper-sea bass sp |	SRR SPE.  |
+|*Mycteroperca acutirostris*    |	western comb grouper| MYC ACUT  |
+|*Mycteroperca bonaci*          |	black grouper	      | MYC BONA  |
+|*Mycteroperca interstitialis*  |	yellowmouth grouper	| MYC INTE  |
+|*Mycteroperca microlepis*      |	gag	                | MYC MICR  |
+|*Mycteroperca phenax*          |	scamp	              | MYC PHEN  |
+|*Mycteroperca tigris*          |	tiger grouper	      | MYC TIGR  |
+|*Mycteroperca venenosa*        |	yellowfin grouper	  | MYC VENE  |
+
+
 ```{r Grouper, eval = F}
 
 grouper_spp_list= c("CEP CRUE", "MYC BONA", "EPI MORI", "EPI STRI", "EPI ITAJ", "CEP FULV", "MYC MICR", "MYC PHEN", "MYC VENE", "MYC INTE", "MYC TIGR", "EPI FLAV", "DER INER", "SRR SPE.", "Epi nive", "Myc acut")
@@ -229,6 +272,24 @@ write_csv(grouper_fk_diversity, "big_csv/trophic_groups/diversity/grouper_fk_div
 ```
 
 #### Grunts 
+
+| Scientific name               | Common name         | RVC code  |  
+|:------------------------------|:--------------------|:----------|
+|*Anisotremus surinamensis*	    | black margate	      | ANI SURI  |
+|*Anisotremus virginicus*	      | porkfish	          | ANI VIRG  |
+|*Haemulon album*	              | margate	            | HAE ALBU  |
+|*Haemulon aurolineatum*	      | tomtate	            | HAE AURO  | 
+|*Haemulon carbonarium*	        | caesar grunt	      | HAE CARB  |
+|*Haemulon chrysargyreum*       |	smallmouth grunt	  | HAE CHRY  |
+|*Haemulon flavolineatum*       |	french grunt	      | HAE FLAV  |
+|*Haemulon macrostomum*	        | spanish grunt	      | HAE MACR  |
+|*Haemulon melanurum*	          | cottonwick	        | HAE MELA  |
+|*Haemulon parra*               |	sailors choice	    | HAE PARR  |
+|*Haemulon plumierii*           |	white grunt	        | HAE PLUM  | 
+|*Haemulon sciurus*             |	bluestriped grunt	  | HAE SCIU  |
+|*Haemulon sp.*                 |	grunt species	      | HAE SPE.  |
+|*Haemulon striatum*            |	striped grunt	      | HAE STRI  | 
+
 ```{r Grunts, eval = F}
 
 grunt_spp_list = c("HAE SCIU", "HAE AURO", "HAE PLUM", "HAE SPE.", "HAE FLAV", "HAE CHRY", "ANI VIRG","HAE MELA", "HAE CARB", "HAE PARR", "HAE STRI", "HAE MACR", "ANI SURI", "HAE ALBU")
@@ -275,6 +336,10 @@ write_csv(grunt_fk_diversity, "big_csv/trophic_groups/diveristy/grunt_fk_diversi
 ```
 
 #### Higher Level Reef Fish
+
+| Scientific name               | Common name         | RVC code  |  
+|:------------------------------|:--------------------|:----------|
+
 ```{r Higher Level Reef Fish, eval = F}
 
 higher_reef_spp_list = c("THA BIFA","STE PART","GYM MORI","PRI AREN","ABU SAXA","HAL BIVI","HAL GARN","HAL MACU","CHR MULT","CLE PARR","STE PLAN","CHR CYAN","MUL MART","MIC CHRY","STE ADUS","CHA CAPI","STE VARI","PEM SCHO","POM ARCU","CAN ROST","CHA OCEL","PSE MACU","HOL TRIC","CHR SCOT","HAL RADI","CAL CALA","CHA SEDE","XYR SPLE","STE LEUC","HOL CILI","POM PARU","AUL MACU","CHA STRI","OPI AURI","HAL POEY","CHR INSO","HOL ADSC","ODO DENT","STE DIEN","HOL BERM","CHA FABE","XYR MART","GER CINE","HOL RUFU","LAC TRIQ","PAR ACUM","ALU SCRI","BAL CAPR","MAL PLUM","CAN SUFF","CAN PULL","HET CRUE","OGC SPE.","XYR SPE.","ACA QUAD","CAL BAJO","MON TUCK","SPH SPEN","ARC RHOM","DIO HOLO","LAC BICA","XYR NOVA","BAL VETU","DIO HYST","HAL CYAN","GYM FUNE","DIP HOLB","APO PSEU","HOL TOWN","EQU PUNC","LAC TRIG","HAL PICT","MYR JACO","SAR VEXI","SYN INTE","HAL CAUD","AMB PINO","GYM MILI","ALU SCHO","ACA POLY","CAL PROR","CHI SCHO","HET LONG","SCO PLUM","CHR ENCH","CAL SPE.","APO MACU","CAN MACR","PAR UMBR","LAG RHOM","EQU LANC","CAL PENN","STE HISP","APO BINO","NEO MARI","ARC PROB","CHI ANTE","APO TOWN","DOR MEGA","REM REMO","OPI WHIT","CEN ARGI","SYN FOET","AST SPE.","CAR HIPP","SAR CORU","OPI MACR","GYM VICI","DIP ARGE","PAG PAGR","PAR BAIR","BOT LUNA","EUC ARGE","PRO ACUL","LAB GOBI","FIS TABA","ALU SPE.","GRA LORE","MON CILI","ECH NEUC","ALU MONO","BOT OCEL","BAL SPE.","PAR ALBI","STE SPE.","APO QUAD","ENC NIGR","GYM SAXI","OPI SPE.","ELO SAUR","MAN BIRO","APO AURO","SPH TEST","CAL NODO","DIO SPE.","SCO CARI","LAB FILA","AHL EGMO","ANT OCEL","AST GUTT","LAB SPE.","LAB SPE.","MUR RETI","AST STEL","EUC GULA","HOL SPE.","ORT CHRY","PRI OPHR","LAB BUCC","ACA SOLA","CAL LEUC","ENC CARY","GYM NIGR","MYR BREV","SAR BULL","TRA GOOD","TRA LATH","UMB CORO","EUC JONE","EUCLEFR","STY LATE","SYA MICR","SYN SCOV","APO PHEN","HIP REID","PHA XENU","AST PUNC","CHI ATIN","CHL CHRY","HIP EREC","OGC NASU","SER PHOE","SPH NEPH","MYR OCEL","PRI RUBI","RHI LENT","ALB VULP","DAC VOLI","RYP BIST","BRO BARB","HYP GUMM","OPS TAU_","EMM ATLA","UPE PARV","SYN SYNO")
@@ -320,6 +385,13 @@ write_csv(higher_reef_diversity, "big_csv/trophic_groups/diversity/higher_reef_f
 ```
 
 #### Hogfish
+
+| Scientific name               | Common name         | RVC code  |  
+|:------------------------------|:--------------------|:----------|
+|*Bodianus pulchellus*	        | spotfin hogfish	    | BOD PULC  |
+|*Bodianus rufus*	              | Spanish hogfish	    | BOD RUFU  |
+|*Lachnolaimus maximus*	        | hogfish	            | LAC MAXI  |
+
 ```{r Hogfish, eval = F}
 
 hogfish_spp_list = c("LAC MAXI", "BOD RUFU", "BOD PULC")
@@ -365,6 +437,11 @@ write_csv(hogfish_fk_diversity, "big_csv/trophic_groups/diversity/hogfish_fk_div
 ```
 
 #### Lionfish
+
+| Scientific name               | Common name         | RVC code  |  
+|:------------------------------|:--------------------|:----------|
+|*Pterois volitans*             | red lionfish        | PTE VOLI  |
+
 ```{r Lionfish, eval = F}
 
 #"PTE VOLI" - lionfish
@@ -386,6 +463,10 @@ write_csv(lionfish_dt_den, "big_csv/trophic_groups/density/lionfish_fk_abun.csv"
 ```
 
 #### Opportunists 
+
+| Scientific name               | Common name         | RVC code  |  
+|:------------------------------|:--------------------|:----------|
+
 ```{r Opportunists, eval = F}
 
 opportunists_spp_list = c("CAR RUBE", "SPH BARR", "ALE CILI","DEC PUNC", "DEC MACA", "CAR CRYS", "CAR BART", "SCO REGA","SPH PICU", "CAR LATU", "SEL VOME", "ELA BIPI", "CAR SPE.", "TRA FALC", "EUT ALLE", "SER RIVO", "SCO MACU", "SER DUME", "SCO CAVA", "SPH GUAC", "CAR LUGU", "OLI SAUR", "SER SPE.", "Rac cana", "Ser zona")
@@ -478,6 +559,16 @@ write_csv(parrotfish_fk_diversity, "big_csv/trophic_groups/diversity/parrotfish_
 ```
 
 #### Rays
+
+| Scientific name               | Common name         | RVC code  |  
+|:------------------------------|:--------------------|:----------|
+|*Aetobatus narinari*	          | spotted eagle ray	  | AET NARI  |
+|*Dasyatis americana*	          | southern stingray	  | DAS AMER  |
+|*Echeneis naucrates*	          | sharksucker	        | ECH NAUC  |
+|*Narcine bancroftii*	          | lesser electric ray	| NAR BANC  |
+|*Rhinoptera bonasus*	          | cownosed ray	      | RHI BONA  |
+|*Urobatis jamaicensis*	        | yellow stingray	    | URO JAMA  |
+
 ```{r Rays, eval = F}
 
 rays_spp_list = c("URO JAMA", "ECH NAUC", "DAS AMER", "AET NARI", "NAR BANC", "Rhi bona")
@@ -570,6 +661,10 @@ write_csv(seabass_fk_diversity, "big_csv/trophic_groups/diversity/seabass_fk_div
 ```
 
 #### Sharks
+
+| Scientific name               | Common name         | RVC code  |  
+|:------------------------------|:--------------------|:----------|
+
 ```{r Sharks, eval = F}
 
 sharks_spp_list = c("GIN CIRR", "CAR PERE", "CAR LEUC", "CAR LIMB", "SPH MOKA", "SPH TIBU", "CAR FALC", "SPH LEWI", "CAR OBSC", "Neg brev", "CAR PLUM", 'Gal cuvi')
@@ -616,6 +711,10 @@ write_csv(sharks_fk_diversity, "big_csv/trophic_groups/diversity/sharks_fk_diver
 ```
 
 #### Small Reef Fish
+
+| Scientific name               | Common name         | RVC code  |  
+|:------------------------------|:--------------------|:----------|
+
 ```{r Small Reef Fish, eval = F}
 
 small_reef_fish_spp_list = c("COR PERS","ACA COER","KYP SECT","ACA BAHI","ACA CHIR","COR GLAU","ELA OCEA","GNA THOM","PTE CALL","ACA SPE.","MAL TRIA","COR DICR","PAR MARM","MAL MACR","OPH MACC","CTE SAEP","MIC CARR","PTE HELE","HEM SIMU","SCA CRIS","COR EIDO","GOB SPE.","TYL CROC","MIC MICR","ACA ASPE","COR SPE.","BLE SPE.","STR NOTA","MEL NIGE","HYP BERM","EMB PAND","ELA EVEL","ACA CHAP","EMB BAHA","COR LIPE","NES LONG","ENN BOEH","ACA MARI","LAB NUCH","MAL VERS","MAL GILL","ELA MACR","PRI HIPO","GOB DILE","ELA SAUC","ELA XANT","STR TIMU","MAL AURO","PAR MARN","CHA LIMB","OXY STIG","ELA HORS","PAR NIGR","COR PUNC","ACA SPIN","BOL BOQU","ElA RAND","LAB KALI","LAB NIGR","ENN ALTI")
@@ -662,6 +761,22 @@ write_csv(small_reef_fk_diversity, "big_csv/trophic_groups/diversity/small_reef_
 ```
 
 #### Snapper
+
+| Scientific name               | Common name         | RVC code  |  
+|:------------------------------|:--------------------|:----------|
+|*Lutjanus analis*              |	mutton snapper	    | LUT ANAL  |
+|*Lutjanus apodus*	            | schoolmaster	      | LUT APOD  |
+|*Lutjanus buccanella*	        | blackfin snapper	  | LUT BUCC  |
+|*Lutjanus campechanus*	        | red snapper	        | Lut CAMP  |
+|*Lutjanus cyanopterus*	        | cubera snapper	    | LUT CYAN  |
+|*Lutjanus griseus*	            | gray snapper	      | LUT GRIS  |
+|*Lutjanus jocu*	              | dog snapper	        | LUT JOCU  |
+|*Lutjanus mahogoni*	          | mahogany snapper	  | LUT MAHO  |
+|*Lutjanus synagris*	          | lane snapper	      | LUT SYNA  |
+|*Ocyurus chrysurus*	          | yellowtail snapper	| OCY CHRY  |
+|*Rhomboplites aurorubens*	    | vermilion snapper	  | RHO AURO  |
+|*snapper species*	            | snapper species	    | LUT SPE.  |
+
 ```{r Snapper, eval = F}
 
 snapper_spp_list = c("OCY CHRY", "LUT GRIS", "LUT ANAL", "LUT APOD", "LUT SYNA", "LUT MAHO", "LUT JOCU", "LUT BUCC", 'LUT SPE.', "LUT CYAN", "RHO AURO", "Lut camp")
@@ -803,31 +918,3 @@ psu_dt_abun_diversity = read_csv("big_csv/abundance_psu/psu_dt_abun_diversity.cs
 
 ```
 
-Adding 1990's RVC data and reweight by strata
-
-```{r trial}
-
-rvc_4tax = getRvcData(years = 1994:2012, region = "FLA KEYS")
-
-
-rvc98<-read.csv("fk1998_dat2.csv")
-rvc97<-read.csv("fk1997_dat2.csv")
-rvc96<-read.csv("fk1996_dat2.csv")
-rvc95<-read.csv("fk1995_dat2.csv")
-rvc94<-read.csv("fk1994_dat2.csv")
-
-
-rvc98t<-rbind(rvc_4tax$sample_data,rvc98,rvc97,rvc96,rvc95,rvc94)
-rvc_4tax$sample_data<-rvc98t
-
-#STRAT
-
-strat94<-read.csv("FKeys_NTOTS_Reweight_1994.csv")
-rvc_4tax$stratum_data<-strat94
-
-
-
-
-
-
-```

@@ -362,9 +362,8 @@ fk_domain_abun_diversity = domain_fk_abun %>% #15,771 * 10
 
 fk_domain_abun_diversity = fk_domain_abun_diversity %>%
   select(dom_richness,dom_simpson,dom_shannon)
-
-write_csv(fk_domain_abun_diversity, 'big_csv/abundance_domain/domain_fk_abun_diversity')
-
+write_csv(fk_domain_abun_diversity, 'big_csv/abundance_domain/domain_fk_abun_diversity.csv')
+  
 ## TO DO: compute SD for each year, Confidence Interval, statistical differences between 
 
 ```
@@ -493,7 +492,7 @@ dt_domain_abun_diversity = domain_dt_abun %>% #12,140 * 10
 
 domain_dt_abun_diversity = dt_domain_abun_diversity %>%
   select(YEAR, protected_status, dom_richness, dom_simpson, dom_shannon) 
-write_csv(domain_dt_abun_diversity, 'abundance_domain/domain_dt_abun_diversity.csv')
+write_csv(domain_dt_abun_diversity, 'big_csv/abundance_domain/domain_dt_abun_diversity.csv')
 
 
 #TODO: why does DT have 4 options underprotected status?? 0,1,2,all 
