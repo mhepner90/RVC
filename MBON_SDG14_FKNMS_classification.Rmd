@@ -73,6 +73,7 @@ library(knitr)
 library(tidyverse)
 library(rvc)
 library(vegan)
+library(dygraphs)
 
 ```
 
@@ -100,14 +101,31 @@ rvc98 <-read.csv("90srvc/fk1998_dat2.csv")
 rvc97 <-read.csv("90srvc/fk1997_dat2.csv")
 rvc96 <-read.csv("90srvc/fk1996_dat2.csv")
 rvc95 <-read.csv("90srvc/fk1995_dat2.csv")
-rvc94 <-read.csv("90srvc/fk1994_dat2.csv") #don't have 1994 
+rvc94 <-read.csv("90srvc/fk1994_dat2.csv")  
 
-abundance: Estimated abundance per sampling domain
+#abundance: Estimated abundance per sampling domain
 
-rvc95_16 <- rbind(RVCdata_FK$sample_data, rvc98, rvc97, rvc96, rvc95) #,rvc94
+RVCdata_FKbu<-RVCdata_FK  
+
+
+rvc94_16 <- rbind(RVCdata_FK$sample_data, rvc98, rvc97, rvc96, rvc95,rvc94)
 
 #STRAT
-strat94<-read.csv("FKeys_NTOTS_Reweight_1994.csv")#need csv file from luke 
+strat94<-read.csv("90srvc/FKeys_NTOTS_Reweight_1994.csv")
+strat90<-strat94[which(strat94$YEAR<1999),]
+
+summary(strat90)
+
+RVCdata_FK$sample_data<-rvc94_16
+
+RVCdata_FK$stratum_data<-rbind(strat90,RVCdata_FK$stratum_data)
+
+
+summary(RVCdata_FK$stratum_data)
+
+
+
+#need csv file from luke 
 
 ## NEED TO RERUN ALL DT data! - MH 5/17/17 
 ## DT data prior to 1999? 
@@ -443,6 +461,8 @@ hogfish_fk_abundance = hogfish_fk_abun %>%
 hogfish_fk_diversity = hogfish_fk_abundance %>%
   select(YEAR, protected_status, richness, simpson, shannon) 
 write_csv(hogfish_fk_diversity, "big_csv/trophic_groups/diversity/hogfish_fk_diversity.csv")
+
+
 
 ```
 
