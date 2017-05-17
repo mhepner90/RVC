@@ -1,4 +1,3 @@
----
 title: "MBON SDG14 FKNMS Ecological Classifications"
 author: "Megan Hepner"
 date: "May 5, 2017"
@@ -74,15 +73,27 @@ library(knitr)
 library(tidyverse)
 library(rvc)
 library(vegan)
+library(dygraphs)
 
 ```
 
 ```{r call RVC data}
+RVCdata_FK_rds = "big_csv/RVCdata_FK.rds"
+RVCdata_DT_rds = "big_csv/RVCdata_DT.rds"
 
-RVCdata_FK <- getRvcData(1999:2016, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+if (!file.exists(RVCdata_FK_rds)){
+  RVCdata_FK <- getRvcData(1999:2016, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+  write_rds(RVCdata_FK, RVCdata_FK_rds)
+}
+RVCdata_FK = read_rds(RVCdata_FK_rds)
 #write_csv(RVCdata_FK, 'big_csv/RVCdata_FK.csv')
 
-RVCdata_DT <- getRvcData(1999:2016, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+if (!file.exists(RVCdata_DT_rds)){
+  RVCdata_DT <- getRvcData(1999:2016, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+
+  write_rds(RVCdata_DT, RVCdata_DT_rds)
+}
+RVCdata_FK = read_rds(RVCdata_DT_rds)
 #write_csv(RVCdata_DT, 'big_csv/RVCdata_DT.csv')
 
 # add 1994 - 1998 RVC data and reweight by strata
@@ -90,12 +101,31 @@ rvc98 <-read.csv("90srvc/fk1998_dat2.csv")
 rvc97 <-read.csv("90srvc/fk1997_dat2.csv")
 rvc96 <-read.csv("90srvc/fk1996_dat2.csv")
 rvc95 <-read.csv("90srvc/fk1995_dat2.csv")
-rvc94 <-read.csv("90srvc/fk1994_dat2.csv") #don't have 1994 
+rvc94 <-read.csv("90srvc/fk1994_dat2.csv")  
 
-rvc95_16 <- rbind(RVCdata_FK$sample_data, rvc98, rvc97, rvc96, rvc95) #,rvc94
+#abundance: Estimated abundance per sampling domain
+
+RVCdata_FKbu<-RVCdata_FK  
+
+
+rvc94_16 <- rbind(RVCdata_FK$sample_data, rvc98, rvc97, rvc96, rvc95,rvc94)
 
 #STRAT
-strat94<-read.csv("FKeys_NTOTS_Reweight_1994.csv")#need csv file from luke 
+strat94<-read.csv("90srvc/FKeys_NTOTS_Reweight_1994.csv")
+strat90<-strat94[which(strat94$YEAR<1999),]
+
+summary(strat90)
+
+RVCdata_FK$sample_data<-rvc94_16
+
+RVCdata_FK$stratum_data<-rbind(strat90,RVCdata_FK$stratum_data)
+
+
+summary(RVCdata_FK$stratum_data)
+
+
+
+#need csv file from luke 
 
 ## NEED TO RERUN ALL DT data! - MH 5/17/17 
 ## DT data prior to 1999? 
@@ -104,28 +134,26 @@ strat94<-read.csv("FKeys_NTOTS_Reweight_1994.csv")#need csv file from luke
 
 #### Read in abundance and diversity csv files for trophic groups 
 ```{r csv files}
+# on Mac in Terminal shell: ln -s ~/Dropbox/big_csv big_csv
 
 # read in all abundance csv files for trophic groups 
 path = "big_csv/trophic_groups/abundance/"
 files = list.files(path=path, pattern = "*.csv")
-for(file in files)
-{
-perpos <- which(strsplit(file, "")[[1]]==".")
-assign(
-gsub(" ","",substr(file, 1, perpos-1)), 
-read.csv(paste(path, file, sep= "")))  
+for(file in files){
+  perpos <- which(strsplit(file, "")[[1]]==".")
+  assign(
+    gsub(" ","",substr(file, 1, perpos-1)), 
+    read.csv(paste(path, file, sep= "")))  
 }
 
 path = "big_csv/trophic_groups/diversity/"
 files = list.files(path=path, pattern = "*.csv")
-for(file in files)
-{
-perpos <- which(strsplit(file, "")[[1]]==".")
-assign(
-gsub(" ","",substr(file, 1, perpos-1)), 
-read.csv(paste(path, file, sep= "")))  
+for(file in files){
+  perpos <- which(strsplit(file, "")[[1]]==".")
+  assign(
+    gsub(" ","",substr(file, 1, perpos-1)), 
+    read.csv(paste(path, file, sep= "")))  
 }
-
 ```
 
 ## Trophic groups
@@ -433,6 +461,8 @@ hogfish_fk_abundance = hogfish_fk_abun %>%
 hogfish_fk_diversity = hogfish_fk_abundance %>%
   select(YEAR, protected_status, richness, simpson, shannon) 
 write_csv(hogfish_fk_diversity, "big_csv/trophic_groups/diversity/hogfish_fk_diversity.csv")
+
+
 
 ```
 
@@ -822,6 +852,73 @@ write_csv(snapper_fk_diversity, "big_csv/trophic_groups/diversity/snapper_fk_div
 
 ```
 
+## Grouper Test w/ BB
+
+Metrics:
+- abundance
+- richness
+- Simpson
+- Shannon
+
+- Q: Have multiple groups, so how to look at single metric across groups?
+  A: TrelliscopeJS to the rescue!
+  
+- Protected areas: in/out
+
+For `big_csv/trophic_groups/abundance/*_*_abun.csv`: 
+- `YEAR`
+- `REGION`: FLA KEYS, or Dry Tortugas
+- `SPECIES_CD`: species code
+- `abundance`: units?
+- `var`: Variance in average density per secondary sampling unit
+- `n`: Number of primary sampling units sampled
+- `nm`: Number of secondary sampling units sampled
+- `N`: Number of possible primary sample units
+- `NM`: Number of possible secondary sampling units
+- `protected_status`: The protected status. Only present if merge_protected is FALSE
+
+So far, per species. Then when summing to # of individuals across species, lose biomass idea.
+
+TODO:
+- get weighted biomass as density!
+- sum abundance across species
+
+Plotting with [htmlwidgets: leaflet](http://www.htmlwidgets.org/showcase_leaflet.html):
+- [dygraphs for R](http://rstudio.github.io/dygraphs/)
+
+```{r test plot}
+library(dygraphs)
+'grouper_fk_abun','grouper_fk_diversity'
+
+#csv = "big_csv/trophic_groups/abundance/grouper_fk_abun.csv"
+csv = "big_csv/trophic_groups/diversity/grouper_fk_diversity.csv"
+
+d = read_csv(csv)
+
+source('~/github/cr-metrics/functions.R')
+
+plot_timeseries(
+  title   = 'Grouper Richness',
+  y_label = 'Richness',
+  x_label = 'Year',
+  csv_tv  = csv,
+  col_t   = 'YEAR',
+  filter  = 'protected_status == "all"',
+  col_y   = 'grouper_richness',
+  skip    = 0)
+
+d = read_csv(csv) %>%
+  filter(protected_status != 'all') %>%
+  select(YEAR, protected_status, grouper_richness) %>%
+  mutate(
+    protected_status = recode(
+      protected_status, '0'='unprotected', '1'='protected')) %>%
+  spread(protected_status, grouper_richness)
+
+dygraph(d, main='Grouper Richness')
+```
+
+
 ## Trophic group plots 
 ```{r Trophic group plots}
 
@@ -850,6 +947,28 @@ trophic_levels = read_csv('big_csv/FKNMS_infographic_list.csv')
 trophic_levels = trophic_levels %>%
   select(RVC_CODE, Trophic_Level) %>% 
   group_by(Trophic_Level) #4 trophic levels, #421 species 
+trophic_levels
+
+tax<-RVCdata_FK$taxonomic_data
+names(tax)
+trophic_levels$SPECIES_CD<-trophic_levels$RVC_CODE
+
+taxgroup<-merge(tax,trophic_levels,by='SPECIES_CD')
+
+RVCdata_FK$taxonomic_data<-taxgroup
+names(lookup1)
+
+#
+lookup1
+
+lookup1=subset(RVCdata_FK$taxonomic_data,Trophic_Level %in% c("1"),select =c("RVC_CODE","Trophic_Level"))
+lookup2=subset(RVCdata_FK$taxonomic_data,Trophic_Level %in% c("2"),select =c("RVC_CODE","Trophic_Level"))
+lookup3=subset(RVCdata_FK$taxonomic_data,Trophic_Level %in% c("3"),select =c("RVC_CODE","Trophic_Level"))
+
+
+Biom1 = getDomainTotalBiomass(RVCdata_FK, species = lookup1$RVC_CODE, growth_parameters=RVCdata_FK$taxonomic_data, group = lookup1)
+
+
 
 ```
 
@@ -917,4 +1036,3 @@ psu_dt_abun_diversity = read_csv("big_csv/abundance_psu/psu_dt_abun_diversity.cs
 ```{Long Spinned Sea Urchin}
 
 ```
-
