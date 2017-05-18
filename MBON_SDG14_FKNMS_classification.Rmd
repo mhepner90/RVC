@@ -79,40 +79,44 @@ library(dygraphs)
 
 # Reef Visual Census (RVC)
 
-```{r call RVC data}
+In order to get the big RDS files, Megan shared her Dropbox folder big_csv, so on Mac in Terminal shell (or directly in Git pane, gear icon, Shell...), run this command to symbolically link the `big_csv` folder: 
 
+```
+ln -s ~/Dropbox/big_csv big_csv
+```
+
+```{r call RVC data}
 #rds files to read 
 RVCdata_FK_rds = 'big_csv/RVCdata_FK.rds'
 RVCdata_DT_rds = 'big_csv/RVCdata_DT.rds'
 rvc94_16_csv = 'big_csv/rvc94_16.csv'
-# 
-# if (!all(file.exists(RVCdata_FK_rds, RVCdata_DT_rds))){
-#   RVCdata_FK <- getRvcData(1999:2016, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
-#   write_rds(RVCdata_FK, 'big_csv/RVCdata_FK.rds')
-#   RVCdata_DT <- getRvcData(1999:2016, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
-#   write_rds(RVCdata_DT, 'big_csv/RVCdata_DT.rds')
-# } else{ #read data 
-# RVCdata_FK = read_rds('big_csv/RVCdata_FK.rds')
-# RVCdata_DT = read_rds('big_csv/RVCdata_DT.rds')} 
-# 
-# # add 1994 - 1998 RVC data and reweight by strata
-# if (!file.exists(rvc94_16_csv)){
-#   rvc98 <-read.csv("90srvc/fk1998_dat2.csv")
-#   rvc97 <-read.csv("90srvc/fk1997_dat2.csv")
-#   rvc96 <-read.csv("90srvc/fk1996_dat2.csv")
-#   rvc95 <-read.csv("90srvc/fk1995_dat2.csv")
-#   rvc94 <-read.csv("90srvc/fk1994_dat2.csv")
-#   rvc94_16 <- rbind(RVCdata_FK$sample_data, rvc98, rvc97, rvc96, rvc95, rvc94)
-#   write_csv(rvc94_16, "big_csv/rvc94_16.csv")
-# } else {
-#   rvc94_16 = read.csv("big_csv/rvc94_16.csv")
-# }
-# 
-# strat94 <- read.csv("90srvc/FKeys_NTOTS_Reweight_1994.csv")
-# strat <- strat94[which(strat94$YEAR<1999),]
-# RVCdata_FK$sample_data <- rvc94_16
-# RVCdata_FK$stratum_data <- rbind(strat,RVCdata_FK$stratum_data)
 
+if (!all(file.exists(RVCdata_FK_rds, RVCdata_DT_rds))){
+  RVCdata_FK <- getRvcData(1999:2016, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+  write_rds(RVCdata_FK, 'big_csv/RVCdata_FK.rds')
+  RVCdata_DT <- getRvcData(1999:2016, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+  write_rds(RVCdata_DT, 'big_csv/RVCdata_DT.rds')
+} else{ #read data
+RVCdata_FK = read_rds('big_csv/RVCdata_FK.rds')
+RVCdata_DT = read_rds('big_csv/RVCdata_DT.rds')}
+
+# add 1994 - 1998 RVC data and reweight by strata
+if (!file.exists(rvc94_16_csv)){
+  rvc98 <-read.csv("90srvc/fk1998_dat2.csv")
+  rvc97 <-read.csv("90srvc/fk1997_dat2.csv")
+  rvc96 <-read.csv("90srvc/fk1996_dat2.csv")
+  rvc95 <-read.csv("90srvc/fk1995_dat2.csv")
+  rvc94 <-read.csv("90srvc/fk1994_dat2.csv")
+  rvc94_16 <- rbind(RVCdata_FK$sample_data, rvc98, rvc97, rvc96, rvc95, rvc94)
+  write_csv(rvc94_16, "big_csv/rvc94_16.csv")
+} else {
+  rvc94_16 = read.csv("big_csv/rvc94_16.csv")
+}
+
+strat94 <- read.csv("90srvc/FKeys_NTOTS_Reweight_1994.csv")
+strat <- strat94[which(strat94$YEAR<1999),]
+RVCdata_FK$sample_data <- rvc94_16
+RVCdata_FK$stratum_data <- rbind(strat,RVCdata_FK$stratum_data)
 ```
 
 ## Trophic Groups
@@ -147,7 +151,6 @@ rvc94_16_csv = 'big_csv/rvc94_16.csv'
 
 
 ```{r Forage fish}
-
 forage_fk_abun_csv     = "big_csv/trophic_groups/abundance/forage_fk_abun.csv"
 forage_dt_abun_csv     = "big_csv/trophic_groups/abundance/forage_dt_abun.csv"
 forage_fk_den_csv      = "big_csv/trophic_groups/density/forage_fk_den.csv"
@@ -155,67 +158,72 @@ forage_dt_den_csv      = "big_csv/trophic_groups/density/forage_dt_den.csv"
 forage_fk_diversity_csv= "big_csv/trophic_groups/diversity/forage_fk_diversity.csv"
 forage_dt_diversity_csv= "big_csv/trophic_groups/diversity/forage_dt_diversity.csv"
 
-if(!all(file.exists(forage_fk_abun_csv, forage_dt_abun_csv, forage_fk_den_csv, forage_dt_den_csv, forage_fk_diversity_csv, forage_dt_diversity_csv))){
+if (!all(
+  file.exists(
+    forage_fk_abun_csv, forage_dt_abun_csv, forage_fk_den_csv, forage_dt_den_csv,
+    forage_fk_diversity_csv, forage_dt_diversity_csv))){
   
   forage_fish_spp_list= c("HYP HARR", "ATH STIP", "JEN SPE.", "HAR JAGU", "ANC LYOL", "INE VITT", "HEM BRAS", "SAR AURI", "HAR HUME", "CHR ATHE")
-#abundance
+  #abundance
   forage_fk_abun = getDomainAbundance(RVCdata_FK, forage_fish_spp_list, merge_protected = F)
   write_csv(forage_fk_abun, "big_csv/trophic_groups/abundance/forage_fk_abun.csv")
   forage_dt_abun = getDomainAbundance(RVCdata_DT, forage_fish_spp_list, merge_protected = F)
   write_csv(forage_dt_abun, "big_csv/trophic_groups/abundance/forage_dt_abun.csv")
-#density
+  #density
   forage_fk_den = getDomainDensity(RVCdata_FK, forage_fish_spp_list, merge_protected = F)
   write_csv(forage_fk_den, "big_csv/trophic_groups/density/forage_fk_den.csv")
   forage_dt_den = getDomainDensity(RVCdata_DT, forage_fish_spp_list, merge_protected = F)
   write_csv(forage_dt_den, "big_csv/trophic_groups/density/forage_dt_den.csv")
-#fk diversity metrics 
-forage_fk_abundance = forage_fk_abun %>% 
-  select(YEAR, protected_status, SPECIES_CD, abundance) %>%  
-  group_by(YEAR, protected_status) %>% #48 groups 
-  nest(-YEAR) %>%  
-  mutate(
-    data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abundance, fill = 0)), 
-     #species richness 
-    richness = map(
-      data_wide, 
-      function(x) specnumber(x)),
-    #simpson diversity as effective number of species 
-    simpson = map( 
-      data_wide,
-      function(x) 1/(1 - diversity(x, index = 'simpson'))),
-     #shannon diversity as effective number of species 
-    shannon = map(
-      data_wide,
-      function(x) exp(diversity(x, index = 'shannon')))) %>%
-  unnest(richness, simpson, shannon)
-forage_fk_diversity = forage_fk_abundance %>%
-  select(YEAR, protected_status, richness, shannon, simpson) 
-write_csv(forage_fk_diversity, "big_csv/trophic_groups/diversity/forage_fk_diversity.csv")
-
-# dt diversity 
-forage_dt_abundance = forage_dt_abun %>% 
-  select(YEAR, protected_status, SPECIES_CD, abundance) %>%  
-  group_by(YEAR, protected_status) %>% #48 groups 
-  nest(-YEAR) %>%  
-  mutate(
-    data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abundance, fill = 0)), 
-     #species richness 
-    richness = map(
-      data_wide, 
-      function(x) specnumber(x)),
-    #simpson diversity as effective number of species 
-    simpson = map( 
-      data_wide,
-      function(x) 1/(1 - diversity(x, index = 'simpson'))),
-     #shannon diversity as effective number of species 
-    shannon = map(
-      data_wide,
-      function(x) exp(diversity(x, index = 'shannon')))) %>%
-  unnest(richness, simpson, shannon)
-forage_dt_diversity = forage_dt_abundance %>%
-  select(YEAR, protected_status, richness, shannon, simpson) 
-write_csv(forage_dt_diversity, "big_csv/trophic_groups/diversity/forage_dt_diversity.csv")} 
-
+  
+  #fk diversity metrics 
+  forage_fk_abundance = forage_fk_abun %>% 
+    select(YEAR, protected_status, SPECIES_CD, abundance) %>%  
+    group_by(YEAR, protected_status) %>% #48 groups 
+    nest(-YEAR) %>%  
+    mutate(
+      data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abundance, fill = 0)), 
+      #species richness 
+      richness = map(
+        data_wide, 
+        function(x) specnumber(x)),
+      #simpson diversity as effective number of species 
+      simpson = map( 
+        data_wide,
+        function(x) 1/(1 - diversity(x, index = 'simpson'))),
+      #shannon diversity as effective number of species 
+      shannon = map(
+        data_wide,
+        function(x) exp(diversity(x, index = 'shannon')))) %>%
+    unnest(richness, simpson, shannon)
+  
+  forage_fk_diversity = forage_fk_abundance %>%
+    select(YEAR, protected_status, richness, shannon, simpson) 
+  write_csv(forage_fk_diversity, "big_csv/trophic_groups/diversity/forage_fk_diversity.csv")
+  
+  # dt diversity 
+  forage_dt_abundance = forage_dt_abun %>% 
+    select(YEAR, protected_status, SPECIES_CD, abundance) %>%  
+    group_by(YEAR, protected_status) %>% #48 groups 
+    nest(-YEAR) %>%  
+    mutate(
+      data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abundance, fill = 0)), 
+      #species richness 
+      richness = map(
+        data_wide, 
+        function(x) specnumber(x)),
+      #simpson diversity as effective number of species 
+      simpson = map( 
+        data_wide,
+        function(x) 1/(1 - diversity(x, index = 'simpson'))),
+      #shannon diversity as effective number of species 
+      shannon = map(
+        data_wide,
+        function(x) exp(diversity(x, index = 'shannon')))) %>%
+    unnest(richness, simpson, shannon)
+  forage_dt_diversity = forage_dt_abundance %>%
+    select(YEAR, protected_status, richness, shannon, simpson) 
+  write_csv(forage_dt_diversity, "big_csv/trophic_groups/diversity/forage_dt_diversity.csv")
+} 
 ```
 
 #### Grouper
@@ -1311,8 +1319,6 @@ write_csv(snapper_dt_diversity, "big_csv/trophic_groups/diversity/snapper_dt_div
 Read in abundance, density, and diversity csv files for trophic groups 
 
 ```{r csv files}
-# on Mac in Terminal shell: ln -s ~/Dropbox/big_csv big_csv
-
 # read in all abundance csv files for trophic groups 
 path = "big_csv/trophic_groups/abundance/"
 files = list.files(path=path, pattern = "*.csv")
