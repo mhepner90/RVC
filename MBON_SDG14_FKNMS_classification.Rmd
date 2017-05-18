@@ -635,7 +635,7 @@ write_csv(lionfish_dt_den, "big_csv/trophic_groups/density/lionfish_dt_den.csv")
 |*Euthynnus alletteratus*	      | little tunny	      | EUT ALLE  |
 |*Oligoplites saurus*           |	leatherjack	        | OLI SAUR  |
 |*Sphyraena barracuda*	        | great barracuda	    | SPH BARR  |
-|*Rachycentron canadum*	        | cobia	              | Rac cana  |
+|*Rachycentron canadum*	        | cobia	              | RAC CANA  |
 |*Scomberomorus regalis*	      | cero	              | SCO REGA  |
 |*Sphyraena picudilla*	        | southern sennet	    | SPH PICU  |
 |*Selene vomer*	                | lookdown	          | SEL VOME  |
@@ -729,6 +729,26 @@ write_csv(opportunists_dt_diversity, "big_csv/trophic_groups/diversity/opportuni
 ```
 
 #### Parrotfish
+
+| Scientific name               | Common name           | RVC code  |  
+|:------------------------------|:----------------------|:----------|
+|*Cryptotomus roseus*	          | bluelip parrotfish	  | CRY ROSE  |
+|*Nicholsina usta*	            | emerald parrotfish	  | NIC USTA  |
+|*Scarus coelestinus*	          | midnight parrotfish	  | SCA COEL  |
+|*Scarus coeruleus*	            | blue parrotfish	      | SCA COER  |
+|*Scarus guacamaia*	            | rainbow parrotfish	  | SCA GUAC  |
+|*Scarus iseri*	                | striped parrotfish	  | SCA ISER  |
+|*Scarus sp.*	                  | parrotfish species	  | SCA SPE.  |
+|*Scarus taeniopterus*          |	princess parrotfish	  | SCA TAEN  |
+|*Scarus vetula*	              | queen parrotfish	    | SCA VETU  |
+|*Sparisoma atomarium*	        | greenblotch parrotfish|	SPA ATOM  |
+|*Sparisoma aurofrenatum*	      | redband parrotfish	  | SPA AURO  |
+|*Sparisoma chrysopterum*	      | redtail parrotfish	  | SPA CHRY  |
+|*Sparisoma radians*	          | bucktooth parrotfish	| SPA RADI  |
+|*Sparisoma rubripinne*	        | yellowtail parrotfish	| SPA RUBR  |
+|*Sparisoma sp.*	              | parrotfish species	  | SPA SPE.  |
+|*Sparisoma viride*	            | stoplight parrotfish	| SPA VIRI  |
+
 ```{r Parrotfish}
 
 parrotfish_fk_abun_csv      = "big_csv/trophic_groups/abundance/parrotfish_fk_abun.csv"
