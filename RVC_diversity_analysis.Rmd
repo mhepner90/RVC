@@ -327,6 +327,11 @@ col_types = cols(
 
 #grep("SPE.$", domain_fk_abun$SPECIES_CD, value = T)
 
+# BB test
+domain_fk_abun %>%
+  filter(stringr::str_detect(SPECIES_CD, 'SPE\\.$')) %>%
+  sum(.$abundance, na.rm=T)
+
 totalabun = sum(domain_fk_abun$abundance) #23,434,984,377 counts over 15 years in FK
 
 new<-subset("SPE.$", domain_fk_abun$SPECIES_CD, value = T)
