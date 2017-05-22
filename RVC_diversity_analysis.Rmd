@@ -37,23 +37,15 @@ All indices were computed as effective number of species. Effective number of sp
 
 ## Outputs 
 1. Functional dendogram
-1. Species weighted abundance matrix by domain for each sampling year 
+1. Species weighted abundance matrix by *domain* for each sampling year and region  
     + Species richness, Simpson diversity, Shannon diversity, and Functional diversity as effective number  of species for each sampling year by domain
-    + plot 
-1. Species weighted abundance matrix by strata for each sampling year
-    + Species richness, Simpson diversity, Shannon diversity, and Functional diversity as effective number of species for each sampling year by strata
-    + plot 
-1. Species weighted abundance matrix by primary sampling unit for each sampling year
+    + plots 
+1. Species weighted abundance matrix by *strata* for each sampling year and region 
+    + Species richness, Simpson diversity, Shannon diversity, and Functional diversity as effective number of species for each sampling year by strata and region 
+    + plots 
+1. Species weighted abundance matrix by *primary sampling unit* for each sampling year and region 
     + Species richness, Simpson diversity, Shannon diversity, and Functional diversity as effective number of species for each sampling year by primary sampling unit
-    + plot 
-1. Species weighted density matrix by domain for each sampling year 
-    + Species richness, Simpson diversity, Shannon diversity, and Functional diversity as effective number  of species for each sampling year by domain
-1. Species weighted density matrix by strata for each sampling year
-    + Species richness, Simpson diversity, Shannon diversity, and Functional diversity as effective number of species for each sampling year by strata
-    + plot 
-1. Species weighted density matrix by primary sampling unit for each sampling year
-    + Species richness, Simpson diversity, Shannon diversity, and Functional diversity as effective number of species for each sampling year by primary sampling unit
-    + plot 
+    + plots 
 1. Environmental factors from SERC 
 
 ```{r setup, include= F}
@@ -454,7 +446,6 @@ dygraph(dygraph_rich_simp_shannon, main = "Florida Keys Reef Fish Biodiversity")
   dySeries("dom_simpson", label = "Simpson", color = "red") %>% 
   dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 1.5) %>% #drawGrid = F
   dyLegend(width = 400)
-
 
 ```
 
