@@ -63,6 +63,7 @@ knitr::opts_chunk$set(echo = T)
 library(rvc) #calls RVC data from SEFSC server 
 library(tidyverse)
 library(vegan) # biodiveristy functions for richness, simpson, and shannon 
+library(dygraphs)
 
 spp_list <- read_csv('spp_list.csv') #402 species 
 
@@ -109,6 +110,20 @@ div_1999_tbl = abun1999 %>%
 
 ```{r percent spp}
 ##Percent of the abundance data is from species identified to the genus? 
+
+domain_fk_abun <- read_csv('big_csv/abundance_domain/domain_fk_abun.csv', 
+col_types = cols(
+  YEAR = col_integer(),
+  REGION = col_character(),
+  SPECIES_CD = col_character(),
+  abundance = col_double(),
+  var = col_double(),
+  n = col_integer(),
+  nm = col_integer(),
+  N = col_double(),
+  NM = col_double(),
+  protected_status = col_character()
+))
 
 spp_abun = domain_fk_abun %>%
   filter(stringr::str_detect(SPECIES_CD, 'SPE\\.$')) %>%
@@ -367,6 +382,82 @@ write_csv(fk_domain_abun_diversity, 'big_csv/abundance_domain/domain_fk_abun_div
 
 ```
 
+
+```{r dygraphs}
+domain_fk_abun_diversity = read_csv('big_csv/abundance_domain/domain_fk_abun_diversity.csv')
+
+## Simpson for protected and unprotected stacked 
+fk_simpson = domain_fk_abun_diversity %>% 
+  filter(protected_status != 'all') %>%
+  select(YEAR, protected_status, dom_simpson) %>%
+  mutate(
+    protected_status = recode(
+      protected_status, '0'='Unprotected', '1'='Protected')) %>%
+  spread(protected_status, dom_simpson)
+
+dygraph(fk_simpson, main = "Simpson Reef Fish Diversity") %>% 
+  dyAxis("y", label = "Effective Number of Species", valueRange = c(0, 50)) %>%
+  dyAxis("x", label = "Year") %>%
+  dyOptions(stackedGraph = T)%>% 
+  dyRangeSelector(height = 20) 
+
+## Shannon for protected and unprotected stacked 
+fk_shannon = domain_fk_abun_diversity %>% 
+  filter(protected_status != 'all') %>%
+  select(YEAR, protected_status, dom_shannon) %>%
+  mutate(
+    protected_status = recode(
+      protected_status, '0'='Unprotected', '1'='Protected')) %>%
+  spread(protected_status, dom_shannon)
+
+dygraph(fk_shannon, main = "Shannon Reef Fish Diversity") %>% 
+  dyAxis("y", label = "Effective Number of Species", valueRange = c(0, 75)) %>%
+  dyAxis("x", label = "Year") %>%
+  dyOptions(stackedGraph = T)%>% 
+  dyRangeSelector(height = 20) 
+
+
+d = domain_fk_abun_diversity %>% 
+  filter(protected_status != 0) %>% 
+  filter(protected_status != 1)
+
+#Simpson for "all" filled 
+dygraph_simp = d %>%
+  select(YEAR, dom_simpson)
+
+dygraph(dygraph_simp, main = "Simpson Diversity of Reef Fish in FKNMS") %>%
+  dyOptions(fillGraph = T, fillAlpha = 0.4, drawPoints = T, pointSize = 2) %>%
+  dyAxis("y", label = "Effective Number of Species") %>% 
+  dyAxis("x", label = "Year")
+
+## Simpson and Shannon stacked for "all"
+dygraph_simp_shannon = d %>%
+  select(YEAR, dom_simpson, dom_shannon)
+
+dygraph(dygraph_simp_shannon, main = "Florida Keys Reef Fish Biodiversity") %>% 
+  dyAxis("y", label = "Effective Number of Species", valueRange = c(0, 70)) %>%
+  dyAxis("x", label = "Year") %>%
+  dySeries("dom_shannon", label = "Shannon Diversity", color = "blue") %>% 
+  dySeries("dom_simpson", label = "Simpson Diversity", color = "red") %>% 
+  dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 1.5) %>% #drawGrid = F
+  dyLegend(width = 400)
+
+#Richness, Shannon, Simpson stacked for "all"
+dygraph_rich_simp_shannon = d %>%
+  select(YEAR, dom_simpson, dom_shannon, dom_richness)
+
+dygraph(dygraph_rich_simp_shannon, main = "Florida Keys Reef Fish Biodiversity") %>% 
+  dyAxis("y", label = "Effective Number of Species") %>% 
+  dyAxis("x", label = "Year") %>%
+  dySeries("dom_richness", label = "Richness", color = "purple") %>%
+  dySeries("dom_shannon", label = "Shannon", color = "blue") %>% 
+  dySeries("dom_simpson", label = "Simpson", color = "red") %>% 
+  dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 1.5) %>% #drawGrid = F
+  dyLegend(width = 400)
+
+
+```
+
 ```{r FK domain biodiversity plots}
 
 domain_fk_abun_diversity = read_csv('big_csv/abundance_domain/domain_fk_abun_diversity.csv')
@@ -383,7 +474,6 @@ protected_status_names <- c(
   "1" = "Protected",
   "all" = "All"
   )
-
 #richness, simpson, shannon for domain FKNMS  
 FK_abun_RShSim <- ggplot(data = fk_domain_abun_diversity, aes(x = YEAR)) +
   geom_point(aes(y = dom_richness, color = "dom_richness")) +
@@ -456,19 +546,20 @@ FK_abun_Simp <- ggplot(data = fk_domain_abun_diversity, aes(x = YEAR)) +
 ### Dry Tortugas domain
 ```{r DT domain biodiversity}
 
-domain_dt_abun <- read_csv('big_csv/abundance_domain/domain_dt_abun.csv', 
-col_types = cols(
-  YEAR = col_integer(),
-  REGION = col_character(),
-  SPECIES_CD = col_character(),
-  abundance = col_double(),
-  var = col_double(),
-  n = col_integer(),
-  nm = col_integer(),
-  N = col_double(),
-  NM = col_double(),
-  protected_status = col_character()
-))
+domain_dt_abun <-
+  read_csv('big_csv/abundance_domain/domain_dt_abun.csv',
+    col_types = cols(
+      YEAR = col_integer(),
+      REGION = col_character(),
+      SPECIES_CD = col_character(),
+      abundance = col_double(),
+      var = col_double(),
+      n = col_integer(),
+      nm = col_integer(),
+      N = col_double(),
+      NM = col_double(),
+      protected_status = col_character()
+      ))
 
 #protected status: 0 - not protected; 1 - protected; all - both 
 
@@ -491,7 +582,7 @@ dt_domain_abun_diversity = domain_dt_abun %>% #12,140 * 10
 
 domain_dt_abun_diversity = dt_domain_abun_diversity %>%
   select(YEAR, protected_status, dom_richness, dom_simpson, dom_shannon) 
-write_csv(domain_dt_abun_diversity, 'abundance_domain/domain_dt_abun_diversity.csv')
+write_csv(domain_dt_abun_diversity, 'big_csv/abundance_domain/domain_dt_abun_diversity.csv')
 
 
 #TODO: why does DT have 4 options underprotected status?? 0,1,2,all 
@@ -594,6 +685,7 @@ strata_fk_abun <- read_csv("big_csv/abundance_strata/strata_fk_abun.csv",
 col_types = cols(
   YEAR = col_integer(),
   REGION = col_character(),
+  STRAT = col_character(),
   SPECIES_CD = col_character(),
   abundance = col_double(),
   var = col_double(),
@@ -611,20 +703,20 @@ fk_strata_abun_diversity = strata_fk_abun %>% #133,762 * 12
   nest() %>%  # 294 * 4 
   mutate(
     data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abundance, fill =0)), 
-    strata_richness = map( #species richness
+    richness = map( #species richness
       data_wide, 
       function(x) specnumber(x)),
-    strata_simpson = map( #simpson diversity as effective number of species 
+    simpson = map( #simpson diversity as effective number of species 
       data_wide,
       function(x) 1/(1 - diversity(x, index = 'simpson'))),
-    strata_shannon = map( #shannon diversity as effective number of species 
+    shannon = map( #shannon diversity as effective number of species 
       data_wide,
       function(x) exp(diversity(x, index = 'shannon')))) %>%
-  unnest(strata_richness, strata_simpson, strata_shannon)
+  unnest(richness, simpson, shannon)
 
-fk_strata_abun_diversity = dt_domain_abun_diversity %>%
-  select(YEAR, STRATA, protected_status, dom_richness, dom_simpson, dom_shannon) 
-write_csv(fk_strata_abun_diversity, 'abundance_strata/strata_fk_abun_diversity.csv')
+fk_strata_abun_diversity = fk_strata_abun_diversity %>%
+  select(YEAR, STRAT, protected_status, richness, simpson, shannon) 
+write_csv(fk_strata_abun_diversity, 'big_csv/abundance_strata/strata_fk_abun_diversity.csv')
 
 ```
 
@@ -837,7 +929,7 @@ psu_dt_abun_diversity = read_csv("big_csv/abundance_psu/psu_dt_abun_diversity.cs
 ### Florida Keys domain
 ```{r FK domain biodiversity with density}
 
-domain_fk_density <- read_csv("big_csv/abundance/density_domain/domain_fk_density.csv", 
+domain_fk_density <- read_csv("big_csv/density_domain/domain_fk_density.csv", 
 col_types = cols(
   YEAR = col_integer(),
   REGION = col_character(),
@@ -872,7 +964,7 @@ domain_fk_density = domain_fk_density %>% #15,771 * 10
 domain_fk_density_diversity = domain_fk_density %>%
   select(YEAR, protected_status, dom_richness, dom_simpson, dom_shannon) 
 
-write_csv(domain_fk_density_diversity, 'density_domain/domain_fk_density_diversity.csv')
+write_csv(domain_fk_density_diversity, 'big_csv/density_domain/domain_fk_density_diversity.csv')
   
 ```
 
@@ -895,7 +987,7 @@ ggplot(data = domain_fk_density, aes(x = YEAR)) +
 ```
 
 ### Dry Tortugas domain
-```{r DT domain biodiversity with density}
+```{r DT domain biodiversity with density, eval = F}
 
 domain_dt_density <- read_csv("big_csv/density_domain/domain_dt_density.csv", 
 col_types = cols(
@@ -933,7 +1025,7 @@ domain_dt_density = domain_dt_density %>% #12,140 * 10
 domain_dt_density_diversity = domain_dt_density %>%
   select(YEAR, protected_status, dom_richness, dom_simpson, dom_shannon) 
 
-write_csv(domain_dt_density_diversity, 'density_domain/domain_dt_density_diversity.csv')
+write_csv(domain_dt_density_diversity, 'big_csv/density_domain/domain_dt_density_diversity.csv')
 
 #TODO: why does DT have 4 options underprotected status?? 0,1,2,all 
 ```
