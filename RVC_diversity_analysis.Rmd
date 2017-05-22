@@ -419,6 +419,7 @@ dygraph_simp = d %>%
 
 dygraph(dygraph_simp, main = "Simpson Diversity of Reef Fish in FKNMS") %>%
   dyOptions(fillGraph = T, fillAlpha = 0.4, drawPoints = T, pointSize = 2) %>%
+  dySeries("dom_simpson", label = "Simpson Diversity") %>% 
   dyAxis("y", label = "Effective Number of Species") %>% 
   dyAxis("x", label = "Year")
 
@@ -535,6 +536,11 @@ FK_abun_Simp <- ggplot(data = fk_domain_abun_diversity, aes(x = YEAR)) +
 ```
 
 ### Dry Tortugas domain
+Protected status:
+0 - Unprotected 
+1 - Dry Tortugas National Park (DRTO)
+2 - Tortugas Northeast Reserve (TNER)
+All
 ```{r DT domain biodiversity}
 
 domain_dt_abun <-
@@ -576,7 +582,7 @@ domain_dt_abun_diversity = dt_domain_abun_diversity %>%
 write_csv(domain_dt_abun_diversity, 'big_csv/abundance_domain/domain_dt_abun_diversity.csv')
 
 
-#TODO: why does DT have 4 options underprotected status?? 0,1,2,all 
+
 ```
 
 ```{r DT domain biodiversity plots}
@@ -584,13 +590,13 @@ write_csv(domain_dt_abun_diversity, 'big_csv/abundance_domain/domain_dt_abun_div
 domain_dt_abun_diversity = read_csv("big_csv/abundance_domain/domain_dt_abun_diversity.csv")
 
 dt_protected_status_names <- c(
-  "0" = "0 - Unprotected",
-  "1" = "1 - Protected?",
-  "2" = "2 - Protected?",
+  "0" = "Unprotected",
+  "1" = "DRTO",
+  "2" = "TNER",
   "all" = "All"
   )
 
-#richness, simpson, shannon for domain FKNMS  
+#richness, simpson, shannon for domain in Dry Tortugas   
 ggplot(data = dt_domain_abun_diversity, aes(x = YEAR)) +
   geom_point(aes(y = dom_richness, color = "dom_richness")) +
   geom_point(aes(y = dom_simpson, color = "dom_simpson")) +
@@ -598,7 +604,7 @@ ggplot(data = dt_domain_abun_diversity, aes(x = YEAR)) +
   geom_line(aes(y = dom_richness, color = "dom_richness")) +
   geom_line(aes(y = dom_simpson, color = "dom_simpson")) +
   geom_line(aes(y = dom_shannon, color = "dom_shannon")) +
-  facet_grid(protected_status ~ ., labeller = as_labeller(protected_status_names)) +
+  facet_grid(protected_status ~ ., labeller = as_labeller(dt_protected_status_names)) +
   labs(x = "Year", y = "Effective Number of Species", color = "Diversity indices") +
   scale_colour_manual(values = c("darkturquoise", "magenta", "blue"), labels=c("Species Richness", "Shannon Diversity", "Simpson Diversity")) +
   ggtitle("Reef Fish Biodiversity in Dry Tortugas") +
@@ -613,19 +619,19 @@ ggplot(data = dt_domain_abun_diversity, aes(x = YEAR)) +
   geom_point(aes(y = dom_shannon, color = "dom_shannon")) +
   geom_line(aes(y = dom_simpson, color = "dom_simpson")) +
   geom_line(aes(y = dom_shannon, color = "dom_shannon")) +
-  facet_grid(protected_status ~ ., labeller = as_labeller(protected_status_names)) +
+  facet_grid(protected_status ~ ., labeller = as_labeller(dt_protected_status_names)) +
   labs(x = "Year", y = "Effective Number of Species", color = "Diversity index") +
   scale_colour_manual(values = c("magenta", "blue"), labels=c("Shannon diversity", "Simpson Diversity")) +
   ggtitle("Reef Fish Biodiversity in Dry Tortugas") +
   theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 12))+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(1999:2016)) +
-  scale_y_continuous(limits= c(0, 50), breaks = c(5,10,15,20,25,30,35,40,45,50))
+  scale_y_continuous(limits= c(0, 35), breaks = c(5,10,15,20,25,30,35))
 
 #species richness by protected status for domain FKNMS
 ggplot(data = dt_domain_abun_diversity, aes(x = YEAR)) +
   geom_point(aes(y = dom_richness, color = "dom_richness"),color = "darkturquoise") +
   geom_line(aes(y = dom_richness, color = "dom_richness"), color = "darkturquoise") +
-  facet_grid(protected_status ~ ., labeller = as_labeller(protected_status_names)) +
+  facet_grid(protected_status ~ ., labeller = as_labeller(dt_protected_status_names)) +
   labs(x = "Year", y = "Effective Number of Species", color = "Level of protection") +
   ggtitle("Species Richness of Reef Fish in Dry Tortugas") +
   theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 12))+
@@ -637,7 +643,7 @@ ggplot(data = dt_domain_abun_diversity, aes(x = YEAR)) +
 ggplot(data = dt_domain_abun_diversity, aes(x = YEAR)) +
   geom_point(aes(y = dom_shannon, color = "dom_shannon"),color = "magenta") +
   geom_line(aes(y = dom_shannon, color = "dom_shannon"), color = "magenta") +
-  facet_grid(protected_status ~ ., labeller = as_labeller(protected_status_names)) +
+  facet_grid(protected_status ~ ., labeller = as_labeller(dt_protected_status_names)) +
   labs(x = "Year", y = "Effective Number of Species", color = "Level of protection") +
   #scale_colour_manual(labels=c("Unprotected", "Protected", "All")) +
   ggtitle("Shannon Diveristy of Reef Fish in Dry Tortugas") +
@@ -649,7 +655,7 @@ ggplot(data = dt_domain_abun_diversity, aes(x = YEAR)) +
 ggplot(data = dt_domain_abun_diversity, aes(x = YEAR)) +
   geom_point(aes(y = dom_simpson, color = "dom_simpson"),color = "blue") +
   geom_line(aes(y = dom_simpson, color = "dom_simpson"), color = "blue") +
-  facet_grid(protected_status ~ ., labeller = as_labeller(protected_status_names)) +
+  facet_grid(protected_status ~ ., labeller = as_labeller(dt_protected_status_names)) +
   labs(x = "Year", y = "Effective Number of Species", color = "Level of protection") +
   #scale_colour_manual(labels=c("Unprotected", "Protected", "All")) +
   ggtitle("Simpson Diveristy of Reef Fish in Dry Tortugas") +
@@ -733,10 +739,16 @@ strata_names <- c(
  "OFPR" = "OFPR",
  "FDLR" = "FDLR")
 
-#simpson by protected status for domain FKNMS
-FK_strata_ab_Sim <- ggplot(data = fk_strata_abun_diversity, aes(x = YEAR)) +
-  geom_point(aes(y = strata_simpson, color = "strata_simpson"),color = "blue") +
-  geom_line(aes(y = strata_simpson, color = "strata_simpson"), color = "blue") +
+protected_status_names <- c(
+  "0" = "Unprotected",
+  "1" = "Protected",
+  "all" = "All"
+  )
+
+#simpson diversity by protected status by strata in FKNMS
+FK_strata_ab_simpson <- ggplot(data = fk_strata_abun_diversity, aes(x = YEAR)) +
+  geom_point(aes(y = simpson, color = "simpson"),color = "blue") +
+  geom_line(aes(y = simpson, color = "simpson"), color = "blue") +
   facet_grid(STRAT ~ protected_status, 
              labeller = labeller(.rows = strata_names, .cols = protected_status_names)) +
              #labeller(strata_names = label_wrap_gen(3))) + 
@@ -746,15 +758,17 @@ FK_strata_ab_Sim <- ggplot(data = fk_strata_abun_diversity, aes(x = YEAR)) +
   scale_x_continuous(limits = c(1999, 2016), breaks = c(1999:2016)) +
   scale_y_continuous(limits= c(0, 25), breaks = c(5,10,15,20,25))
 
-ggplot(data = fk_strata_abun_diversity, aes(x = YEAR)) +
-  geom_point(aes(y = strata_shannon, color = "strata_shannon"), color = "magenta") +
-  geom_line(aes(y = strata_shannon, color = "strata_shannon"), color = "magenta") +
-  facet_grid(STRAT ~ protected_status, labeller = as_labeller(protected_status_names)) +
+#shannon diversity by protected status by strata in FKNMS
+FK_strata_ab_shannon <- ggplot(data = fk_strata_abun_diversity, aes(x = YEAR)) +
+  geom_point(aes(y = shannon, color = "shannon"), color = "magenta") +
+  geom_line(aes(y = shannon, color = "shannon"), color = "magenta") +
+  facet_grid(STRAT ~ protected_status, 
+             labeller = labeller(.rows = strata_names, .cols = protected_status_names)) +
   labs(x = "Year", y = "Effective Number of Species", color = "Level of protection") +
   ggtitle("Shannon Diveristy of Reef Fish in the Florida Keys by Strata") + 
   theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 12))+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(1999:2016)) +
-  scale_y_continuous(limits= c(0, 25), breaks = c(5,10,15,20,25))
+  scale_y_continuous(limits= c(0, 50), breaks = c(5,10,15,20,25))
 
 ```
 
@@ -793,19 +807,19 @@ dt_strata_abun_diversity = strata_dt_abun %>% #133,762 * 12
   nest(-YEAR) %>%
   mutate(
     data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abundance, fill =0)), 
-    strata_richness = map( #species richness
+    richness = map( #species richness
       data_wide, 
       function(x) specnumber(x %>% select(-REGION, -var, -n, -nm, -N, -NM))),
-    strata_simpson = map( #simpson diversity as effective number of species 
+    simpson = map( #simpson diversity as effective number of species 
       data_wide,
       function(x) 1/(1 - diversity(x %>% select(-REGION, -var, -n, -nm, -N, -NM), index = 'simpson'))),
-    strata_shannon = map( #shannon diversity as effective number of species 
+    shannon = map( #shannon diversity as effective number of species 
       data_wide,
       function(x) exp(diversity(x %>% select(-REGION, -var, -n, -nm, -N, -NM), index = 'shannon')))) %>%
-  unnest(strata_richness, strata_simpson, strata_shannon)
+  unnest(richness, simpson, shannon)
 
 strata_dt_abun_diversity = dt_strata_abun_diversity %>%
-  select(YEAR, STRAT, PROT, strata_richness, strata_simpson, strata_shannon)
+  select(YEAR, STRAT, PROT, richness, simpson, shannon)
 write_csv(strata_dt_abun_diversity, "big_csv/abundance_strata/strata_dt_abun_diversity.csv")
 
 ```
@@ -813,6 +827,34 @@ write_csv(strata_dt_abun_diversity, "big_csv/abundance_strata/strata_dt_abun_div
 ```{r DT  strata biodiversity plots}
 
 strata_dt_abun_diversity = read_csv("big_csv/abundance_strata/strata_dt_abun_diversity.csv")
+
+dt_strata_names = c(
+"CONT_LR" = "CONT_LR",#continuous low relief,
+"CONT_MR" = "CONT_MR", #continuous mid relief,
+"CONT_HR" = "CONT_HR", #continuous high relief,
+"ISOL_LR" = "ISOL_LR", #isolated low relief,
+"ISOL_MR" = "ISOL_MR", #isolated mid relief,
+"ISOL_HR" = "ISOL_HR", #isolated high relief,
+"SPGR_LR" = "SPGR_LR", #spur and groove low relief,
+"SPGR_HR" = "SPGR_HR") #spur and groove high relief)
+
+dt_protected_status <- c(
+  "0" = "Unprotected",
+  "1" = "DRTO",
+  "2" = "TNER",
+  "all" = "All"
+  )
+
+dt_strata_ab_shannon <- ggplot(data = strata_dt_abun_diversity, aes(x = YEAR)) +
+  geom_point(aes(y = shannon, color = "shannon"), color = "magenta") +
+  geom_line(aes(y = shannon, color = "shannon"), color = "magenta") +
+  facet_grid(STRAT ~ PROT, 
+             labeller = labeller(.rows = dt_strata_names, .cols = dt_protected_status)) +
+  labs(x = "Year", y = "Effective Number of Species", color = "Level of protection") +
+  ggtitle("Shannon Diveristy of Reef Fish in the Florida Keys by Strata") + 
+  theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 12))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(1999:2016)) +
+  scale_y_continuous(limits= c(0, 40), breaks = c(5,10,15,20,25,30,35,40))
 
 ```
 
