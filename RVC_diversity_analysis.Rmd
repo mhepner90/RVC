@@ -106,6 +106,21 @@ div_1999_tbl = abun1999 %>%
 
 ``` 
 
+
+```{r percent spp}
+##Percent of the abundance data is from species identified to the genus? 
+
+spp_abun = domain_fk_abun %>%
+  filter(stringr::str_detect(SPECIES_CD, 'SPE\\.$')) %>%
+  #sum(.$abundance, na.rm=T)
+  .$abundance %>% 
+  sum() #1923525258 
+
+total_abun = sum(domain_fk_abun$abundance) #23,434,984,377 counts over 15 years in FK
+
+percent_spp = (spp_abun/total_abun)*100 
+
+```
 ## Functional distance trait based matrix (from Lefcheck et al.,)
 
 ```{r Functional distance matrix, eval = F}
@@ -323,29 +338,7 @@ col_types = cols(
   protected_status = col_character()
 ))
 
-## Should I remove the species that are not identified to species level. Is this skewing my diversity indices? What percent of the abundance data is from species identified to the genus? 
-
-#grep("SPE.$", domain_fk_abun$SPECIES_CD, value = T)
-
-# BB test
-domain_fk_abun %>%
-  filter(stringr::str_detect(SPECIES_CD, 'SPE\\.$')) %>%
-  sum(.$abundance, na.rm=T)
-
-totalabun = sum(domain_fk_abun$abundance) #23,434,984,377 counts over 15 years in FK
-
-new<-subset("SPE.$", domain_fk_abun$SPECIES_CD, value = T)
-head(new)
-
-(grep("SPE.$", domain_fk_abun$SPECIES_CD))
-head(domain_fk_abun)
-grep("SPE.$", domain_fk_abun$SPECIES_CD, value = T)
-
-if(grep("SPE.$", domain_fk_abun$SPECIES_CD, value = T)){
-    sppabun = sum(domain_fk_abun$abundance)
-    }
-
-percent_spp = (sppabun/totalabun)*100 
+##Percent of the abundance data is from species identified to the genus? 
 
 ## FK's domain abundance 
 fk_domain_abun_diversity = domain_fk_abun %>% #15,771 * 10
