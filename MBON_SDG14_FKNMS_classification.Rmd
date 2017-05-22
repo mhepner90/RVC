@@ -1386,12 +1386,27 @@ Plotting with [htmlwidgets: leaflet](http://www.htmlwidgets.org/showcase_leaflet
 - [dygraphs for R](http://rstudio.github.io/dygraphs/)
 
 ```{r test plot, eval = F}
-'grouper_fk_abun','grouper_fk_diversity'
 
 #csv = "big_csv/trophic_groups/abundance/grouper_fk_abun.csv"
-csv = "big_csv/trophic_groups/diversity/grouper_fk_diversity.csv"
+grouper = read_csv("trophic_groups/diversity/grouper_fk_diversity.csv")
+grouper_abun = read_csv("trophic_groups/abundance/grouper_fk_abun.csv")
 
-d = read_csv(csv)
+grouper_abundance = grouper_abun %>%
+  select(YEAR,protected_status, SPECIES_CD,abundance) %>% 
+  group_by(YEAR, protected_status) %>%
+  summarise(
+  ntot = sum(abundance)) %>%
+  filter(protected_status != "all") %>%
+  mutate(
+    protected_status = recode(
+      protected_status, '0'='unprotected', '1'='protected')) %>%
+  spread(protected_status, ntot)
+
+dygraph(grouper_abundance, main = 'Grouper Abundance') %>% 
+    dyAxis("y", label = "Abundance") %>%
+    dyAxis("x", label = "Year") %>%
+    dyOptions(stackedGraph = T)
+  
 
 source('~/github/cr-metrics/functions.R')
 
@@ -1405,15 +1420,20 @@ plot_timeseries(
   col_y   = 'grouper_richness',
   skip    = 0)
 
-d = read_csv(csv) %>%
+grouper = grouper %>%
   filter(protected_status != 'all') %>%
-  select(YEAR, protected_status, grouper_richness) %>%
+  select(YEAR, protected_status, shannon) %>%
   mutate(
     protected_status = recode(
       protected_status, '0'='unprotected', '1'='protected')) %>%
-  spread(protected_status, grouper_richness)
+  spread(protected_status, shannon)
 
-dygraph(d, main='Grouper Richness')
+dygraph(grouper, main = 'Grouper Shannon Diversity') %>% 
+    dyAxis("y", label = "Effective Number of Species") %>%
+    dyAxis("x", label = "Year") %>%
+     dyOptions(stackedGraph = T)%>% 
+    dyRangeSelector(height = 20) 
+  
 ```
 
 ## Trophic Level 
@@ -1479,10 +1499,10 @@ Biom1 = getDomainTotalBiomass(RVCdata_FK, species = lookup1$RVC_CODE, growth_par
 
 ```{r Exploited reef fish}
 
-exploited_fk_abun_csv = "big_csv/exploited/exploited_fk_abun.csv"
-exploited_dt_abun_csv = "big_csv/exploited/exploited_dt_abun.csv"
-exploited_fk_den_csv  = "big_csv/exploited/exploited_fk_den.csv"
-exploited_dt_den_csv  = "big_csv/exploited/exploited_dt_den.csv"
+exploited_fk_abun_csv = "exploited_species/exploited_fk_abun.csv"
+exploited_dt_abun_csv = "exploited_species/exploited_dt_abun.csv"
+exploited_fk_den_csv  = "exploited_species/exploited_fk_den.csv"
+exploited_dt_den_csv  = "exploited_species/exploited_dt_den.csv"
 
 if(!all(file.exists(exploited_fk_abun_csv, exploited_dt_abun_csv, exploited_fk_den_csv, exploited_dt_den_csv))){
   
@@ -1509,6 +1529,24 @@ exploited_dt_den <- getDomainDensity(RVCdata_DT, species = exploited_spp_list, m
 write_csv(exploited_dt_den,"big_csv/exploited/exploited_dt_den.csv")
 
 }
+
+exploited_den = read_csv("exploited_species/exploited_fk_den.csv")
+
+exploited_den = exploited_den %>%
+  select(YEAR, protected_status, SPECIES_CD, density) %>% 
+  group_by(YEAR, protected_status) %>%
+  summarise(
+  ntot = sum(density)) %>%
+  filter(protected_status != "all") %>%
+  mutate(
+    protected_status = recode(
+      protected_status, '0'='unprotected', '1'='protected')) %>%
+  spread(protected_status, ntot)
+
+dygraph(exploited_den, main = 'Exploited Reef Fish Density') %>% 
+    dyAxis("y", label = "Density") %>%
+    dyAxis("x", label = "Year") %>%
+    dyOptions(stackedGraph = T)
 
 ```
 
