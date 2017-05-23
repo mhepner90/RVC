@@ -1532,18 +1532,51 @@ write_csv(exploited_dt_den,"big_csv/exploited/exploited_dt_den.csv")
 
 exploited_den = read_csv("exploited_species/exploited_fk_den.csv")
 
-exploited_den = exploited_den %>%
-  select(YEAR, protected_status, SPECIES_CD, density) %>% 
-  group_by(YEAR, protected_status) %>%
-  summarise(
-  ntot = sum(density)) %>%
-  filter(protected_status != "all") %>%
+exploited_density = exploited_den %>%
   mutate(
     protected_status = recode(
-      protected_status, '0'='unprotected', '1'='protected')) %>%
-  spread(protected_status, ntot)
+      protected_status, '0'='unprotected', '1'='protected'), 
+    common_name = recode(
+      SPECIES_CD,
+      'CEP CRUE' = 'Graysby',
+      'EPI ITAJ' = 'Goliath_Grouper',
+      'EPI MORI' = 'Red_Grouper',
+      'EPI STRI' = 'Nassau_Grouper',
+      'LAC MAXI' = 'Hogfish',
+      'LUT ANAL' = 'Mutton_Snapper',
+      'LUT GRIS' = 'Grey_Snapper',
+      'MYC BONA' = 'Black_Grouper',
+      'OCY CHRY' = 'Yellowtail_Snapper')) %>% 
+  select(YEAR, common_name, protected_status, density) %>%
+  group_by(YEAR, common_name, protected_status) %>%
+  filter(protected_status != "all") %>%
+  summarise(
+    ntot = sum(density)) %>%
+  spread(common_name, ntot)
+    
+graysby = exploited_density %>%
+  select(YEAR, protected_status, Graysby) %>%
+  spread(protected_status, Graysby)
 
-dygraph(exploited_den, main = 'Exploited Reef Fish Density') %>% 
+dygraph(graysby, main = 'Graysby Density') %>% 
+    dyAxis("y", label = "Density") %>%
+    dyAxis("x", label = "Year") %>%
+    dyOptions(stackedGraph = T)
+
+goliath_grouper = exploited_density %>%
+  select(YEAR, protected_status, Goliath_Grouper) %>%
+  spread(protected_status, Goliath_Grouper)
+
+dygraph(goliath_grouper, main = 'Goliath Grouper Density') %>% 
+    dyAxis("y", label = "Density") %>%
+    dyAxis("x", label = "Year") %>%
+    dyOptions(stackedGraph = T)
+
+yellowtail_snapper = exploited_density %>%
+  select(YEAR, protected_status, Yellowtail_Snapper) %>%
+  spread(protected_status, Yellowtail_Snapper)
+
+dygraph(yellowtail_snapper, main = 'Yellowtail Snapper Density') %>% 
     dyAxis("y", label = "Density") %>%
     dyAxis("x", label = "Year") %>%
     dyOptions(stackedGraph = T)
