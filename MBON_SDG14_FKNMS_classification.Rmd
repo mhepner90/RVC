@@ -508,6 +508,26 @@ higher_reef_diversity = higher_reef_dt_abundance %>%
 write_csv(higher_reef_diversity, "big_csv/trophic_groups/diversity/higher_reef_dt_diversity.csv")
 }
 
+higher_reef_fk_den = read_csv("trophic_groups/density/higher_reef_fk_den.csv", 
+      col_types = cols(protected_status = col_character()))
+
+higher_reef_fk_density = higher_reef_fk_den %>%
+  select(YEAR, protected_status, SPECIES_CD, density) %>% 
+  group_by(YEAR, protected_status) %>%
+  summarise(
+  ntot = sum(density)) %>%
+  filter(protected_status != "0") %>%
+  filter(protected_status != "1") %>% 
+  mutate(
+    protected_status = recode(
+      protected_status, '0'='unprotected', '1'='protected')) %>%
+  spread(protected_status, ntot)
+
+dygraph(higher_reef_fk_density, main = 'Higher Level Reef Fish Density') %>% 
+    dyAxis("y", label = "Density") %>%
+    dyAxis("x", label = "Year") %>%
+    dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 2)
+
 ```
 
 #### Hogfish
@@ -835,6 +855,44 @@ parrotfish_dt_diversity = parrotfish_dt_abundance %>%
 write_csv(parrotfish_dt_diversity, "big_csv/trophic_groups/diversity/parrotfish_dt_diversity.csv")
 }
 
+parrotfish_fk_abun = read_csv('trophic_groups/abundance/parrotfish_fk_abun.csv')
+
+parrotfish_fk_abundance = parrotfish_fk_abun %>%
+  select(YEAR, protected_status, SPECIES_CD, abundance) %>% 
+  group_by(YEAR, protected_status) %>%
+  summarise(
+  ntot = sum(abundance)) %>%
+  filter(protected_status != "0") %>%
+  filter(protected_status != "1") %>% 
+  mutate(
+    protected_status = recode(
+      protected_status, '0'='unprotected', '1'='protected')) %>%
+  spread(protected_status, ntot)
+
+dygraph(parrotfish_fk_abundance, main = 'Parrotfish Abundance') %>% 
+    dyAxis("y", label = "Abundance") %>%
+    dyAxis("x", label = "Year") %>%
+    dyOptions(stackedGraph = T)
+
+parrotfish_fk_den = read_csv('trophic_groups/density/parrotfish_fk_den.csv')
+
+parrotfish_fk_density = parrotfish_fk_den %>%
+  select(YEAR, protected_status, SPECIES_CD, density) %>% 
+  group_by(YEAR, protected_status) %>%
+  summarise(
+  ntot = sum(density)) %>%
+  filter(protected_status != "0") %>%
+  filter(protected_status != "1") %>% 
+  mutate(
+    protected_status = recode(
+      protected_status, '0'='unprotected', '1'='protected')) %>%
+  spread(protected_status, ntot)
+
+dygraph(parrotfish_fk_density, main = 'Parrotfish Density') %>% 
+    dyAxis("y", label = "Density") %>%
+    dyAxis("x", label = "Year") %>%
+    dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 2)
+
 ```
 
 #### Rays
@@ -1134,6 +1192,22 @@ sharks_dt_diversity = sharks_dt_abundance %>%
 write_csv(sharks_dt_diversity, "big_csv/trophic_groups/diversity/sharks_dt_diversity.csv")
 }
 
+sharks_fk_den= read_csv('trophic_groups/density/sharks_fk_den.csv')
+
+sharks_fk_density = sharks_fk_den %>%
+  select(YEAR, protected_status, SPECIES_CD, density) %>% 
+  group_by(YEAR, protected_status) %>%
+  summarise(
+  ntot = sum(density)) %>%
+  filter(protected_status != "0") %>%
+  filter(protected_status != "1") %>%
+  spread(protected_status, ntot)
+
+dygraph(sharks_fk_density, main = 'Sharks Density') %>% 
+    dyAxis("y", label = "Density") %>%
+    dyAxis("x", label = "Year") %>%
+    dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 2)
+
 ```
 
 #### Small Reef Fish
@@ -1313,6 +1387,26 @@ snapper_dt_diversity = snapper_dt_abundance %>%
   select(YEAR, protected_status, richness, simpson, shannon) 
 write_csv(snapper_dt_diversity, "big_csv/trophic_groups/diversity/snapper_dt_diversity.csv") 
 }
+
+snapper_fk_den = read_csv("trophic_groups/density/snapper_fk_den.csv", 
+      col_types = cols(protected_status = col_character()))
+
+snapper_fk_density = snapper_fk_den %>%
+  select(YEAR, protected_status, SPECIES_CD, density) %>% 
+  group_by(YEAR, protected_status) %>%
+  summarise(
+  ntot = sum(density)) %>%
+  filter(protected_status != "0") %>%
+  filter(protected_status != "1") %>% 
+  mutate(
+    protected_status = recode(
+      protected_status, '0'='unprotected', '1'='protected')) %>%
+  spread(protected_status, ntot)
+
+dygraph(snapper_fk_density, main = 'Snapper Density') %>% 
+    dyAxis("y", label = "Density") %>%
+    dyAxis("x", label = "Year") %>%
+    dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 2)
 
 ```
 
@@ -1553,25 +1647,58 @@ exploited_density = exploited_den %>%
   summarise(
     ntot = sum(density)) %>%
   spread(common_name, ntot)
-    
-graysby = exploited_density %>%
+ 
+#Graysby density    
+Graysby = exploited_density %>%
   select(YEAR, protected_status, Graysby) %>%
   spread(protected_status, Graysby)
 
-dygraph(graysby, main = 'Graysby Density') %>% 
+dygraph(Graysby, main = 'Graysby Density') %>% 
     dyAxis("y", label = "Density") %>%
     dyAxis("x", label = "Year") %>%
     dyOptions(stackedGraph = T)
 
-goliath_grouper = exploited_density %>%
+#Grey_Snapper density    
+Grey_Snapper = exploited_density %>%
+  select(YEAR, protected_status, Grey_Snapper) %>%
+  spread(protected_status, Grey_Snapper)
+
+dygraph(Grey_Snapper, main = 'Grey Snapper Density') %>% 
+    dyAxis("y", label = "Density") %>%
+    dyAxis("x", label = "Year") %>%
+    dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 2)
+
+#Hogfish density    
+Hogfish = exploited_density %>%
+  select(YEAR, protected_status, Hogfish) %>%
+  spread(protected_status, Hogfish)
+
+dygraph(Hogfish, main = 'Hogfish Density') %>% 
+    dyAxis("y", label = "Density") %>%
+    dyAxis("x", label = "Year") %>%
+    dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 2)
+
+#Goliath grouper density 
+Goliath_Grouper = exploited_density %>%
   select(YEAR, protected_status, Goliath_Grouper) %>%
   spread(protected_status, Goliath_Grouper)
 
-dygraph(goliath_grouper, main = 'Goliath Grouper Density') %>% 
+dygraph(Goliath_Grouper, main = 'Goliath Grouper Density') %>% 
     dyAxis("y", label = "Density") %>%
     dyAxis("x", label = "Year") %>%
-    dyOptions(stackedGraph = T)
+    dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 2)
 
+##Nassau Grouper
+Nassau_Grouper = exploited_density %>%
+  select(YEAR, protected_status, Nassau_Grouper) %>%
+  spread(protected_status, Nassau_Grouper)
+
+dygraph(Nassau_Grouper, main = 'Nassau Grouper Density') %>% 
+    dyAxis("y", label = "Density") %>%
+    dyAxis("x", label = "Year") %>%
+    dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = )
+
+##Yellowtail Snapper 
 yellowtail_snapper = exploited_density %>%
   select(YEAR, protected_status, Yellowtail_Snapper) %>%
   spread(protected_status, Yellowtail_Snapper)
@@ -1579,7 +1706,17 @@ yellowtail_snapper = exploited_density %>%
 dygraph(yellowtail_snapper, main = 'Yellowtail Snapper Density') %>% 
     dyAxis("y", label = "Density") %>%
     dyAxis("x", label = "Year") %>%
-    dyOptions(stackedGraph = T)
+    dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 2)
+
+#exploited reef fish density in protected areas 
+exploited_density_protected = exploited_density %>%
+  filter(protected_status == 'protected') %>% 
+  select(YEAR, Black_Grouper, Goliath_Grouper, Graysby, Grey_Snapper, Hogfish, Mutton_Snapper, Nassau_Grouper,Red_Grouper, Yellowtail_Snapper)
+
+dygraph(exploited_density_protected, main = "Exploited Reef Fish Density in Protected Areas") %>% 
+    dyAxis("y", label = "Density") %>%
+    dyAxis("x", label = "Year") %>%
+    dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 2, colors = rainbow(9))
 
 ```
 
@@ -1594,6 +1731,106 @@ strata_dt_abun_diversity = read_csv("big_csv/abundance_strata/strata_dt_abun_div
 psu_fk_abun_diversity = read_csv("big_csv/abundance_psu/psu_fk_abun_diversity.csv", 
           col_types = cols(protected_status = col_character())) 
 psu_dt_abun_diversity = read_csv("big_csv/abundance_psu/psu_dt_abun_diversity.csv")
+
+domain_fk_abun_diversity = read_csv('big_csv/abundance_domain/domain_fk_abun_diversity.csv')
+
+## Simpson for protected and unprotected stacked 
+fk_simpson = domain_fk_abun_diversity %>% 
+  filter(protected_status != 'all') %>%
+  select(YEAR, protected_status, dom_simpson) %>%
+  mutate(
+    protected_status = recode(
+      protected_status, '0'='Unprotected', '1'='Protected')) %>%
+  spread(protected_status, dom_simpson)
+
+dygraph(fk_simpson, main = "Simpson Reef Fish Diversity") %>% 
+  dyAxis("y", label = "Effective Number of Species", valueRange = c(0, 50)) %>%
+  dyAxis("x", label = "Year") %>%
+  dySeries("Protected", strokeWidth = 2, strokePattern = "dashed") %>% 
+  dySeries("Unprotected", strokeWidth = 2) %>%
+  dyOptions(stackedGraph = T, fillAlpha = 0.8, axisLineWidth = 2)
+
+  #dyRangeSelector(height = 20) 
+
+## Shannon for protected and unprotected stacked 
+fk_shannon = domain_fk_abun_diversity %>% 
+  filter(protected_status != 'all') %>%
+  select(YEAR, protected_status, dom_shannon) %>%
+  mutate(
+    protected_status = recode(
+      protected_status, '0'='Unprotected', '1'='Protected')) %>%
+  spread(protected_status, dom_shannon)
+
+dygraph(fk_shannon, main = "Shannon Reef Fish Diversity") %>% 
+  dyAxis("y", label = "Effective Number of Species", valueRange = c(0, 75)) %>%
+  dyAxis("x", label = "Year") %>%
+  dySeries("Protected", strokeWidth = 2, strokePattern = "dashed") %>% 
+  dySeries("Unprotected", strokeWidth = 2) %>%
+  dyOptions(stackedGraph = T, fillAlpha = 0.8, axisLineWidth = 2)
+  #dyRangeSelector(height = 20) 
+
+d = domain_fk_abun_diversity %>% 
+  filter(protected_status != 0) %>% 
+  filter(protected_status != 1)
+
+#Simpson for "all" filled 
+dygraph_simp = d %>%
+  select(YEAR, dom_simpson)
+
+dygraph(dygraph_simp, main = "Simpson Diversity of Reef Fish in FKNMS") %>%
+  dyOptions(fillGraph = T, fillAlpha = 0.4, drawPoints = T, pointSize = 2) %>%
+  dySeries("dom_simpson", label = "Simpson Diversity", color = "red") %>% 
+  dyAxis("y", label = "Effective Number of Species") %>% 
+  dyAxis("x", label = "Year") %>%
+  dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 2)
+
+#Shannon for "all" filled 
+dygraph_shannon = d %>%
+  select(YEAR, dom_shannon)
+
+dygraph(dygraph_shannon, main = "Shannon Diversity of Reef Fish in FKNMS") %>%
+  dyOptions(fillGraph = T, fillAlpha = 0.4, drawPoints = T, pointSize = 2) %>%
+  dySeries("dom_shannon", label = "Shannon Diversity", color = "blue") %>% 
+  dyAxis("y", label = "Effective Number of Species") %>% 
+  dyAxis("x", label = "Year") %>% 
+  dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 2)
+
+#Richness for "all" filled 
+dygraph_richness = d %>%
+  select(YEAR, dom_richness)
+
+dygraph(dygraph_richness, main = "Species Richness of Reef Fish in FKNMS") %>%
+  dyOptions(fillGraph = T, fillAlpha = 0.4, drawPoints = T, pointSize = 2) %>%
+  dySeries("dom_richness", label = "Species Richness", color = "purple") %>% 
+  dyAxis("y", label = "Number of Species") %>% 
+  dyAxis("x", label = "Year") %>% 
+  dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 2)
+
+## Simpson and Shannon stacked for "all"
+dygraph_simp_shannon = d %>%
+  select(YEAR, dom_simpson, dom_shannon)
+
+dygraph(dygraph_simp_shannon, main = "Florida Keys Reef Fish Biodiversity") %>% 
+  dyAxis("y", label = "Effective Number of Species", valueRange = c(0, 70)) %>%
+  dyAxis("x", label = "Year") %>%
+  dySeries("dom_shannon", label = "Shannon Diversity", color = "blue") %>% 
+  dySeries("dom_simpson", label = "Simpson Diversity", color = "red") %>% 
+  dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 1.5) %>% #drawGrid = F
+  dyLegend(width = 400)
+
+#Richness, Shannon, Simpson stacked for "all"
+dygraph_rich_simp_shannon = d %>%
+  select(YEAR, dom_simpson, dom_shannon, dom_richness)
+
+dygraph(dygraph_rich_simp_shannon, main = "Florida Keys Reef Fish Biodiversity") %>% 
+  dyAxis("y", label = "Effective Number of Species") %>% 
+  dyAxis("x", label = "Year") %>%
+  dySeries("dom_richness", label = "Richness", color = "purple") %>%
+  dySeries("dom_shannon", label = "Shannon",  color = "blue") %>% 
+  dySeries("dom_simpson", label = "Simpson", color = "red") %>% 
+  dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 2) %>% #drawGrid = F
+  dyLegend(width = 400)
+
 
 ```
 
