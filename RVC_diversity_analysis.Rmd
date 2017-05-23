@@ -56,8 +56,11 @@ library(rvc) #calls RVC data from SEFSC server
 library(tidyverse)
 library(vegan) # biodiveristy functions for richness, simpson, and shannon 
 library(dygraphs)
+library(plotly)
+library(webshot)
+library(htmlwidgets)
 
-spp_list <- read_csv('spp_list.csv') #402 species 
+#spp_list <- read_csv('spp_list.csv') #402 species 
 
 
 ```
@@ -376,6 +379,7 @@ write_csv(fk_domain_abun_diversity, 'big_csv/abundance_domain/domain_fk_abun_div
 
 
 ```{r dygraphs}
+
 domain_fk_abun_diversity = read_csv('big_csv/abundance_domain/domain_fk_abun_diversity.csv')
 
 ## Simpson for protected and unprotected stacked 
@@ -390,8 +394,8 @@ fk_simpson = domain_fk_abun_diversity %>%
 dygraph(fk_simpson, main = "Simpson Reef Fish Diversity") %>% 
   dyAxis("y", label = "Effective Number of Species", valueRange = c(0, 50)) %>%
   dyAxis("x", label = "Year") %>%
-  dyOptions(stackedGraph = T)%>% 
-  dyRangeSelector(height = 20) 
+  dyOptions(stackedGraph = T) 
+  #dyRangeSelector(height = 20) 
 
 ## Shannon for protected and unprotected stacked 
 fk_shannon = domain_fk_abun_diversity %>% 
@@ -405,8 +409,8 @@ fk_shannon = domain_fk_abun_diversity %>%
 dygraph(fk_shannon, main = "Shannon Reef Fish Diversity") %>% 
   dyAxis("y", label = "Effective Number of Species", valueRange = c(0, 75)) %>%
   dyAxis("x", label = "Year") %>%
-  dyOptions(stackedGraph = T)%>% 
-  dyRangeSelector(height = 20) 
+  dyOptions(stackedGraph = T)
+  #dyRangeSelector(height = 20) 
 
 
 d = domain_fk_abun_diversity %>% 
@@ -423,6 +427,26 @@ dygraph(dygraph_simp, main = "Simpson Diversity of Reef Fish in FKNMS") %>%
   dyAxis("y", label = "Effective Number of Species") %>% 
   dyAxis("x", label = "Year")
 
+#Shannon for "all" filled 
+dygraph_shannon = d %>%
+  select(YEAR, dom_shannon)
+
+dygraph(dygraph_shannon, main = "Shannon Diversity of Reef Fish in FKNMS") %>%
+  dyOptions(fillGraph = T, fillAlpha = 0.4, drawPoints = T, pointSize = 2) %>%
+  dySeries("dom_shannon", label = "Shannon Diversity") %>% 
+  dyAxis("y", label = "Effective Number of Species") %>% 
+  dyAxis("x", label = "Year")
+
+#Richness for "all" filled 
+dygraph_richness = d %>%
+  select(YEAR, dom_richness)
+
+dygraph(dygraph_richness, main = "Species Richness of Reef Fish in FKNMS") %>%
+  dyOptions(fillGraph = T, fillAlpha = 0.4, drawPoints = T, pointSize = 2) %>%
+  dySeries("dom_richness", label = "Species Richness") %>% 
+  dyAxis("y", label = "Number of Species") %>% 
+  dyAxis("x", label = "Year")
+
 ## Simpson and Shannon stacked for "all"
 dygraph_simp_shannon = d %>%
   select(YEAR, dom_simpson, dom_shannon)
@@ -434,6 +458,11 @@ dygraph(dygraph_simp_shannon, main = "Florida Keys Reef Fish Biodiversity") %>%
   dySeries("dom_simpson", label = "Simpson Diversity", color = "red") %>% 
   dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 1.5) %>% #drawGrid = F
   dyLegend(width = 400)
+
+# m <- plot_ly(x = 1:10)
+# saveWidget(as.widget(m), "temp.html")
+# webshot("temp.html", file = "test.png",
+#         cliprect = "viewport")
 
 #Richness, Shannon, Simpson stacked for "all"
 dygraph_rich_simp_shannon = d %>%
@@ -537,10 +566,10 @@ FK_abun_Simp <- ggplot(data = fk_domain_abun_diversity, aes(x = YEAR)) +
 
 ### Dry Tortugas domain
 Protected status:
-0 - Unprotected 
-1 - Dry Tortugas National Park (DRTO)
-2 - Tortugas Northeast Reserve (TNER)
-All
+- 0 = Unprotected 
+- 1 = Dry Tortugas National Park (DRTO)
+- 2 = Tortugas Northeast Reserve (TNER)
+- All = All
 ```{r DT domain biodiversity}
 
 domain_dt_abun <-
@@ -666,7 +695,7 @@ ggplot(data = dt_domain_abun_diversity, aes(x = YEAR)) +
 ```
 
 
-###Florida Keys strata's:
+### Florida Keys strata's:
 1. FMLR - Forereef Midchannel Linear Reef
 2. FSLR - Forereef Shallow Linear Reef
 3. HRRF - High Relief Reef (Spur and Groove)
