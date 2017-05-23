@@ -349,12 +349,12 @@ write_csv(grouper_dt_diversity, "big_csv/trophic_groups/diversity/grouper_dt_div
 
 ```{r Grunts}
 
-grunt_fk_abun_csv     = "big_csv/trophic_groups/abundance/grunt_fk_abun.csv"
-grunt_dt_abun_csv     = "big_csv/trophic_groups/abundance/grunt_dt_abun.csv"
-grunt_fk_den_csv      = "big_csv/trophic_groups/density/grunt_fk_den.csv"
-grunt_dt_den_csv      = "big_csv/trophic_groups/density/grunt_dt_den.csv"
-grunt_fk_diversity_csv= "big_csv/trophic_groups/diversity/grunt_fk_diversity.csv"
-grunt_dt_diversity_csv= "big_csv/trophic_groups/diversity/grunt_dt_diversity.csv"
+grunt_fk_abun_csv     = "trophic_groups/abundance/grunt_fk_abun.csv"
+grunt_dt_abun_csv     = "trophic_groups/abundance/grunt_dt_abun.csv"
+grunt_fk_den_csv      = "trophic_groups/density/grunt_fk_den.csv"
+grunt_dt_den_csv      = "trophic_groups/density/grunt_dt_den.csv"
+grunt_fk_diversity_csv= "trophic_groups/diversity/grunt_fk_diversity.csv"
+grunt_dt_diversity_csv= "trophic_groups/diversity/grunt_dt_diversity.csv"
 
 if(!all(file.exists(grunt_fk_abun_csv,grunt_dt_abun_csv,grunt_fk_den_csv,grunt_dt_den_csv,grunt_fk_diversity_csv,grunt_dt_diversity_csv))){
   
@@ -362,17 +362,17 @@ grunt_spp_list = c("HAE SCIU", "HAE AURO", "HAE PLUM", "HAE SPE.", "HAE FLAV", "
 
 #abundance
 grunt_fk_abun = getDomainAbundance(RVCdata_FK, grunt_spp_list, merge_protected = F)
-write_csv(grunt_fk_abun, "big_csv/trophic_groups/abundance/grunt_fk_abun.csv")
+write_csv(grunt_fk_abun, "trophic_groups/abundance/grunt_fk_abun.csv")
 
 grunt_dt_abun = getDomainAbundance(RVCdata_DT, grunt_spp_list, merge_protected = F)
-write_csv(grunt_dt_abun, "big_csv/trophic_groups/abundance/grunt_dt_abun.csv")
+write_csv(grunt_dt_abun, "trophic_groups/abundance/grunt_dt_abun.csv")
 
 #density
 grunt_fk_den = getDomainDensity(RVCdata_FK, grunt_spp_list, merge_protected = F)
-write_csv(grunt_fk_den, "big_csv/trophic_groups/density/grunt_fk_den.csv")
+write_csv(grunt_fk_den, "trophic_groups/density/grunt_fk_den.csv")
 
 grunt_dt_den = getDomainDensity(RVCdata_DT, grunt_spp_list, merge_protected = F)
-write_csv(grunt_dt_den, "big_csv/trophic_groups/density/grunt_dt_den.csv")
+write_csv(grunt_dt_den, "trophic_groups/density/grunt_dt_den.csv")
 
 #diversity metrics 
 grunt_fk_abundance = grunt_fk_abun %>% 
@@ -397,7 +397,7 @@ grunt_fk_abundance = grunt_fk_abun %>%
 
 grunt_fk_diversity = grunt_fk_abundance %>%
   select(YEAR, protected_status, richness, simpson, shannon) 
-write_csv(grunt_fk_diversity, "big_csv/trophic_groups/diversity/grunt_fk_diversity.csv")
+write_csv(grunt_fk_diversity, "trophic_groups/diversity/grunt_fk_diversity.csv")
 
 #dt diversity
 grunt_dt_abundance = grunt_dt_abun %>% 
@@ -422,7 +422,7 @@ grunt_dt_abundance = grunt_dt_abun %>%
 
 grunt_dt_diversity = grunt_dt_abundance %>%
   select(YEAR, protected_status, richness, simpson, shannon) 
-write_csv(grunt_dt_diversity, "big_csv/trophic_groups/diversity/grunt_dt_diversity.csv")
+write_csv(grunt_dt_diversity, "trophic_groups/diversity/grunt_dt_diversity.csv")
 }
 
 ```
@@ -447,15 +447,15 @@ higher_reef_spp_list = c("THA BIFA","STE PART","GYM MORI","PRI AREN","ABU SAXA",
 
 #abundance
 higher_reef_fk_abun = getDomainAbundance(RVCdata_FK, higher_reef_spp_list, merge_protected = F)
-write_csv(higher_reef_fk_abun, "big_csv/trophic_groups/abundance/higher_reef_fk_abun.csv")
+write_csv(higher_reef_fk_abun, "trophic_groups/abundance/higher_reef_fk_abun.csv")
 higher_reef_dt_abun = getDomainAbundance(RVCdata_DT, higher_reef_spp_list, merge_protected = F)
-write_csv(higher_reef_dt_abun, "big_csv/trophic_groups/abundance/higher_reef_dt_abun.csv")
+write_csv(higher_reef_dt_abun, "trophic_groups/abundance/higher_reef_dt_abun.csv")
 
 #density
 higher_reef_fk_den = getDomainDensity(RVCdata_FK, higher_reef_spp_list, merge_protected = F)
-write_csv(higher_reef_fk_den, "big_csv/trophic_groups/density/higher_reef_fk_den.csv")
+write_csv(higher_reef_fk_den, "trophic_groups/density/higher_reef_fk_den.csv")
 higher_reef_dt_den = getDomainDensity(RVCdata_DT, higher_reef_spp_list, merge_protected = F)
-write_csv(higher_reef_dt_den, "big_csv/trophic_groups/density/higher_reef_dt_den.csv")
+write_csv(higher_reef_dt_den, "trophic_groups/density/higher_reef_dt_den.csv")
 
 #fk diversity
 higher_reef_fk_abundance = higher_reef_fk_abun %>% 
@@ -480,7 +480,7 @@ higher_reef_fk_abundance = higher_reef_fk_abun %>%
 
 higher_reef_diversity = higher_reef_fk_abundance %>%
   select(YEAR, protected_status, richness, simpson, shannon) 
-write_csv(higher_reef_diversity, "big_csv/trophic_groups/diversity/higher_reef_fk_diversity.csv")
+write_csv(higher_reef_diversity, "trophic_groups/diversity/higher_reef_fk_diversity.csv")
 
 #dt diversity 
 higher_reef_dt_abundance = higher_reef_dt_abun %>% 
@@ -505,7 +505,7 @@ higher_reef_dt_abundance = higher_reef_dt_abun %>%
 
 higher_reef_diversity = higher_reef_dt_abundance %>%
   select(YEAR, protected_status, richness, simpson, shannon) 
-write_csv(higher_reef_diversity, "big_csv/trophic_groups/diversity/higher_reef_dt_diversity.csv")
+write_csv(higher_reef_diversity, "trophic_groups/diversity/higher_reef_dt_diversity.csv")
 }
 
 higher_reef_fk_den = read_csv("trophic_groups/density/higher_reef_fk_den.csv", 
@@ -586,7 +586,7 @@ hogfish_fk_abundance = hogfish_fk_abun %>%
 
 hogfish_fk_diversity = hogfish_fk_abundance %>%
   select(YEAR, protected_status, richness, simpson, shannon) 
-write_csv(hogfish_fk_diversity, "big_csv/trophic_groups/diversity/hogfish_fk_diversity.csv")
+write_csv(hogfish_fk_diversity, "trophic_groups/diversity/hogfish_fk_diversity.csv")
 
 #DT diversity
 hogfish_dt_abundance = hogfish_dt_abun %>% 
@@ -611,7 +611,7 @@ hogfish_dt_abundance = hogfish_dt_abun %>%
 
 hogfish_dt_diversity = hogfish_dt_abundance %>%
   select(YEAR, protected_status, richness, simpson, shannon) 
-write_csv(hogfish_dt_diversity, "big_csv/trophic_groups/diversity/hogfish_dt_diversity.csv")
+write_csv(hogfish_dt_diversity, "trophic_groups/diversity/hogfish_dt_diversity.csv")
 }
 ```
 
