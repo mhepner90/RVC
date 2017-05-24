@@ -318,11 +318,11 @@ for(i in seq_along(groups)) {
 - YEAR
 - REGION
 - SPECIES_CD
-- density 
+- density: Domain-wide mean density for a stratified random survey  
 - var: Variance in average density per secondary sampling unit
 - n: Number of primary sampling units sampled
 - nm: Number of secondary sampling units sampled
-- N: Number of possible primary sample units
+- N: Number of total possible primary sample units
 - NM: Number of possible secondary sampling units
 - length_class: The length class or bin. Only present if length_bins is not NULL. The notation, [lower, upper), is inclusive of the lower bound, but exclusive of the upper bound
 - protected_status: The protected status. Only present if merge_protected is FALSE
@@ -469,7 +469,7 @@ dygraph_rich_simp_shannon = d %>%
   select(YEAR, dom_simpson, dom_shannon, dom_richness)
 
 dygraph(dygraph_rich_simp_shannon, main = "Florida Keys Reef Fish Biodiversity") %>% 
-  dyAxis("y", label = "Effective Number of Species") %>% 
+  dyAxis("y", label = "Effective Number of Species", valueRange = c(0, 350)) %>% 
   dyAxis("x", label = "Year") %>%
   dySeries("dom_richness", label = "Richness", color = "purple") %>%
   dySeries("dom_shannon", label = "Shannon", color = "blue") %>% 
@@ -625,6 +625,36 @@ dt_protected_status_names <- c(
   "all" = "All"
   )
 
+dt = domain_dt_abun_diversity %>% 
+  filter(protected_status != 0) %>% 
+  filter(protected_status != 1) %>% 
+  filter(protected_status != 2) 
+
+## DT richness, shannon, and simpson for all 
+dt_rich_simp_shannon = dt %>%
+  select(YEAR, dom_simpson, dom_shannon, dom_richness)
+
+dygraph(dt_rich_simp_shannon, main = "Dry Tortugas Reef Fish Biodiversity") %>% 
+  dyAxis("y", label = "Effective Number of Species", valueRange = c(0, 350)) %>% 
+  dyAxis("x", label = "Year") %>%
+  dySeries("dom_richness", label = "Richness", color = "purple") %>%
+  dySeries("dom_shannon", label = "Shannon", color = "blue") %>% 
+  dySeries("dom_simpson", label = "Simpson", color = "red") %>% 
+  dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 1.5) %>% #drawGrid = F
+  dyLegend(width = 400)
+
+## Dry Tortugas Shannon and Simpson for all 
+dt_simp_shannon = dt %>%
+  select(YEAR, dom_simpson, dom_shannon)
+
+dygraph(dt_simp_shannon, main = "Dry Tortugas Reef Fish Biodiversity") %>% 
+  dyAxis("y", label = "Effective Number of Species", valueRange = c(0, 70)) %>%
+  dyAxis("x", label = "Year") %>%
+  dySeries("dom_shannon", label = "Shannon Diversity", color = "blue") %>% 
+  dySeries("dom_simpson", label = "Simpson Diversity", color = "red") %>% 
+  dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 1.5) %>% #drawGrid = F
+  dyLegend(width = 400)
+
 #richness, simpson, shannon for domain in Dry Tortugas   
 ggplot(data = dt_domain_abun_diversity, aes(x = YEAR)) +
   geom_point(aes(y = dom_richness, color = "dom_richness")) +
@@ -696,13 +726,13 @@ ggplot(data = dt_domain_abun_diversity, aes(x = YEAR)) +
 
 
 ### Florida Keys strata's:
-1. FMLR - Forereef Midchannel Linear Reef
-2. FSLR - Forereef Shallow Linear Reef
-3. HRRF - High Relief Reef (Spur and Groove)
+1. FSLR - Forereef Shallow Linear Reef (<6m)
+2. FMLR - Forereef Midchannel Linear Reef (6-18m)
+3. FDLR - Forereef Deep Linear Reef (18-33m)
 4. INPR - Inshore patch reef
 5. MCPR - Midchannel Patch Reef 
 6. OFPR - Offshore Patch Reef
-7. FDLR - Forereef Deep Linear Reef 
+7. HRRF - High Relief Reef (Spur and Groove)
 
 ```{r FK strata biodiversity}
 
@@ -759,6 +789,64 @@ strata_fk_abun_diversity = read_csv("big_csv/abundance_strata/strata_fk_abun_div
 #  "OFPR" = "Offshore Patch Reef",
 #  "FDLR" = "Forereef Deep Linear Reef")
 
+##protected by strata 
+fk_strata_protected = strata_fk_abun_diversity %>% 
+  filter(protected_status != 1)
+
+#richness protected by strata 
+fk_rich_protected = fk_strata_protected %>% 
+  select(YEAR, STRAT, richness) %>%
+  spread(STRAT, richness)
+
+dygraph(fk_rich_protected, main = "Florida Keys Richness by Strata - NTMR") %>% 
+  dyAxis("y", label = "Effective Number of Species") %>%
+  dyAxis("x", label = "Year") %>% 
+  dyOptions(stackedGraph = T, colors = colorRamps::blue2red(7), fillAlpha = .8, axisLineWidth = 2)
+
+##shannon protected by strata 
+fk_shan_protected = fk_strata_protected %>% 
+  select(YEAR, STRAT, shannon) %>%
+  spread(STRAT, shannon)
+
+dygraph(fk_shan_protected, main = "Florida Keys Shannon Diversity by Strata - NTMR") %>% 
+  dyAxis("y", label = "Effective Number of Species") %>%
+  dyAxis("x", label = "Year") %>% 
+  dyOptions(stackedGraph = T, colors = colorRamps::blue2red(7), fillAlpha = .8, axisLineWidth = 2)
+
+##simpson protected by strata 
+fk_simp_protected = fk_strata_protected %>% 
+  select(YEAR, STRAT, simpson) %>%
+  spread(STRAT, simpson)
+
+dygraph(fk_simp_protected, main = "Florida Keys Simpson Diversity by Strata - NTMR") %>% 
+  dyAxis("y", label = "Effective Number of Species") %>%
+  dyAxis("x", label = "Year") %>% 
+  dyOptions(stackedGraph = T, colors = colorRamps::blue2red(7), fillAlpha = .8, axisLineWidth = 2)#topo.colors(n = 7, alpha = 1) RColorBrewer::brewer.pal(7, "Paired") grDevices::topo.colors(7, alpha = 1) grDevices::rainbow(7) colorspace::rainbow_hcl(7) colorspace::heat_hcl(7)
+
+#unprotected by strata 
+fk_strata_unprotected = strata_fk_abun_diversity %>% 
+  filter(protected_status != 0)
+
+#richness unprotected by strata 
+fk_rich_unprotected = fk_strata_unprotected %>% 
+  select(YEAR, STRAT, richness) %>%
+  spread(STRAT, richness)
+
+dygraph(fk_rich_unprotected, main = "Florida Keys Richness by Strata - Unprotected") %>% 
+  dyAxis("y", label = "Effective Number of Species") %>%
+  dyAxis("x", label = "Year") %>% 
+  dyOptions(stackedGraph = T, colors = colorRamps::blue2red(7), fillAlpha = .8, axisLineWidth = 2)
+
+#simpson unprotected by strata
+fk_simp_unprotected = fk_strata_unprotected %>% 
+  select(YEAR, STRAT, simpson) %>%
+  spread(STRAT, simpson)
+
+dygraph(fk_simp_unprotected, main = "Florida Keys Simpson Diversity by Strata - Unprotected") %>% 
+  dyAxis("y", label = "Effective Number of Species") %>%
+  dyAxis("x", label = "Year") %>% 
+  dyOptions(stackedGraph = T, colors = colorRamps::blue2red(7), fillAlpha = .8, axisLineWidth = 2)
+
 strata_names <- c(
  "FMLR" = "FMLR",
  "FSLR" = "FSLR",
@@ -775,7 +863,7 @@ protected_status_names <- c(
   )
 
 #simpson diversity by protected status by strata in FKNMS
-FK_strata_ab_simpson <- ggplot(data = fk_strata_abun_diversity, aes(x = YEAR)) +
+fk_strata_ab_simpson <- ggplot(data = strata_fk_abun_diversity, aes(x = YEAR)) +
   geom_point(aes(y = simpson, color = "simpson"),color = "blue") +
   geom_line(aes(y = simpson, color = "simpson"), color = "blue") +
   facet_grid(STRAT ~ protected_status, 
