@@ -74,6 +74,8 @@ library(tidyverse)
 library(rvc)
 library(vegan)
 library(dygraphs)
+library(grDevices)
+library(RColorBrewer)
 
 ```
 
@@ -1408,6 +1410,23 @@ dygraph(snapper_fk_density, main = 'Snapper Density') %>%
     dyAxis("x", label = "Year") %>%
     dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 2)
 
+#mean density 
+snapper_fk_mean_density = snapper_fk_den %>%
+  select(YEAR, protected_status, SPECIES_CD, density) %>% 
+  group_by(YEAR, protected_status) %>%
+  summarise(
+  meanden = mean(density)) %>%
+  filter(protected_status != "0") %>%
+  filter(protected_status != "1") %>% 
+  mutate(
+    protected_status = recode(
+      protected_status, '0'='unprotected', '1'='protected')) %>%
+  spread(protected_status, meanden)
+
+dygraph(snapper_fk_mean_density, main = 'Snapper Density') %>% 
+    dyAxis("y", label = "Density") %>%
+    dyAxis("x", label = "Year") %>%
+    dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 2)
 ```
 
 Read in abundance, density, and diversity csv files for trophic groups 
@@ -1469,6 +1488,7 @@ For `big_csv/trophic_groups/abundance/*_*_abun.csv`:
 - `N`: Number of possible primary sample units
 - `NM`: Number of possible secondary sampling units
 - `protected_status`: The protected status. Only present if merge_protected is FALSE
+- `density`: Average density per secondary sampling unit
 
 So far, per species. Then when summing to # of individuals across species, lose biomass idea.
 
@@ -1647,7 +1667,27 @@ exploited_density = exploited_den %>%
   summarise(
     ntot = sum(density)) %>%
   spread(common_name, ntot)
- 
+
+#Graysby density    
+Black_Grouper = exploited_density %>%
+  select(YEAR, protected_status, Black_Grouper) %>%
+  spread(protected_status, Black_Grouper)
+
+dygraph(Black_Grouper, main = 'Black Grouper Density') %>% 
+    dyAxis("y", label = "Density") %>%
+    dyAxis("x", label = "Year") %>%
+    dyOptions(stackedGraph = T)
+
+ggplot(Black_Grouper, aes(x = YEAR)) +
+  geom_point(aes(y = protected, color = "protected")) +
+  geom_point(aes(y = unprotected, color = "unprotected")) +
+  geom_line(aes(y = protected, color = "protected")) +
+  geom_line(aes(y = unprotected, color = "unprotected"))+
+  ggtitle("Black Grouper Density") +
+  theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 12))+
+  labs(x = "Year", y = "Density", color = "Level of Protection") +
+  scale_x_continuous(breaks = c(1999:2016))
+       
 #Graysby density    
 Graysby = exploited_density %>%
   select(YEAR, protected_status, Graysby) %>%
@@ -1668,22 +1708,22 @@ dygraph(Grey_Snapper, main = 'Grey Snapper Density') %>%
     dyAxis("x", label = "Year") %>%
     dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 2)
 
-#Hogfish density    
-Hogfish = exploited_density %>%
-  select(YEAR, protected_status, Hogfish) %>%
-  spread(protected_status, Hogfish)
-
-dygraph(Hogfish, main = 'Hogfish Density') %>% 
-    dyAxis("y", label = "Density") %>%
-    dyAxis("x", label = "Year") %>%
-    dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 2)
-
 #Goliath grouper density 
 Goliath_Grouper = exploited_density %>%
   select(YEAR, protected_status, Goliath_Grouper) %>%
   spread(protected_status, Goliath_Grouper)
 
 dygraph(Goliath_Grouper, main = 'Goliath Grouper Density') %>% 
+    dyAxis("y", label = "Density") %>%
+    dyAxis("x", label = "Year") %>%
+    dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 2)
+
+#Hogfish density    
+Hogfish = exploited_density %>%
+  select(YEAR, protected_status, Hogfish) %>%
+  spread(protected_status, Hogfish)
+
+dygraph(Hogfish, main = 'Hogfish Density') %>% 
     dyAxis("y", label = "Density") %>%
     dyAxis("x", label = "Year") %>%
     dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 2)
@@ -1717,6 +1757,15 @@ dygraph(exploited_density_protected, main = "Exploited Reef Fish Density in Prot
     dyAxis("y", label = "Density") %>%
     dyAxis("x", label = "Year") %>%
     dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 2, colors = rainbow(9))
+
+exploited_density_unprotected = exploited_density %>%
+  filter(protected_status == 'unprotected') %>% 
+  select(YEAR, Black_Grouper, Goliath_Grouper, Graysby, Grey_Snapper, Hogfish, Mutton_Snapper, Nassau_Grouper,Red_Grouper, Yellowtail_Snapper)
+
+dygraph(exploited_density_unprotected, main = "Exploited Reef Fish Density in Protected Areas") %>% 
+    dyAxis("y", label = "Density") %>%
+    dyAxis("x", label = "Year") %>%
+    dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 2, colors = grDevices::rainbow(9, start = 0, end = 1, alpha = 0.6))
 
 ```
 
