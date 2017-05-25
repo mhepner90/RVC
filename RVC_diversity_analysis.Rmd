@@ -59,8 +59,9 @@ library(dygraphs)
 library(plotly)
 library(webshot)
 library(htmlwidgets)
+library(FD)
 
-#spp_list <- read_csv('spp_list.csv') #402 species 
+spp_list <- read_csv('spp_list.csv') #402 species 
 
 
 ```
@@ -102,7 +103,7 @@ div_1999_tbl = abun1999 %>%
 
 ``` 
 
-
+8.2% of the abundance data is from species identified to the genus and/or family level. 
 ```{r percent spp}
 ##Percent of the abundance data is from species identified to the genus? 
 
@@ -128,94 +129,187 @@ spp_abun = domain_fk_abun %>%
 
 total_abun = sum(domain_fk_abun$abundance) #23,434,984,377 counts over 15 years in FK
 
-percent_spp = (spp_abun/total_abun)*100 
+percent_spp = (spp_abun/total_abun)*100 #8.207% 
 
 ```
+
+Matched species codes in trait matrix with the species in the RVC data. Total of 348 species identified to species level. 
+```{r matching species, eval = F}
+## Matching species in RVC data with species in trait matrix
+
+# domain_fk_abun_no_spp = domain_fk_abun %>%
+#   filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) 
+# 
+# length(unique(domain_fk_abun$SPECIES_CD)) #377 species in RVC with .SPE (29 end in SPE.)
+# length(unique(domain_fk_abun_no_spp$SPECIES_CD)) #348 species in RVC without .SPE 
+# 
+# spp_list_without_spp = domain_fk_abun_no_spp %>%
+#   select(SPECIES_CD) %>% 
+#   arrange(SPECIES_CD) %>% 
+#   mutate(
+#     SPECIES_CD = toupper(as.character(SPECIES_CD)))
+# 
+# spp_list_without_spp = unique(spp_list_without_spp) #348 species 
+# 
+# trait_matrix = read_csv('C:/Users/Megan Hepner/Dropbox/Thesis/Functional_Diversity/species_trait_matrix.csv')
+# 
+# length(unique(trait_matrix$SPECIES_CD)) #371 species 
+# 
+# trait_matrix_spp = trait_matrix %>%
+#   as.tibble() %>%
+#   mutate(
+#     SPECIES_CD = toupper(as.character(SPECIES_CD))) %>%
+#   select(SPECIES_CD) #371 species 
+# 
+# missing_species = anti_join(trait_matrix_spp, spp_list_without_spp, by = "SPECIES_CD") #species in trait_matrix not in RVC species list #23
+# 
+# trait_matrix_348_spp = read_csv('C:/Users/Megan Hepner/Dropbox/Thesis/Functional_Diversity/species_trait_matrix_348_spp.csv')
+# 
+# length(unique(trait_matrix_348_spp$SPECIES_CD)) #348 species 
+# 
+# trait_matrix_348_spp = trait_matrix_348_spp %>%
+#   as.tibble() %>%
+#   mutate(
+#     SPECIES_CD = toupper(as.character(SPECIES_CD))) #%>%
+  #select(SPECIES_CD) #348 species
+# 
+# missing_species_2 = semi_join(trait_matrix_spp_348_spp, spp_list_without_spp, by = "SPECIES_CD") #perfect match :) 
+
+```
+
 ## Functional distance trait based matrix (from Lefcheck et al.,)
 
-```{r Functional distance matrix, eval = F}
-#rvc_grp = read_csv('data/rvc_spp_grouped.csv')
+Gowdis computes the Gower (1971) similarity coefficient exactly as described by Podani (1999), then converts it to a dissimilarity coefficient by using D = 1 - S
 
-# wide: common_name x traits
-d_traits = rvc_grp %>% 
+```{r Functional distance matrix, eval = F}
+
+library(FD) #calls gowdis 
+library(clue) #calls cl_ultrametric 
+library(fpc) #calls pamk
+library(ggtree)
+
+trait_matrix = read_csv('C:/Users/Megan Hepner/Dropbox/Thesis/Functional_Diversity/species_trait_matrix_348_spp.csv')
+# Parsed with column specification:
+# cols(
+#   Species_code = col_integer(),
+#   SPECIES_CD = col_character(),
+#   Latin_name = col_character(),
+#   Common_name = col_character(),
+#   Maxlength = col_double(),
+#   Trophic_level = col_double(),
+#   Trophic_group = col_character(),
+#   Water_column = col_character(),
+#   Diel_activity = col_character(),
+#   Substrate_type = col_character(),
+#   Complexity = col_character(),
+#   Gregariousness = col_integer()
+
+trait_matrix_348_spp = trait_matrix_348_spp %>%
+  as.tibble() %>%
+  mutate(
+    SPECIES_CD = toupper(as.character(SPECIES_CD))) %>% 
+  arrange(SPECIES_CD)
+
+trait_matrix = trait_matrix_348_spp %>% #348*12
+  select(SPECIES_CD, Maxlength, Trophic_level, Trophic_group, Water_column, Diel_activity, Substrate_type, Complexity, Gregariousness) %>% #348*9
   group_by(
-    common_name, maxlength, trophic_level, trophic_group, water_column, diel_activity, substrate_type, complexity, gregariousness) %>%
+    SPECIES_CD, Maxlength, Trophic_level, Trophic_group, Water_column, Diel_activity, Substrate_type, Complexity, Gregariousness) %>%
   summarize(
     n = n()) %>%
   select(-n) %>%
   ungroup() %>%
   mutate(
     # ordinal traits
-    complexity = factor(
-      complexity, levels=c("Low","Medium","High"), ordered=T)) %>%
-  arrange(common_name) %>%
+    Complexity = ordered(Complexity, levels=c("Low","Medium","High")),
+    Gregariousness = ordered(Gregariousness, levels=c("1","2","3"))) %>%
   as.data.frame()
 
-#dim(d_traits) 333, 8 (species*traits)
+#Calculate Gower distances. Variables have equal weight. 
+traits.dist = gowdis(trait_matrix, ord="podani")
 
-# conform to: species x traits
-rownames(d_traits) = d_traits$common_name
-d_traits = select(d_traits, -common_name)
-head(d_traits)
-
-#Calculate Gower distances
-traits.dist=gowdis(d_traits,ord="podani")
-
-#Use clustering method to produce ultrametric dendrogramBecause values of Rao's Q can be maximized when fewer than the max number of functional types are present unless distances are ultramtetric 
+#Use clustering method to produce ultrametric dendrogram because values of Rao's Q can be maximized when fewer than the max number of functional types are present unless distances are ultramtetric 
 
 #to account for sensitivity in clustering use multiple algorithms  (Mouchet et al., 2008) 
 tree_methods = c("single","complete","average","mcquitty","ward.D") #average is best clustering method 
-trees=lapply(tree_methods,function(i) hclust(traits.dist, method=i))
-#par(mfrow=c(3,2))
-#for(i in 1:length(trees)) {plot(trees[[i]])}
+trees=lapply(tree_methods,  function(i) hclust(traits.dist, method=i))
+par(mfrow=c(3,2))
+for(i in 1:length(trees)) {plot(trees[[i]])} #plots the 5 different kinds of trees 
 
 #convert trees to ultrametric
-trees.ultra=lapply(trees,function(i) cl_ultrametric(as.hclust(i)))
+trees.ultra= lapply(trees,function(i) cl_ultrametric(as.hclust(i)))
 
 #Plot each tree
 par(mfrow=c(3,2))
-for (i in 1:length(trees.ultra)) {plot(trees.ultra[[i]])}
+for (i in 1:length(trees.ultra)) {plot(trees.ultra[[i]])} #plots the 5 different kinds of trees 
 
-#Build the consensus tree (Mouchet et al 2008 Oikos) from package clue 
+#Build the consensus tree (Mouchet et al 2008 Oikos)  
 ensemble.trees=cl_ensemble(list=trees) #list of clusterings 
 class(ensemble.trees)
 consensus.tree=cl_consensus(ensemble.trees) #synthesizes the information in the elements of a cluster ensemble into a single clustering 
-#plot(consensus.tree)
+plot(consensus.tree)
 
-#Calculate dissimilarity values for each tree using 2-norm (Merigot et al 2010 Ecology) to determine which tree best preserves orignial distances
+#Calculate dissimilarity values for each tree using 2-norm (Merigot et al 2010 Ecology) to determine which tree best preserves orignial distances 
+#spectral norm (2-norm) of the differences of the ultrametrics
 all.trees=c(trees.ultra,consensus.tree[1])
 names(all.trees)=c(tree_methods,"consensus")
-trees.dissim=lapply(all.trees,function(i) cl_dissimilarity(i,traits.dist,method="spectral")) #spectral norm (2-norm) of the differences of the ultrametrics
+(trees.dissim=lapply(all.trees,function(i) cl_dissimilarity(i,traits.dist,method="spectral"))) 
+#Cross-dissimilarities using spectral ultrametric distance:
+#Single = 63.17399
+#complete = 116.8516
+#average = 14.99288
+#mcquitty = 36.06599
+#ward.D = 3161.581
+#consensus = 1103.76
 
 #Identify best tree and isolate
 trees.dissim2=do.call(rbind,trees.dissim)
-min.tree=which.min(trees.dissim2)
+min.tree=which.min(trees.dissim2) #average 
 names(all.trees)[min.tree]
 func.dist=all.trees[names(all.trees)==names(all.trees)[min.tree]][[1]]
 
-#Confirm lowest 2-norm value
+#Confirm lowest 2-norm value,  spectral norm (2-norm) of the differences if the ultrametrics 
 cl_dissimilarity(func.dist,traits.dist,method="spectral")
 
-#Scale by the max value so that all values are between 0-1 (clue package)
+#Scale by the max value so that all values are between 0-1
 func.dist=func.dist/max(func.dist)
 
-#Plot the best tree
+#Plot the best tree - average 
 par(mfrow=c(1,1))
 par(mar=c(3,1,0,16))
 plot(func.dist,horiz=TRUE)
 #Save plot: 10" x 15"
 
 #Write newick tree
-write.tree(as.phylo(as.hclust(func.dist)),"data/dendro_functional.nwk")
+write.tree(as.phylo(as.hclust(func.dist)),"functional_diversity/functional_dendrogram.new")
 
 #Visualize species' differences in multivariate trait space
 #Perform k-means clustering with no a priori specification for k
-traits.kclus=pamk(traits.dist,krange=2:10)
+traits.kclus= pamk(traits.dist, krange=2:10) 
+
+#krange: integer vector. Numbers of clusters which are to be compared by the average silhouette width criterion.
+#traits.kclus$nc = 10 
+#traits.kclus$crit 0.0000000 0.2374706 0.2362513 0.2355555 0.2681756 0.2581352 0.2759547 0.2852216 0.3006077 0.3062123
+
 # #Perform multidimensional scaling on functional dendrogram
-traits_nmds=metaMDS(traits.dist,k=traits.kclus$nc,trymax=500)
-# #Plot in two dimensions
+traits_nmds = metaMDS(traits.dist,k=traits.kclus$nc,trymax=500)
+#k = Number of dimensions
+
+#*** No convergence -- monoMDS stopping criteria:
+   #499: no. of iterations >= maxit
+     #1: stress ratio > sratmax
+
+# Dimensions: 10 
+# Stress:     0.03545178 
+# Stress type 1, weak ties
+# No convergent solutions - best solution after 500 tries
+# Scaling: centring, PC rotation 
+# Species: scores missing
+
+
+# #Plot in two dimensions - doesn't work 
 par(mar=c(4,4,1,1))
 ordiplot(traits_nmds,type="n")
+
 #Assign colors to different groups
 groups=levels(factor(traits.kclus$pamobject$clustering))
 points.symbols=15:16
@@ -223,10 +317,19 @@ points.colors=c("firebrick3","cornflowerblue")
 for(i in seq_along(groups)) {
    points(traits_nmds$points[traits.kclus$pamobject$clustering==groups[i],],
           pch=points.symbols[i],col=points.colors[i],cex=1.4) }
- ordispider(traits_nmds,factor(traits_kclus$pamobject$clustering),label=F)
+ ordispider(traits_nmds,factor(traits.kclus$pamobject$clustering),label=F)
  ordihull(traits_nmds,factor(traits.kclus$pamobject$clustering),lty="dotted")
  orditorp(traits_nmds,dis="sites",pcex=0,air=0.5,col="grey10",cex=0.8)
  
+## try http:// if https:// URLs are not supported
+source("https://bioconductor.org/biocLite.R")
+## biocLite("BiocUpgrade") ## you may need this
+biocLite("ggtree", type = "source")
+library(ape)
+library("Biostrings")
+library("ggplot2")
+library("ggtree")
+ggtree(tree)
 ```
 
 ### Trait matrix visualization [http://jkunst.com/r/pokemon-visualize-em-all/]
@@ -348,9 +451,8 @@ col_types = cols(
   protected_status = col_character()
 ))
 
-##Percent of the abundance data is from species identified to the genus? 
 
-## FK's domain abundance 
+## FK's domain abundance including specis to genus level (spp.) 
 fk_domain_abun_diversity = domain_fk_abun %>% #15,771 * 10
   select(YEAR, protected_status, SPECIES_CD, abundance) %>% #27,911 * 4 
   group_by(YEAR, protected_status) %>% ##45 groups (fk 15*3)
@@ -374,6 +476,32 @@ fk_domain_abun_diversity = fk_domain_abun_diversity %>%
 write_csv(fk_domain_abun_diversity, 'big_csv/abundance_domain/domain_fk_abun_diversity')
 
 ## TO DO: compute SD for each year, Confidence Interval, statistical differences between 
+
+domain_fk_abun_no_spp = domain_fk_abun %>%
+  filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$'))
+
+## FK's domain abundance only identified to species level (without spp.) 
+fk_domain_abun_diversity_no_spp = domain_fk_abun_no_spp %>% #15,771 * 10
+  select(YEAR, protected_status, SPECIES_CD, abundance) %>% #27,911 * 4 
+  group_by(YEAR, protected_status) %>% ##45 groups (fk 15*3)
+  nest(-YEAR) %>%  
+  mutate(
+    data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abundance, fill =0)), 
+    richness = map( #species richness 
+      data_wide, #why are there 116 rows??? 
+      function(x) specnumber(x)),
+    simpson = map( #simpson diversity as effective number of species 
+      data_wide,
+      function(x) 1/(1 - diversity(x, index = 'simpson'))),
+    shannon = map( #shannon diversity as effective number of species 
+      data_wide,
+      function(x) exp(diversity(x, index = 'shannon')))) %>%
+  unnest(richness,simpson,shannon)
+
+fk_domain_abun_diversity_no_spp = fk_domain_abun_diversity_no_spp %>%
+  select(YEAR, protected_status,richness,simpson,shannon)
+
+write_csv(fk_domain_abun_diversity_no_spp, 'big_csv/diversity_without_spp/domain_fk_abun_diversity_no_spp.csv')
 
 ```
 
@@ -474,6 +602,34 @@ dygraph(dygraph_rich_simp_shannon, main = "Florida Keys Reef Fish Biodiversity")
   dySeries("dom_richness", label = "Richness", color = "purple") %>%
   dySeries("dom_shannon", label = "Shannon", color = "blue") %>% 
   dySeries("dom_simpson", label = "Simpson", color = "red") %>% 
+  dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 1.5) %>% #drawGrid = F
+  dyLegend(width = 400)
+
+##without spp 
+d_no_spp = fk_domain_abun_diversity_no_spp %>% 
+  filter(protected_status != 0) %>% 
+  filter(protected_status != 1)
+
+dygraph_rich_simp_shannon_no_spp = d_no_spp %>%
+  select(YEAR, simpson, shannon, richness)
+
+dygraph(dygraph_rich_simp_shannon_no_spp, main = "Florida Keys Reef Fish Biodiversity") %>% 
+  dyAxis("y", label = "Effective Number of Species", valueRange = c(0, 350)) %>% 
+  dyAxis("x", label = "Year") %>%
+  dySeries("richness", label = "Richness", color = "purple") %>%
+  dySeries("shannon", label = "Shannon", color = "blue") %>% 
+  dySeries("simpson", label = "Simpson", color = "red") %>% 
+  dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 1.5) %>% #drawGrid = F
+  dyLegend(width = 400)
+
+dygraph_simp_shannon_no_spp = d_no_spp %>%
+  select(YEAR, simpson, shannon)
+
+dygraph(dygraph_simp_shannon_no_spp, main = "Florida Keys Reef Fish Biodiversity") %>% 
+  dyAxis("y", label = "Effective Number of Species") %>%  #valueRange = c(0, 350)
+  dyAxis("x", label = "Year") %>%
+  dySeries("shannon", label = "Shannon", color = "blue") %>% 
+  dySeries("simpson", label = "Simpson", color = "red") %>% 
   dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 1.5) %>% #drawGrid = F
   dyLegend(width = 400)
 
