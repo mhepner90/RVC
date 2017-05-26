@@ -61,12 +61,11 @@ library(webshot)
 library(htmlwidgets)
 library(FD)
 
-spp_list <- read_csv('spp_list.csv') #402 species 
-
-
 ```
 
 ```{r practice codes, eval = F}
+
+spp_list <- read_csv('spp_list.csv') #402 species 
 
 fk1999 <- getRvcData(1999, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
 
@@ -183,10 +182,18 @@ Gowdis computes the Gower (1971) similarity coefficient exactly as described by 
 
 ```{r Functional distance matrix, eval = F}
 
-library(FD) #calls gowdis 
 library(clue) #calls cl_ultrametric 
 library(fpc) #calls pamk
-library(ggtree)
+library(ape)
+## try http:// if https:// URLs are not supported
+source("https://bioconductor.org/biocLite.R")
+biocLite("ggtree")
+## biocLite("BiocUpgrade") ## you may need this
+#biocLite("ggtree", type = "source")
+devtools::install_github("GuangchuangYu/ggtree") #requires R>= 3.3.2
+library(Biostrings)
+library(ggdendro)
+library(cluster)
 
 trait_matrix = read_csv('C:/Users/Megan Hepner/Dropbox/Thesis/Functional_Diversity/species_trait_matrix_348_spp.csv')
 # Parsed with column specification:
@@ -204,13 +211,11 @@ trait_matrix = read_csv('C:/Users/Megan Hepner/Dropbox/Thesis/Functional_Diversi
 #   Complexity = col_character(),
 #   Gregariousness = col_integer()
 
-trait_matrix_348_spp = trait_matrix_348_spp %>%
+trait_matrix = trait_matrix %>%
   as.tibble() %>%
   mutate(
     SPECIES_CD = toupper(as.character(SPECIES_CD))) %>% 
-  arrange(SPECIES_CD)
-
-trait_matrix = trait_matrix_348_spp %>% #348*12
+  arrange(SPECIES_CD)%>% 
   select(SPECIES_CD, Maxlength, Trophic_level, Trophic_group, Water_column, Diel_activity, Substrate_type, Complexity, Gregariousness) %>% #348*9
   group_by(
     SPECIES_CD, Maxlength, Trophic_level, Trophic_group, Water_column, Diel_activity, Substrate_type, Complexity, Gregariousness) %>%
@@ -291,7 +296,7 @@ traits.kclus= pamk(traits.dist, krange=2:10)
 #traits.kclus$crit 0.0000000 0.2374706 0.2362513 0.2355555 0.2681756 0.2581352 0.2759547 0.2852216 0.3006077 0.3062123
 
 # #Perform multidimensional scaling on functional dendrogram
-traits_nmds = metaMDS(traits.dist,k=traits.kclus$nc,trymax=500)
+traits_nmds = metaMDS(traits.dist,k=traits.kclus$nc,trymax=20)
 #k = Number of dimensions
 
 #*** No convergence -- monoMDS stopping criteria:
@@ -320,16 +325,31 @@ for(i in seq_along(groups)) {
  ordispider(traits_nmds,factor(traits.kclus$pamobject$clustering),label=F)
  ordihull(traits_nmds,factor(traits.kclus$pamobject$clustering),lty="dotted")
  orditorp(traits_nmds,dis="sites",pcex=0,air=0.5,col="grey10",cex=0.8)
- 
-## try http:// if https:// URLs are not supported
-source("https://bioconductor.org/biocLite.R")
-## biocLite("BiocUpgrade") ## you may need this
-biocLite("ggtree", type = "source")
-library(ape)
-library("Biostrings")
-library("ggplot2")
-library("ggtree")
-ggtree(tree)
+
+#From Anni Djurhuus - make a dendrogram
+hclust.den <- as.dendrogram(hclust(traits.dist, method = "average")) #make dendogram 
+p <- ggdendrogram(hclust.den, leaf_labels=TRUE) #plot 
+
+
+h <- diana(trait_matrix, metric="bray")
+p <- as.phylo(as.hclust(h, method="average"))
+plot(p, cex=0.75,label.offset=300,direct='down',font=1, adj=0.0, sub="")
+# add in the dated surface type via color
+tiplabels(col=mypalette[as.numeric(deep_vent_meta$vent)],bg=mypalette[as.numeric(deep_vent_meta$vent)],pch=c(25,15,17,18,16)[as.factor(deep_vent_meta$vent)], cex=2)
+# based on distance matrix values, YMMV
+legend('topleft', legend=c("Background SWIR","Background ESR","Diffuse vents ESR", "Longqi", "Dog's Head"), col=mypalette, pt.bg=mypalette,bty='n', cex=1,pch=c(25,15,17,18,16))
+
+#Plot the best tree - average 
+func_dist_average = read.tree('functional_diversity/functional_dendrogram.new')
+func_dist_average # Phylogenetic tree with 348 tips and 347 internal nodes.
+par(mfrow=c(1,1))
+par(mar=c(3,1,0,2)) #mar: numerical vector of form c(bottom, left, top, right)which gives the number of lines of margin to be specified on the four sides of the plot.
+par(lheight = 50)
+plot(func_dist_average,main = "Functional Dendogram") # horiz=TRUE, 
+
+#ggtree 
+ggtree(func_dist_average)
+
 ```
 
 ### Trait matrix visualization [http://jkunst.com/r/pokemon-visualize-em-all/]
