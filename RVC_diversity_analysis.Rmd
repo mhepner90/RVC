@@ -52,13 +52,22 @@ All indices were computed as effective number of species. Effective number of sp
 knitr::opts_chunk$set(echo = T)
 #rm(list = ls())
 
+#install.packages('devtools')
+#devtools::install_github('jeremiaheb/rvc')
 library(rvc) #calls RVC data from SEFSC server 
+#install.packages("tidyverse")
 library(tidyverse)
+#install.packages("vegan")
 library(vegan) # biodiveristy functions for richness, simpson, and shannon 
+#install.packages("dygraphs")
 library(dygraphs)
+#install.packages("plotly")
 library(plotly)
+#install.packages("webshot")
 library(webshot)
+#install.packages("htmlwidgets")
 library(htmlwidgets)
+#install.packages("FD")
 library(FD)
 
 ```
@@ -182,8 +191,11 @@ Gowdis computes the Gower (1971) similarity coefficient exactly as described by 
 
 ```{r Functional distance matrix, eval = F}
 
+#install.packages("clue")
 library(clue) #calls cl_ultrametric 
+#install.packages("fpc")
 library(fpc) #calls pamk
+#install.packages("ape")
 library(ape)
 ## try http:// if https:// URLs are not supported
 source("https://bioconductor.org/biocLite.R")
@@ -191,9 +203,6 @@ biocLite("ggtree")
 ## biocLite("BiocUpgrade") ## you may need this
 #biocLite("ggtree", type = "source")
 devtools::install_github("GuangchuangYu/ggtree") #requires R>= 3.3.2
-library(Biostrings)
-library(ggdendro)
-library(cluster)
 
 trait_matrix = read_csv('C:/Users/Megan Hepner/Dropbox/Thesis/Functional_Diversity/species_trait_matrix_348_spp.csv')
 # Parsed with column specification:
@@ -264,7 +273,7 @@ names(all.trees)=c(tree_methods,"consensus")
 #average = 14.99288
 #mcquitty = 36.06599
 #ward.D = 3161.581
-#consensus = 1103.76
+#consensus =  1065.058
 
 #Identify best tree and isolate
 trees.dissim2=do.call(rbind,trees.dissim)
@@ -285,7 +294,10 @@ plot(func.dist,horiz=TRUE)
 #Save plot: 10" x 15"
 
 #Write newick tree
-write.tree(as.phylo(as.hclust(func.dist)),"functional_diversity/functional_dendrogram.new")
+write.tree(as.phylo(as.hclust(func.dist)),"functional_diversity/functional_dendrogram.tre")
+
+tree <- read.tree("functional_diversity/functional_dendrogram.tre")
+ggtree(tree, branch.length = "none") + geom_treescale()
 
 #Visualize species' differences in multivariate trait space
 #Perform k-means clustering with no a priori specification for k
@@ -348,7 +360,7 @@ par(lheight = 50)
 plot(func_dist_average,main = "Functional Dendogram") # horiz=TRUE, 
 
 #ggtree 
-ggtree(func_dist_average)
+ggtree(func_dist_average, ndigits=2, branch.length = 'none') #+ geom_text(aes(x=branch, label=length_0.95_HPD), vjust=-.5, color='firebrick')
 
 ```
 
