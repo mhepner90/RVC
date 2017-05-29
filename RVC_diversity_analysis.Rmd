@@ -204,7 +204,10 @@ biocLite("ggtree")
 #biocLite("ggtree", type = "source")
 devtools::install_github("GuangchuangYu/ggtree") #requires R>= 3.3.2
 
+trait_matrix = read_csv('functional_diversity/species_trait_matrix_348_spp.csv')
+
 trait_matrix = read_csv('C:/Users/Megan Hepner/Dropbox/Thesis/Functional_Diversity/species_trait_matrix_348_spp.csv')
+
 # Parsed with column specification:
 # cols(
 #   Species_code = col_integer(),
@@ -296,7 +299,7 @@ plot(func.dist,horiz=TRUE)
 #Write newick tree
 write.tree(as.phylo(as.hclust(func.dist)),"functional_diversity/functional_dendrogram.tre")
 
-tree <- read.tree("functional_diversity/functional_dendrogram.tre")
+tree <- read.tree("functional_diversity/functional_dendrogram.new")
 ggtree(tree, branch.length = "none") + geom_treescale()
 
 #Visualize species' differences in multivariate trait space
