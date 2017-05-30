@@ -62,10 +62,10 @@ SDG14: Conserve and sustainably use the oceans, seas and marine resources
 | Foundation species             | Sea fan                | percent cover & diseased                      | CREMP   |
 | Foundation species             | Macroalgae             | percent cover & diseased                      | CREMP   |       
 | Foundation species             | Sponges                | percent cover & diseased                      | CREMP   |       
-| Keystone species               | Long-spinned sea urchin| abundance                                     | TBD     |
+| Keystone species               | Long-spined sea urchin| abundance                                     | TBD     |
 | Focal species                  | Caribbean spiny lobster| abundance                                     | TBD     |
 | Focal species                  | Queen Conch            | abundance                                     | TBD     |
-| Focal species            )     | Sea turtles            | abundance                                     | TBD     |
+| Focal species                 | Sea turtles            | abundance                                     | TBD     |
     
 ```{r librarys}
 #rm(list = ls())
