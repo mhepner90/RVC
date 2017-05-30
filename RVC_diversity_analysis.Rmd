@@ -206,8 +206,6 @@ devtools::install_github("GuangchuangYu/ggtree") #requires R>= 3.3.2
 
 trait_matrix = read_csv('functional_diversity/species_trait_matrix_348_spp.csv')
 
-trait_matrix = read_csv('C:/Users/Megan Hepner/Dropbox/Thesis/Functional_Diversity/species_trait_matrix_348_spp.csv')
-
 # Parsed with column specification:
 # cols(
 #   Species_code = col_integer(),
@@ -241,6 +239,9 @@ trait_matrix = trait_matrix %>%
     Gregariousness = ordered(Gregariousness, levels=c("1","2","3"))) %>%
   as.data.frame()
 
+#Set species names as row.names and remove extra columns
+rownames(trait_matrix)=trait_matrix$SPECIES_CD 
+
 #Calculate Gower distances. Variables have equal weight. 
 traits.dist = gowdis(trait_matrix, ord="podani")
 
@@ -263,7 +264,8 @@ for (i in 1:length(trees.ultra)) {plot(trees.ultra[[i]])} #plots the 5 different
 ensemble.trees=cl_ensemble(list=trees) #list of clusterings 
 class(ensemble.trees)
 consensus.tree=cl_consensus(ensemble.trees) #synthesizes the information in the elements of a cluster ensemble into a single clustering 
-plot(consensus.tree)
+par(mar=c(1,1,1,1))
+plot(consensus.tree, horiz=T)
 
 #Calculate dissimilarity values for each tree using 2-norm (Merigot et al 2010 Ecology) to determine which tree best preserves orignial distances 
 #spectral norm (2-norm) of the differences of the ultrametrics
@@ -276,7 +278,7 @@ names(all.trees)=c(tree_methods,"consensus")
 #average = 14.99288
 #mcquitty = 36.06599
 #ward.D = 3161.581
-#consensus =  1065.058
+#consensus =  1065.058 (1067.782) (1091.628)
 
 #Identify best tree and isolate
 trees.dissim2=do.call(rbind,trees.dissim)
@@ -285,7 +287,7 @@ names(all.trees)[min.tree]
 func.dist=all.trees[names(all.trees)==names(all.trees)[min.tree]][[1]]
 
 #Confirm lowest 2-norm value,  spectral norm (2-norm) of the differences if the ultrametrics 
-cl_dissimilarity(func.dist,traits.dist,method="spectral")
+cl_dissimilarity(func.dist,traits.dist,method="spectral") #Cross-dissimilarities using spectral ultrametric distance:  14.99288
 
 #Scale by the max value so that all values are between 0-1
 func.dist=func.dist/max(func.dist)
@@ -296,11 +298,19 @@ par(mar=c(3,1,0,16))
 plot(func.dist,horiz=TRUE)
 #Save plot: 10" x 15"
 
-#Write newick tree
-write.tree(as.phylo(as.hclust(func.dist)),"functional_diversity/functional_dendrogram.tre")
+#Phylogenetic tree with 348 tips and 347 internal nodes. 
+func.dist.phy = as.phylo(as.hclust(func.dist))
 
-tree <- read.tree("functional_diversity/functional_dendrogram.new")
-ggtree(tree, branch.length = "none") + geom_treescale()
+#Write newick tree
+write.tree(func.dist.phy, "functional_diversity/functional_dendrogram.nwk")
+#write.nexus(func.dist.phy, "functional_diversity/functional_dendrogram.nex") 
+
+tree <- read.tree("functional_diversity/functional_dendrogram.nwk")
+
+ggtree(tree) +
+  ggtitle("Functional Dendogram")
+#ggtree(tree, branch.length = "none") + geom_treescale()
+#ggtree(tree, aes(color=group, linetype = group))
 
 #Visualize species' differences in multivariate trait space
 #Perform k-means clustering with no a priori specification for k
