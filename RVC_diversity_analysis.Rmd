@@ -197,6 +197,7 @@ library(clue) #calls cl_ultrametric
 library(fpc) #calls pamk
 #install.packages("ape")
 library(ape)
+library(phytools)
 ## try http:// if https:// URLs are not supported
 source("https://bioconductor.org/biocLite.R")
 biocLite("ggtree")
@@ -204,7 +205,8 @@ biocLite("ggtree")
 #biocLite("ggtree", type = "source")
 devtools::install_github("GuangchuangYu/ggtree") #requires R>= 3.3.2
 
-trait_matrix = read_csv('C:/Users/Megan Hepner/Dropbox/Thesis/Functional_Diversity/species_trait_matrix_348_spp.csv')
+trait_matrix = read_csv('functional_diversity/species_trait_matrix_348_spp.csv')
+
 # Parsed with column specification:
 # cols(
 #   Species_code = col_integer(),
@@ -238,6 +240,9 @@ trait_matrix = trait_matrix %>%
     Gregariousness = ordered(Gregariousness, levels=c("1","2","3"))) %>%
   as.data.frame()
 
+#Set species names as row.names and remove extra columns
+rownames(trait_matrix)=trait_matrix$SPECIES_CD 
+
 #Calculate Gower distances. Variables have equal weight. 
 traits.dist = gowdis(trait_matrix, ord="podani")
 
@@ -260,7 +265,8 @@ for (i in 1:length(trees.ultra)) {plot(trees.ultra[[i]])} #plots the 5 different
 ensemble.trees=cl_ensemble(list=trees) #list of clusterings 
 class(ensemble.trees)
 consensus.tree=cl_consensus(ensemble.trees) #synthesizes the information in the elements of a cluster ensemble into a single clustering 
-plot(consensus.tree)
+par(mar=c(1,1,1,1))
+plot(consensus.tree, horiz=T)
 
 #Calculate dissimilarity values for each tree using 2-norm (Merigot et al 2010 Ecology) to determine which tree best preserves orignial distances 
 #spectral norm (2-norm) of the differences of the ultrametrics
@@ -273,7 +279,7 @@ names(all.trees)=c(tree_methods,"consensus")
 #average = 14.99288
 #mcquitty = 36.06599
 #ward.D = 3161.581
-#consensus =  1065.058
+#consensus =  1065.058 (1067.782) (1091.628)
 
 #Identify best tree and isolate
 trees.dissim2=do.call(rbind,trees.dissim)
@@ -282,7 +288,7 @@ names(all.trees)[min.tree]
 func.dist=all.trees[names(all.trees)==names(all.trees)[min.tree]][[1]]
 
 #Confirm lowest 2-norm value,  spectral norm (2-norm) of the differences if the ultrametrics 
-cl_dissimilarity(func.dist,traits.dist,method="spectral")
+cl_dissimilarity(func.dist,traits.dist,method="spectral") #Cross-dissimilarities using spectral ultrametric distance:  14.99288
 
 #Scale by the max value so that all values are between 0-1
 func.dist=func.dist/max(func.dist)
@@ -293,11 +299,45 @@ par(mar=c(3,1,0,16))
 plot(func.dist,horiz=TRUE)
 #Save plot: 10" x 15"
 
-#Write newick tree
-write.tree(as.phylo(as.hclust(func.dist)),"functional_diversity/functional_dendrogram.tre")
+#Phylogenetic tree with 348 tips and 347 internal nodes. 
+func.dist.phy = as.phylo(as.hclust(func.dist))
 
-tree <- read.tree("functional_diversity/functional_dendrogram.tre")
-ggtree(tree, branch.length = "none") + geom_treescale()
+#Write newick tree
+write.tree(func.dist.phy, "functional_diversity/functional_dendrogram.nwk")
+#write.nexus(func.dist.phy, "functional_diversity/functional_dendrogram.nex") 
+
+tree <- read.tree("functional_diversity/functional_dendrogram.nwk")
+# List of 4
+#  $ edge       : int [1:694, 1:2] 
+#  $ Nnode      : int 347
+#  $ tip.label  : chr [1:348] 
+#  $ edge.length: num
+ # - attr(*, "class")= chr "phylo"
+ # - attr(*, "order")= chr "cladewise"
+
+# Phylogenetic tree with 348 tips and 347 internal nodes.
+# Tip labels:
+# 	KYP_SECT, ALE_CILI, ELO_SAUR, HAR_JAGU, CEN_UNDE, TYL_CROC, ...
+# Rooted; includes branch lengths.
+
+plot(tree, label.offset=0.2, edge.width = 2, type = "cladogram")  #the label.offset argument moves the species names a bit to the right (try different values!)
+nodelabels() #add node numbers
+tiplabels() #add tip numbers
+
+ggtree(tree, branch.length = T) +
+  ggtitle("Functional Dendogram") +
+  geom_tiplab()+
+  geom_text(aes(x = branch, label=branch.length), vjust = -.5) +
+  theme_tree2()
+
+ggtree(tree, layout= "circular") +
+  ggtitle("Functional Dendogram") +
+  geom_tiplab(size = 1, aes(angle=angle))+
+  theme_tree2()
+
+# transformed to a tidy data.frame by fortify method
+tree_data <- fortify(tree) #node; parent; branch.length; x; y; label; isTip; branch; angle 
+head(tree_data)
 
 #Visualize species' differences in multivariate trait space
 #Perform k-means clustering with no a priori specification for k
@@ -337,30 +377,6 @@ for(i in seq_along(groups)) {
  ordispider(traits_nmds,factor(traits.kclus$pamobject$clustering),label=F)
  ordihull(traits_nmds,factor(traits.kclus$pamobject$clustering),lty="dotted")
  orditorp(traits_nmds,dis="sites",pcex=0,air=0.5,col="grey10",cex=0.8)
-
-#From Anni Djurhuus - make a dendrogram
-hclust.den <- as.dendrogram(hclust(traits.dist, method = "average")) #make dendogram 
-p <- ggdendrogram(hclust.den, leaf_labels=TRUE) #plot 
-
-
-h <- diana(trait_matrix, metric="bray")
-p <- as.phylo(as.hclust(h, method="average"))
-plot(p, cex=0.75,label.offset=300,direct='down',font=1, adj=0.0, sub="")
-# add in the dated surface type via color
-tiplabels(col=mypalette[as.numeric(deep_vent_meta$vent)],bg=mypalette[as.numeric(deep_vent_meta$vent)],pch=c(25,15,17,18,16)[as.factor(deep_vent_meta$vent)], cex=2)
-# based on distance matrix values, YMMV
-legend('topleft', legend=c("Background SWIR","Background ESR","Diffuse vents ESR", "Longqi", "Dog's Head"), col=mypalette, pt.bg=mypalette,bty='n', cex=1,pch=c(25,15,17,18,16))
-
-#Plot the best tree - average 
-func_dist_average = read.tree('functional_diversity/functional_dendrogram.new')
-func_dist_average # Phylogenetic tree with 348 tips and 347 internal nodes.
-par(mfrow=c(1,1))
-par(mar=c(3,1,0,2)) #mar: numerical vector of form c(bottom, left, top, right)which gives the number of lines of margin to be specified on the four sides of the plot.
-par(lheight = 50)
-plot(func_dist_average,main = "Functional Dendogram") # horiz=TRUE, 
-
-#ggtree 
-ggtree(func_dist_average, ndigits=2, branch.length = 'none') #+ geom_text(aes(x=branch, label=length_0.95_HPD), vjust=-.5, color='firebrick')
 
 ```
 
