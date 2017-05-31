@@ -549,7 +549,7 @@ fk_domain_abun_diversity_no_spp = domain_fk_abun_no_spp %>% #14,634 * 10
     shannon = purrr::map( #shannon diversity as effective number of species 
       data_wide,
       function(x) exp(diversity(x, index = 'shannon'))),
-    func_div = purrr::map( #shannon diversity as effective number of species 
+    func_div = purrr::map( 
       data_wide, 
       function(x) dbFD((as.matrix(func.dist)), x))) %>% #x = trait matrix where rows are species and columns are traits; a = abundance matrix where rows are sites and species are columns 
   unnest(richness,shannon,simpson, func_div)
