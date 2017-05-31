@@ -502,3 +502,10 @@ dygraph(snapper_fk_mean_density, main = 'Snapper Density') %>%
   dyAxis("y", label = "Density") %>%
   dyAxis("x", label = "Year") %>%
   dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 2)
+
+exploited_dt_abun_csv = "exploited_species/exploited_dt_abun.csv"
+exploited_dt_den_csv  = "exploited_species/exploited_dt_den.csv"
+exploited_dt_abun <- getDomainAbundance(RVCdata_DT, species = exploited_spp_list, merge_protected = F)
+write_csv(exploited_dt_abun,"big_csv/exploited/exploited_dt_abun.csv")
+exploited_dt_den <- getDomainDensity(RVCdata_DT, species = exploited_spp_list, merge_protected = F)
+write_csv(exploited_dt_den,"big_csv/exploited/exploited_dt_den.csv")
