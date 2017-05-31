@@ -197,6 +197,7 @@ library(clue) #calls cl_ultrametric
 library(fpc) #calls pamk
 #install.packages("ape")
 library(ape)
+#install.packages("phytools")
 library(phytools)
 ## try http:// if https:// URLs are not supported
 source("https://bioconductor.org/biocLite.R")
@@ -483,8 +484,6 @@ for(i in seq_along(groups)) {
 ### Florida Keys domain
 ```{r FK domain biodiversity}
 
-#variables: YEAR, REGION SPECIES_CD, abundance, var, n, nm, N, NM, protected_status
-
 domain_fk_abun <- read_csv('big_csv/abundance_domain/domain_fk_abun.csv', 
 col_types = cols(
   YEAR = col_integer(),
@@ -499,55 +498,64 @@ col_types = cols(
   protected_status = col_character()
 ))
 
+## FK's domain abundance including specis to genus level (spp.)  - 377 species 
+# fk_domain_abun_diversity = domain_fk_abun %>% #15,771 * 10
+#   select(YEAR, protected_status, SPECIES_CD, abundance) %>% #27,911 * 4 
+#   group_by(YEAR, protected_status) %>% ##45 groups (fk 15*3)
+#   nest(-YEAR) %>%  
+#   mutate(
+#     data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abundance, fill =0)), 
+#     dom_richness = map( #species richness 
+#       data_wide, #why are there 116 rows??? 
+#       function(x) specnumber(x)),
+#     dom_simpson = map( #simpson diversity as effective number of species 
+#       data_wide,
+#       function(x) 1/(1 - diversity(x, index = 'simpson'))),
+#     dom_shannon = map( #shannon diversity as effective number of species 
+#       data_wide,
+#       function(x) exp(diversity(x, index = 'shannon')))) %>%
+#   unnest(dom_richness, dom_simpson, dom_shannon)
+# 
+# fk_domain_abun_diversity = fk_domain_abun_diversity %>%
+#   select(dom_richness,dom_simpson,dom_shannon)
 
-## FK's domain abundance including specis to genus level (spp.) 
-fk_domain_abun_diversity = domain_fk_abun %>% #15,771 * 10
-  select(YEAR, protected_status, SPECIES_CD, abundance) %>% #27,911 * 4 
-  group_by(YEAR, protected_status) %>% ##45 groups (fk 15*3)
-  nest(-YEAR) %>%  
-  mutate(
-    data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abundance, fill =0)), 
-    dom_richness = map( #species richness 
-      data_wide, #why are there 116 rows??? 
-      function(x) specnumber(x)),
-    dom_simpson = map( #simpson diversity as effective number of species 
-      data_wide,
-      function(x) 1/(1 - diversity(x, index = 'simpson'))),
-    dom_shannon = map( #shannon diversity as effective number of species 
-      data_wide,
-      function(x) exp(diversity(x, index = 'shannon')))) %>%
-  unnest(dom_richness, dom_simpson, dom_shannon)
-
-fk_domain_abun_diversity = fk_domain_abun_diversity %>%
-  select(dom_richness,dom_simpson,dom_shannon)
-
-write_csv(fk_domain_abun_diversity, 'big_csv/abundance_domain/domain_fk_abun_diversity')
-
-## TO DO: compute SD for each year, Confidence Interval, statistical differences between 
+#write_csv(fk_domain_abun_diversity, 'big_csv/abundance_domain/domain_fk_abun_diversity')
 
 domain_fk_abun_no_spp = domain_fk_abun %>%
-  filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$'))
+  filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species 
 
 ## FK's domain abundance only identified to species level (without spp.) 
-fk_domain_abun_diversity_no_spp = domain_fk_abun_no_spp %>% #15,771 * 10
-  select(YEAR, protected_status, SPECIES_CD, abundance) %>% #27,911 * 4 
+fk_domain_abun_diversity_no_spp = domain_fk_abun_no_spp %>% #14,634 * 10
+  select(YEAR, protected_status, SPECIES_CD, abundance) %>% #14,634 * 4
   group_by(YEAR, protected_status) %>% ##45 groups (fk 15*3)
   nest(-YEAR) %>%  
   mutate(
-    data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abundance, fill =0)), 
-    richness = map( #species richness 
+    data_wide = purrr::map(data, ~ spread(data=.x, SPECIES_CD, abundance, fill =0)), 
+    #data_wide 1*339 species 
+     #length(unique(fk_domain_abun_diversity_no_spp$data_wide[1])) #1*339 
+     #length(unique(fk_domain_abun_diversity_no_spp$data_wide[40])) #1*229 
+     #length(unique(fk_domain_abun_diversity_no_spp$data_wide[45])) #1*234  
+     #fk_domain_abun_diversity_no_spp$richness[[40]] #1*214
+     #fk_domain_abun_diversity_no_spp$richness[[1]] #1*177 
+    
+    ### TODO: why dont length unique and specnumber values match? How to get so all species are listed in all years? 
+    
+    richness = purrr::map( #species richness 
       data_wide, #why are there 116 rows??? 
       function(x) specnumber(x)),
     simpson = map( #simpson diversity as effective number of species 
       data_wide,
       function(x) 1/(1 - diversity(x, index = 'simpson'))),
-    shannon = map( #shannon diversity as effective number of species 
+    shannon = purrr::map( #shannon diversity as effective number of species 
       data_wide,
-      function(x) exp(diversity(x, index = 'shannon')))) %>%
-  unnest(richness,simpson,shannon)
+      function(x) exp(diversity(x, index = 'shannon'))),
+    func_div = purrr::map( #shannon diversity as effective number of species 
+      data_wide, 
+      function(x) dbFD((as.matrix(func.dist)), x))) %>% #x = trait matrix where rows are species and columns are traits; a = abundance matrix where rows are sites and species are columns 
+  unnest(richness,shannon,simpson, func_div)
 
 fk_domain_abun_diversity_no_spp = fk_domain_abun_diversity_no_spp %>%
-  select(YEAR, protected_status,richness,simpson,shannon)
+  select(YEAR, protected_status,richness,shannon,simpson, func_div)
 
 write_csv(fk_domain_abun_diversity_no_spp, 'big_csv/diversity_without_spp/domain_fk_abun_diversity_no_spp.csv')
 
