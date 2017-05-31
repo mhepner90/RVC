@@ -3,13 +3,19 @@ title:
 account: rpubs
 server: rpubs.com
 <<<<<<< HEAD
+<<<<<<< HEAD
 appId: https://api.rpubs.com/api/v1/document/279234/766bd5afb28840e383eab040d0b25edb
 bundleId: https://api.rpubs.com/api/v1/document/279234/766bd5afb28840e383eab040d0b25edb
 url: http://rpubs.com/publish/claim/279234/40ad99d05772446aa5b64c5216763775
 when: 1495560861.53443
 =======
+=======
+>>>>>>> 9c9149fce1e72099941a8611cf3a3d83e80cba41
 appId: https://api.rpubs.com/api/v1/document/277227/a45857d4e8fe4d099b96ffc0cffcf4a6
 bundleId: https://api.rpubs.com/api/v1/document/277227/a45857d4e8fe4d099b96ffc0cffcf4a6
 url: http://rpubs.com/publish/claim/277227/62b6446cde584b47b60f98098d1fa418
 when: 1494865274.7647
+<<<<<<< HEAD
 >>>>>>> 150f67ad5c2ae50ed286288dff93a16af84094b5
+=======
+>>>>>>> 9c9149fce1e72099941a8611cf3a3d83e80cba41
