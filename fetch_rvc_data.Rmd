@@ -855,3 +855,9 @@ for (f in list.files('/Users/debbiehepner/Dropbox/github/RVC/density_psu/DT', pa
 write_csv(d, 'density_psu/psu_dt_density.csv')
 
 ```
+
+Katie working on calling biomass 
+```{r}
+
+```
+
