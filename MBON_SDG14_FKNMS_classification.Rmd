@@ -1124,18 +1124,37 @@ trophic_level = trophic_levels %>%
     TL = # 3 trophic levels 
       ifelse(Trophic_Level == 2, "TL2",
                     ifelse(Trophic_Level == 3, "TL3",
-                           ifelse(Trophic_Level == 4, "TL4", NA)))) %>% 
-  select(RVC_CODE, TL) 
+                           ifelse(Trophic_Level == 4, "TL4", NA))),
+    SPECIES_CD = RVC_CODE) %>% 
+  arrange(SPECIES_CD) %>% 
+  select(SPECIES_CD, TL) 
 
 #Get Biomass for the 391 species 
 trophic_level_bio = getDomainBiomass(RVCdata_FK, trophic_level$RVC_CODE, RVCdata_FK$taxonomic_data)
 write_csv(trophic_level_bio, "trophic_level/trophic_level_bio.csv")
+#Warning messages: 
+#1: In .checkSpeciesMatch(x, species, growth_parameters) : growth_parameters for ACA SOLA, ALB VULP, AST GUTT, BOL BOQU, BRO BARB, CAL LEUC, CAR OBSC, CAR PLUM, CEN OCYU, CEN STRI, CHI ATIN, CHL CHRY, EMM ATLA, ENC CARY, ENN ALTI, EPI DRUM, EUC JONE, EUC LEFR, GAL CUVI, HIP EREC, HIP REID, LIO MOWB, LUT CAMP, NAR BANC, NEG BREV, OGC NASU, OPI SPE., OPS TAU_, PRI OPHR, PRI RUBI, RAC CANA, RHI BONA, RYP BIST, RYP MACU, SAR BULL, SER ZONA, SPH NEPH, SRR SPE., STE SPE., STY LATE, SYN SCOV, SYN SYNO, TRA GOOD, TRA LATH, UMB CORO, UPE PARV unavailable
+# 2: In .wrapperProto(x, species, length_bins, merge_protected, getDomainBiomass,: length mismatch between species provided and species found.
+# 391 species provided 390 species found.
 }
 
-#join trophic level groupings to biomass 
-trophic_level_bio = right_join(trophic_level, trophic_level_bio, by = RVC_CODE)
-
 trophic_level_bio = read_csv("trophic_level/trophic_level_bio.csv")
+# Parsed with column specification:
+# cols(
+#   YEAR = col_integer(),
+#   REGION = col_character(),
+#   SPECIES_CD = col_character(),
+#   biomass = col_double(),
+#   var = col_double(),
+#   n = col_integer(),
+#   nm = col_integer(),
+#   N = col_integer(),
+#   NM = col_double()
+# )
+
+trophic_level_bio = trophic_level_bio %>%
+  select(YEAR, SPECIES_CD, biomass) %>% 
+  right_join(trophic_level, trophic_level_bio, by = SPECIES_CD)
 
 trophic_level_biomass = trophic_level_bio %>% 
   select(YEAR, SPECIES_CD, TL, biomass) %>% 
