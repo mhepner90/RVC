@@ -1103,48 +1103,63 @@ dygraph(grouper, main = 'Grouper Shannon Diversity') %>%
 
 ## Trophic Level 
 ```{r Trophic levels, eval = F}
+
+trophic_level_bio_csv = "trophic_level_bio.csv"
+  
+if(!file.exists(trophic_level_bio_csv)){ 
+  
 #potential visualize as a stacked chart 
-trophic_levels = read_csv('big_csv/FKNMS_infographic_list.csv')
+trophic_levels = read_csv('trophic_level/RVC_trophic_level.csv')
 # Parsed with column specification:
 # cols(
-#   Ecological_classification = col_character(),
-#   Sanctuary_Classifcation_level = col_character(),
-#   Icons = col_character(),
 #   Latin_Name = col_character(),
 #   Common_Name = col_character(),
 #   RVC_CODE = col_character(),
-#   Trophic_Level = col_integer(),
-#   Representative_Species = col_character(),
-#   Dataset = col_character(),
-#   Metric = col_character(),
-#   Lead = col_character()
+#   Trophic_Level = col_integer()
 # )
 
-trophic_levels = trophic_levels %>%
-  select(RVC_CODE, Trophic_Level) %>% 
-  group_by(Trophic_Level) #4 trophic levels, #421 species 
-trophic_levels
+trophic_level = trophic_levels %>%
+  select(RVC_CODE, Trophic_Level) %>%  #391 species 
+  mutate(
+    TL = # 3 trophic levels 
+      ifelse(Trophic_Level == 2, "TL2",
+                    ifelse(Trophic_Level == 3, "TL3",
+                           ifelse(Trophic_Level == 4, "TL4", NA)))) %>% 
+  select(RVC_CODE, TL) 
 
-tax<-RVCdata_FK$taxonomic_data
-names(tax)
-trophic_levels$SPECIES_CD<-trophic_levels$RVC_CODE
+#Get Biomass for the 391 species 
+trophic_level_bio = getDomainBiomass(RVCdata_FK, trophic_level$RVC_CODE, RVCdata_FK$taxonomic_data)
+write_csv(trophic_level_bio, "trophic_level/trophic_level_bio.csv")
+}
 
-taxgroup<-merge(tax,trophic_levels,by='SPECIES_CD')
+#join trophic level groupings to biomass 
+trophic_level_bio = right_join(trophic_level, trophic_level_bio, by = RVC_CODE)
 
-RVCdata_FK$taxonomic_data<-taxgroup
-names(lookup1)
+trophic_level_bio = read_csv("trophic_level/trophic_level_bio.csv")
 
-#
-lookup1
-
-lookup1=subset(RVCdata_FK$taxonomic_data,Trophic_Level %in% c("1"),select =c("RVC_CODE","Trophic_Level"))
-lookup2=subset(RVCdata_FK$taxonomic_data,Trophic_Level %in% c("2"),select =c("RVC_CODE","Trophic_Level"))
-lookup3=subset(RVCdata_FK$taxonomic_data,Trophic_Level %in% c("3"),select =c("RVC_CODE","Trophic_Level"))
-
-
-Biom1 = getDomainTotalBiomass(RVCdata_FK, species = lookup1$RVC_CODE, growth_parameters=RVCdata_FK$taxonomic_data, group = lookup1)
-
-
+trophic_level_biomass = trophic_level_bio %>% 
+  select(YEAR, SPECIES_CD, TL, biomass) %>% 
+  group_by(YEAR, TL) %>%
+  summarise(
+  ntot = sum(biomass)) %>% 
+  spread(TL, biomass)
+  
+# tax<-RVCdata_FK$taxonomic_data
+# names(tax)
+# trophic_levels$SPECIES_CD<-trophic_levels$RVC_CODE
+# 
+# taxgroup<-merge(tax,trophic_levels,by='SPECIES_CD')
+# 
+# RVCdata_FK$taxonomic_data<-taxgroup
+# names(lookup1)
+# 
+# lookup1
+# 
+# lookup1=subset(RVCdata_FK$taxonomic_data,Trophic_Level %in% c("1"),select =c("RVC_CODE","Trophic_Level"))
+# lookup2=subset(RVCdata_FK$taxonomic_data,Trophic_Level %in% c("2"),select =c("RVC_CODE","Trophic_Level"))
+# lookup3=subset(RVCdata_FK$taxonomic_data,Trophic_Level %in% c("3"),select =c("RVC_CODE","Trophic_Level"))
+# 
+# Biom1 = getDomainTotalBiomass(RVCdata_FK, species = lookup1$RVC_CODE, growth_parameters=RVCdata_FK$taxonomic_data, group = lookup1)
 
 ```
 
@@ -1170,7 +1185,7 @@ exploited_fk_bio_csv  = "exploited_species/exploited_fk_bio.csv"
 
 if(!all(file.exists(exploited_fk_abun_csv, exploited_fk_den_csv, exploited_fk_bio_csv))){
   
-exploited_spp_list= c(
+  exploited_spp_list= c(
     "CEP CRUE", #Graysby
     "EPI ITAJ", #Goliath Grouper 
     "EPI MORI", #Red Grouper
@@ -1180,18 +1195,18 @@ exploited_spp_list= c(
     "LUT GRIS", #Grey Snapper    
     "MYC BONA", #Black Grouper
     "OCY CHRY" #Yellowtail Snapper 
-    )
-#abundance
-exploited_fk_abun <- getDomainAbundance(RVCdata_FK, species = exploited_spp_list, merge_protected = F)
-write_csv(exploited_fk_abun,"big_csv/exploited/exploited_fk_abun.csv")
-
-#density 
-exploited_fk_den <- getDomainDensity(RVCdata_FK, species = exploited_spp_list, merge_protected = F)
-write_csv(exploited_fk_den,"big_csv/exploited/exploited_fk_den.csv")
-
-#density 
-exploited_fk_bio <- getDomainBiomass(RVCdata_FK, species = exploited_spp_list, RVCdata_FK$taxonomic_data, merge_protected = F)
-write_csv(exploited_fk_bio,"big_csv/exploited/exploited_fk_bio.csv")
+  )
+  #abundance
+  exploited_fk_abun <- getDomainAbundance(RVCdata_FK, species = exploited_spp_list, merge_protected = F)
+  write_csv(exploited_fk_abun,"exploited_species/exploited_fk_abun.csv")
+  
+  #density 
+  exploited_fk_den <- getDomainDensity(RVCdata_FK, species = exploited_spp_list, merge_protected = F)
+  write_csv(exploited_fk_den,"exploited_species/exploited_fk_den.csv")
+  
+  #biomass 
+  exploited_fk_bio <- getDomainBiomass(RVCdata_FK, species = exploited_spp_list, growth_parameters = RVCdata_FK$taxonomic_data, merge_protected = F)
+  write_csv(exploited_fk_bio,"exploited_species/exploited_fk_bio.csv")
 }
 
 exploited_den = read_csv("exploited_species/exploited_fk_den.csv")
@@ -1224,9 +1239,9 @@ Black_Grouper = exploited_density %>%
   spread(protected_status, Black_Grouper)
 
 dygraph(Black_Grouper, main = 'Black Grouper Density') %>% 
-    dyAxis("y", label = "Density") %>%
-    dyAxis("x", label = "Year") %>%
-    dyOptions(stackedGraph = T)
+  dyAxis("y", label = "Density") %>%
+  dyAxis("x", label = "Year") %>%
+  dyOptions(stackedGraph = T)
 
 ggplot(Black_Grouper, aes(x = YEAR)) +
   geom_point(aes(y = protected, color = "protected")) +
@@ -1237,16 +1252,16 @@ ggplot(Black_Grouper, aes(x = YEAR)) +
   theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 12))+
   labs(x = "Year", y = "Density", color = "Level of Protection") +
   scale_x_continuous(breaks = c(1999:2016))
-       
+
 #Graysby density    
 Graysby = exploited_density %>%
   select(YEAR, protected_status, Graysby) %>%
   spread(protected_status, Graysby)
 
 dygraph(Graysby, main = 'Graysby Density') %>% 
-    dyAxis("y", label = "Density") %>%
-    dyAxis("x", label = "Year") %>%
-    dyOptions(stackedGraph = T)
+  dyAxis("y", label = "Density") %>%
+  dyAxis("x", label = "Year") %>%
+  dyOptions(stackedGraph = T)
 
 #Grey_Snapper density    
 Grey_Snapper = exploited_density %>%
@@ -1254,9 +1269,9 @@ Grey_Snapper = exploited_density %>%
   spread(protected_status, Grey_Snapper)
 
 dygraph(Grey_Snapper, main = 'Grey Snapper Density') %>% 
-    dyAxis("y", label = "Density") %>%
-    dyAxis("x", label = "Year") %>%
-    dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 2)
+  dyAxis("y", label = "Density") %>%
+  dyAxis("x", label = "Year") %>%
+  dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 2)
 
 #Goliath grouper density 
 Goliath_Grouper = exploited_density %>%
@@ -1264,9 +1279,9 @@ Goliath_Grouper = exploited_density %>%
   spread(protected_status, Goliath_Grouper)
 
 dygraph(Goliath_Grouper, main = 'Goliath Grouper Density') %>% 
-    dyAxis("y", label = "Density") %>%
-    dyAxis("x", label = "Year") %>%
-    dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 2)
+  dyAxis("y", label = "Density") %>%
+  dyAxis("x", label = "Year") %>%
+  dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 2)
 
 #Hogfish density    
 Hogfish = exploited_density %>%
@@ -1274,9 +1289,9 @@ Hogfish = exploited_density %>%
   spread(protected_status, Hogfish)
 
 dygraph(Hogfish, main = 'Hogfish Density') %>% 
-    dyAxis("y", label = "Density") %>%
-    dyAxis("x", label = "Year") %>%
-    dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 2)
+  dyAxis("y", label = "Density") %>%
+  dyAxis("x", label = "Year") %>%
+  dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 2)
 
 ##Nassau Grouper
 Nassau_Grouper = exploited_density %>%
@@ -1284,9 +1299,9 @@ Nassau_Grouper = exploited_density %>%
   spread(protected_status, Nassau_Grouper)
 
 dygraph(Nassau_Grouper, main = 'Nassau Grouper Density') %>% 
-    dyAxis("y", label = "Density") %>%
-    dyAxis("x", label = "Year") %>%
-    dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = )
+  dyAxis("y", label = "Density") %>%
+  dyAxis("x", label = "Year") %>%
+  dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = )
 
 ##Yellowtail Snapper 
 yellowtail_snapper = exploited_density %>%
@@ -1294,9 +1309,9 @@ yellowtail_snapper = exploited_density %>%
   spread(protected_status, Yellowtail_Snapper)
 
 dygraph(yellowtail_snapper, main = 'Yellowtail Snapper Density') %>% 
-    dyAxis("y", label = "Density") %>%
-    dyAxis("x", label = "Year") %>%
-    dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 2)
+  dyAxis("y", label = "Density") %>%
+  dyAxis("x", label = "Year") %>%
+  dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 2)
 
 #exploited reef fish density in protected areas 
 exploited_density_protected = exploited_density %>%
@@ -1304,18 +1319,81 @@ exploited_density_protected = exploited_density %>%
   select(YEAR, Black_Grouper, Goliath_Grouper, Graysby, Grey_Snapper, Hogfish, Mutton_Snapper, Nassau_Grouper,Red_Grouper, Yellowtail_Snapper)
 
 dygraph(exploited_density_protected, main = "Exploited Reef Fish Density in Protected Areas") %>% 
-    dyAxis("y", label = "Density") %>%
-    dyAxis("x", label = "Year") %>%
-    dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 2, colors = rainbow(9))
+  dyAxis("y", label = "Density") %>%
+  dyAxis("x", label = "Year") %>%
+  dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 2, colors = rainbow(9))
 
 exploited_density_unprotected = exploited_density %>%
   filter(protected_status == 'unprotected') %>% 
   select(YEAR, Black_Grouper, Goliath_Grouper, Graysby, Grey_Snapper, Hogfish, Mutton_Snapper, Nassau_Grouper,Red_Grouper, Yellowtail_Snapper)
 
 dygraph(exploited_density_unprotected, main = "Exploited Reef Fish Density in Protected Areas") %>% 
-    dyAxis("y", label = "Density") %>%
-    dyAxis("x", label = "Year") %>%
-    dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 2, colors = grDevices::rainbow(9, start = 0, end = 1, alpha = 0.6))
+  dyAxis("y", label = "Density") %>%
+  dyAxis("x", label = "Year") %>%
+  dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 2, colors = grDevices::rainbow(9, start = 0, end = 1, alpha = 0.6))
+
+
+##Exploited Biomass 
+exploited_bio = read_csv("exploited_species/exploited_fk_bio.csv")
+# Parsed with column specification:
+# cols(
+#   YEAR = col_integer(),
+#   REGION = col_character(),
+#   SPECIES_CD = col_character(),
+#   biomass = col_double(),
+#   var = col_double(),
+#   n = col_integer(),
+#   nm = col_integer(),
+#   N = col_integer(),
+#   NM = col_double(),
+#   protected_status = col_character()
+# )
+
+exploited_biomass = exploited_bio %>%
+  mutate(
+    protected_status = recode(
+      protected_status, '0'='unprotected', '1'='protected'), 
+    common_name = recode(
+      SPECIES_CD,
+      'CEP CRUE' = 'Graysby',
+      'EPI ITAJ' = 'Goliath_Grouper',
+      'EPI MORI' = 'Red_Grouper',
+      'EPI STRI' = 'Nassau_Grouper',
+      'LAC MAXI' = 'Hogfish',
+      'LUT ANAL' = 'Mutton_Snapper',
+      'LUT GRIS' = 'Grey_Snapper',
+      'MYC BONA' = 'Black_Grouper',
+      'OCY CHRY' = 'Yellowtail_Snapper')) %>% 
+  select(YEAR, common_name, protected_status, biomass) %>%
+  group_by(YEAR, common_name, protected_status) %>%
+  filter(protected_status != "all") %>%
+  summarise(
+    ntot = sum(biomass)) %>%
+  spread(common_name, ntot)
+
+
+exploited_biomass_all = exploited_bio %>% #432*10
+  filter(protected_status == 'all') %>%   #144*10 
+  select(YEAR, SPECIES_CD, biomass) %>%   #144*3
+  mutate(
+    common_name = recode(
+      SPECIES_CD,
+      'CEP CRUE' = 'Graysby',
+      'EPI ITAJ' = 'Goliath Grouper',
+      'EPI MORI' = 'Red Grouper',
+      'EPI STRI' = 'Nassau Grouper',
+      'LAC MAXI' = 'Hogfish',
+      'LUT ANAL' = 'Mutton Snapper',
+      'LUT GRIS' = 'Grey Snapper',
+      'MYC BONA' = 'Black Grouper',
+      'OCY CHRY' = 'Yellowtail Snapper')) %>% 
+  select(YEAR, common_name, biomass) %>%
+  spread(common_name, biomass)
+
+dygraph(exploited_biomass_all, main = "Exploited Reef Fish Biomass in Protected Areas") %>% 
+  dyAxis("y", label = "Density") %>%
+  dyAxis("x", label = "Year") %>%
+  dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 2) #colors = grDevices::rainbow(9, alpha = 0.6)
 
 ```
 
@@ -1324,12 +1402,8 @@ dygraph(exploited_density_unprotected, main = "Exploited Reef Fish Density in Pr
 ```{r Biodiversity}
 
 domain_fk_abun_diversity = read_csv('big_csv/abundance_domain/domain_fk_abun_diversity.csv')
-domain_dt_abun_diversity = read_csv("big_csv/abundance_domain/domain_dt_abun_diversity.csv")
-strata_fk_abun_diversity = read_csv("big_csv/abundance_strata/strata_fk_abun_diversity.csv")
-strata_dt_abun_diversity = read_csv("big_csv/abundance_strata/strata_dt_abun_diversity.csv")
-psu_fk_abun_diversity = read_csv("big_csv/abundance_psu/psu_fk_abun_diversity.csv", 
-          col_types = cols(protected_status = col_character())) 
-psu_dt_abun_diversity = read_csv("big_csv/abundance_psu/psu_dt_abun_diversity.csv")
+#strata_fk_abun_diversity = read_csv("big_csv/abundance_strata/strata_fk_abun_diversity.csv")
+#psu_fk_abun_diversity = read_csv("big_csv/abundance_psu/psu_fk_abun_diversity.csv",  col_types = cols(protected_status = col_character())) 
 
 domain_fk_abun_diversity = read_csv('big_csv/abundance_domain/domain_fk_abun_diversity.csv')
 
