@@ -498,34 +498,15 @@ col_types = cols(
   protected_status = col_character()
 ))
 
-## FK's domain abundance including specis to genus level (spp.)  - 377 species 
-# fk_domain_abun_diversity = domain_fk_abun %>% #15,771 * 10
-#   select(YEAR, protected_status, SPECIES_CD, abundance) %>% #27,911 * 4 
-#   group_by(YEAR, protected_status) %>% ##45 groups (fk 15*3)
-#   nest(-YEAR) %>%  
-#   mutate(
-#     data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abundance, fill =0)), 
-#     dom_richness = map( #species richness 
-#       data_wide, #why are there 116 rows??? 
-#       function(x) specnumber(x)),
-#     dom_simpson = map( #simpson diversity as effective number of species 
-#       data_wide,
-#       function(x) 1/(1 - diversity(x, index = 'simpson'))),
-#     dom_shannon = map( #shannon diversity as effective number of species 
-#       data_wide,
-#       function(x) exp(diversity(x, index = 'shannon')))) %>%
-#   unnest(dom_richness, dom_simpson, dom_shannon)
-# 
-# fk_domain_abun_diversity = fk_domain_abun_diversity %>%
-#   select(dom_richness,dom_simpson,dom_shannon)
-
-#write_csv(fk_domain_abun_diversity, 'big_csv/abundance_domain/domain_fk_abun_diversity')
-
 domain_fk_abun_no_spp = domain_fk_abun %>%
   filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species 
 
 #length(unique(domain_fk_abun_no_spp$SPECIES_CD)) # 348
 #length(unique(trait_matrix$SPECIES_CD))          # 348
+
+# check if one species has total abundance of zero (never occurs)
+abun.sum2 <- apply(a, 2, sum)
+if (any(abun.sum2 == 0) ) stop("At least one species does not occur in any community (zero total abundance across all communities).","\n")
 
 ## FK's domain abundance only identified to species level (without spp.) 
 fk_domain_abun_diversity_no_spp = domain_fk_abun_no_spp %>% #14,634 * 10
@@ -533,12 +514,12 @@ fk_domain_abun_diversity_no_spp = domain_fk_abun_no_spp %>% #14,634 * 10
   group_by(YEAR, protected_status) %>% ##45 groups (fk 15*3)
   nest(-YEAR) %>%  
   mutate(
-data_wide = map(data, function(x) 
+    data_wide = map(data, function(x) 
       full_join(x, trait_matrix %>% select(SPECIES_CD), by='SPECIES_CD') %>%
         mutate(abundance = ifelse(is.na(abundance), 0, abundance)) %>%
         spread(SPECIES_CD, abundance, fill =0)), 
     richness = map( #species richness 
-      data_wide, #why are there 116 rows??? 
+      data_wide, 
       function(x) specnumber(x)),
     simpson = map( #simpson diversity as effective number of species 
       data_wide,
@@ -548,13 +529,14 @@ data_wide = map(data, function(x)
       function(x) exp(diversity(x, index = 'shannon'))),
     func_div = map( 
       data_wide, 
-      function(x) dbFD((as.matrix(func.dist)), x))) %>% #x = trait matrix where rows are species and columns are traits; a = abundance matrix where rows are sites and species are columns 
-  unnest(richness,shannon,simpson, func_div)
+      function(x) 1/(1 - dbFD(as.matrix(func.dist), x)))) %>% 
+  unnest(richness,shannon,simpson,func_div)
 
 fk_domain_abun_diversity_no_spp = fk_domain_abun_diversity_no_spp %>%
   select(YEAR, protected_status,richness,shannon,simpson, func_div)
 
 write_csv(fk_domain_abun_diversity_no_spp, 'big_csv/diversity_without_spp/domain_fk_abun_diversity_no_spp.csv')
+
 ```
 
 
@@ -1572,4 +1554,29 @@ dt_strata_diversity = strata_dtdensity_1999_2016 %>%
 ```{r SERC environmental variables}
 
 
+```
+
+```{r}
+## FK's domain abundance including specis to genus level (spp.)  - 377 species 
+# fk_domain_abun_diversity = domain_fk_abun %>% #15,771 * 10
+#   select(YEAR, protected_status, SPECIES_CD, abundance) %>% #27,911 * 4 
+#   group_by(YEAR, protected_status) %>% ##45 groups (fk 15*3)
+#   nest(-YEAR) %>%  
+#   mutate(
+#     data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abundance, fill =0)), 
+#     dom_richness = map( #species richness 
+#       data_wide, #why are there 116 rows??? 
+#       function(x) specnumber(x)),
+#     dom_simpson = map( #simpson diversity as effective number of species 
+#       data_wide,
+#       function(x) 1/(1 - diversity(x, index = 'simpson'))),
+#     dom_shannon = map( #shannon diversity as effective number of species 
+#       data_wide,
+#       function(x) exp(diversity(x, index = 'shannon')))) %>%
+#   unnest(dom_richness, dom_simpson, dom_shannon)
+# 
+# fk_domain_abun_diversity = fk_domain_abun_diversity %>%
+#   select(dom_richness,dom_simpson,dom_shannon)
+
+#write_csv(fk_domain_abun_diversity, 'big_csv/abundance_domain/domain_fk_abun_diversity')
 ```
