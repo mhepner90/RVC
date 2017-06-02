@@ -408,16 +408,16 @@ trait_matrix_treemap = trait_matrix %>%
   ungroup() %>%
   as.data.frame()
   
-treemap = 
-  d3tree2(
+treemap2 = 
+  d3treeR::d3tree2(
     treemap(dtf = trait_matrix_treemap,
             index = c("Trophic_group", "Trophic_level", "Water_column", "Complexity", "Substrate_type", "Diel_activity"),
             vSize = "n", 
-            #vColor = "Trophic_group",
-            type = "index",
-            title = "Reef Fish Traits",
-            fontsize.title = 14,
-            algorithm = "squarified"),
+            vColor = "Trophic_group",
+            type = "index"),
+            #title = "Reef Fish Traits",
+            #fontsize.title = 14, 
+            #algorithm = "squarified"
     rootname = "Species Traits")
 
 ```
