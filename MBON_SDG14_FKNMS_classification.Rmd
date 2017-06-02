@@ -1136,7 +1136,6 @@ write_csv(trophic_level_bio, "trophic_level/trophic_level_bio.csv")
 #1: In .checkSpeciesMatch(x, species, growth_parameters) : growth_parameters for ACA SOLA, ALB VULP, AST GUTT, BOL BOQU, BRO BARB, CAL LEUC, CAR OBSC, CAR PLUM, CEN OCYU, CEN STRI, CHI ATIN, CHL CHRY, EMM ATLA, ENC CARY, ENN ALTI, EPI DRUM, EUC JONE, EUC LEFR, GAL CUVI, HIP EREC, HIP REID, LIO MOWB, LUT CAMP, NAR BANC, NEG BREV, OGC NASU, OPI SPE., OPS TAU_, PRI OPHR, PRI RUBI, RAC CANA, RHI BONA, RYP BIST, RYP MACU, SAR BULL, SER ZONA, SPH NEPH, SRR SPE., STE SPE., STY LATE, SYN SCOV, SYN SYNO, TRA GOOD, TRA LATH, UMB CORO, UPE PARV unavailable
 # 2: In .wrapperProto(x, species, length_bins, merge_protected, getDomainBiomass,: length mismatch between species provided and species found.
 # 391 species provided 390 species found.
-}
 
 trophic_level_bio = read_csv("trophic_level/trophic_level_bio.csv")
 # Parsed with column specification:
@@ -1153,32 +1152,25 @@ trophic_level_bio = read_csv("trophic_level/trophic_level_bio.csv")
 # )
 
 trophic_level_bio = trophic_level_bio %>%
-  select(YEAR, SPECIES_CD, biomass) %>% 
-  right_join(trophic_level, trophic_level_bio, by = SPECIES_CD)
+  select(YEAR, biomass, SPECIES_CD) %>% 
+  left_join(trophic_level, trophic_level_bio, by = 'SPECIES_CD')
+
+write_csv(trophic_level_bio, "trophic_level/tlbio.csv")
+}
+
+trophic_level_bio = read_csv("trophic_level/tlbio.csv")
+# Parsed with column specification:
+# cols(
+#   YEAR = col_integer(),
+#   biomass = col_double(),
+#   SPECIES_CD = col_character(),
+#   TL = col_character()
 
 trophic_level_biomass = trophic_level_bio %>% 
-  select(YEAR, SPECIES_CD, TL, biomass) %>% 
   group_by(YEAR, TL) %>%
   summarise(
   ntot = sum(biomass)) %>% 
-  spread(TL, biomass)
-  
-# tax<-RVCdata_FK$taxonomic_data
-# names(tax)
-# trophic_levels$SPECIES_CD<-trophic_levels$RVC_CODE
-# 
-# taxgroup<-merge(tax,trophic_levels,by='SPECIES_CD')
-# 
-# RVCdata_FK$taxonomic_data<-taxgroup
-# names(lookup1)
-# 
-# lookup1
-# 
-# lookup1=subset(RVCdata_FK$taxonomic_data,Trophic_Level %in% c("1"),select =c("RVC_CODE","Trophic_Level"))
-# lookup2=subset(RVCdata_FK$taxonomic_data,Trophic_Level %in% c("2"),select =c("RVC_CODE","Trophic_Level"))
-# lookup3=subset(RVCdata_FK$taxonomic_data,Trophic_Level %in% c("3"),select =c("RVC_CODE","Trophic_Level"))
-# 
-# Biom1 = getDomainTotalBiomass(RVCdata_FK, species = lookup1$RVC_CODE, growth_parameters=RVCdata_FK$taxonomic_data, group = lookup1)
+  spread(TL, ntot)
 
 ```
 
