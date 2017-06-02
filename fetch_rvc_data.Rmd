@@ -866,5 +866,7 @@ fk1999<- getRvcData(1999, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_a
 biofk1999 <- getDomainBiomass(fk1999, spp_list, merge_protected = F)
 write_csv(biofk1999, 'big_csv/biomass_domain/biofk1999.csv') #1999 
 
+#work on this later
+
 ```
 
