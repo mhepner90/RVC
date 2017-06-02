@@ -306,7 +306,7 @@ alphadiv.list=lapply(list(catch_abund,catch_biomass,catch_pres.abs),
    #Compute phylogenetic diversity
    phylo.div=1/(1-apply(rel.mat,1, function(x) t(x) %*% as.matrix(phylo.dist) %*% x))
    #Compute taxonomic diversity
-   taxo.div=1/(1-apply(rel.mat,1,function(x) t(x) %*% as.matrix(taxo.dist) %*% x))
+   taxo.div=1/(1-apply(rel.mat,1,function(x) t(x) %*% as.matrix(taxo.dist) %*% x)) #%*% = Matrix multiplyer
    #Bind all to the original dataframe
    cbind(i,evenness,species.div,func.div,phylo.div,taxo.div) } ) 
 names(alphadiv.list)=c("abund","biomass","pres.abs")
