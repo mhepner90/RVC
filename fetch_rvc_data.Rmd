@@ -27,6 +27,9 @@ spp_list<- fk1999_to_2016$taxonomic_data$COMNAME #species list #399/400
 spp_list<- fk1999$taxonomic_data$COMNAME
 
 write_csv(spp_list, 'spp_list.csv') #is.data.frame(x) is not true 
+
+#RVCdata_FK_rds = 'big_csv/RVCdata_FK.rds'
+#RVCdata_FK = read_rds('big_csv/RVCdata_FK.rds') 
 ```
 
 ## Abundance 
@@ -857,7 +860,11 @@ write_csv(d, 'density_psu/psu_dt_density.csv')
 ```
 
 Katie working on calling biomass 
-```{r}
-##blah blah 
+```{r Florida Keys Domain Biomass}
+spp_list = read_csv('spp_list.csv')
+fk1999<- getRvcData(1999, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+biofk1999 <- getDomainBiomass(fk1999, spp_list, merge_protected = F)
+write_csv(biofk1999, 'big_csv/biomass_domain/biofk1999.csv') #1999 
+
 ```
 
