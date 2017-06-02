@@ -509,3 +509,7 @@ exploited_dt_abun <- getDomainAbundance(RVCdata_DT, species = exploited_spp_list
 write_csv(exploited_dt_abun,"big_csv/exploited/exploited_dt_abun.csv")
 exploited_dt_den <- getDomainDensity(RVCdata_DT, species = exploited_spp_list, merge_protected = F)
 write_csv(exploited_dt_den,"big_csv/exploited/exploited_dt_den.csv")
+
+domain_dt_abun_diversity = read_csv("big_csv/abundance_domain/domain_dt_abun_diversity.csv")
+strata_dt_abun_diversity = read_csv("big_csv/abundance_strata/strata_dt_abun_diversity.csv")
+psu_dt_abun_diversity = read_csv("big_csv/abundance_psu/psu_dt_abun_diversity.csv")
