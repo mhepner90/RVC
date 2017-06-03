@@ -296,7 +296,8 @@ func.dist=func.dist/max(func.dist)
 
 #Plot the best tree - average 
 par(mfrow=c(1,1))
-par(mar=c(3,1,0,16))
+par(mar=c(2,1,0,2))
+par(pin=c(10,15))
 plot(func.dist,horiz=TRUE)
 #Save plot: 10" x 15"
 
@@ -321,7 +322,7 @@ tree <- read.tree("functional_diversity/functional_dendrogram.nwk")
 # 	KYP_SECT, ALE_CILI, ELO_SAUR, HAR_JAGU, CEN_UNDE, TYL_CROC, ...
 # Rooted; includes branch lengths.
 
-plot(tree, label.offset=0.2, edge.width = 2, type = "cladogram")  #the label.offset argument moves the species names a bit to the right (try different values!)
+plot(tree, label.offset=0.2, edge.width = 2, type = "cladogram")  
 nodelabels() #add node numbers
 tiplabels() #add tip numbers
 
@@ -382,7 +383,42 @@ for(i in seq_along(groups)) {
 ```
 
 ### Trait matrix visualization [http://jkunst.com/r/pokemon-visualize-em-all/]
+[https://d3js.org/]
+[http://www.buildingwidgets.com/blog/2015/7/22/week-29-d3treer-v2]
 ```{r trait visualization}
+
+library(treemap)
+devtools::install_github("gluc/data.tree")
+devtools::install_github("timelyportfolio/d3treeR")
+library(d3treeR)
+
+trait_matrix = read_csv('functional_diversity/species_trait_matrix_348_spp.csv')
+
+trait_matrix_treemap = trait_matrix %>%
+  select(Common_name, Maxlength, Trophic_level, Trophic_group, Water_column,Diel_activity,Substrate_type,Complexity, Gregariousness) %>% 
+  group_by(Maxlength,
+           Trophic_level,
+           Trophic_group,
+           Water_column,
+           Diel_activity,
+           Substrate_type,
+           Complexity,
+           Gregariousness) %>%
+  summarise(n = n())%>% 
+  ungroup() %>%
+  as.data.frame()
+  
+treemap2 = 
+  d3treeR::d3tree2(
+    treemap(dtf = trait_matrix_treemap,
+            index = c("Trophic_group", "Trophic_level", "Water_column", "Complexity", "Substrate_type", "Diel_activity"),
+            vSize = "n", 
+            vColor = "Trophic_group",
+            type = "index"),
+            #title = "Reef Fish Traits",
+            #fontsize.title = 14, 
+            #algorithm = "squarified"
+    rootname = "Species Traits")
 
 ```
 
