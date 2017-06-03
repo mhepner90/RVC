@@ -1,0 +1,101 @@
+---
+title: "statistical_tests"
+author: "Katie Shulzitski"
+date: "June 3, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library("MASS")
+library("ggplot2")
+library("moments")
+library(DescTools)
+
+```
+
+## Checking data for normality and homoscedasticity
+
+### COLUMN is the column name of the variable of interest that you want to test (e.g., abundance) and DATAFRMAE is the dataframe from which you are working. COLUMN2 is the variable by which you are testing (e.g., year).
+
+```{r}
+
+ggplot() + geom_density(aes(x=COLUMN), data=DATAFRAME) #first just plot the data to see what your distribution looks like
+shapiro.test(DATAFRAME$COLUMN) # test for normality
+#to look at residuals....
+r1=lm(COLUMN~COLUMN2,DATAFRAME) 
+plot(DATAFRAME$COLUMN2, rstandard(r1))
+hist(r1$resid)
+qqnorm(r1$resid)
+qqline(r1$resid)
+skewness(r1$resid) #greater than zero is evidence for having skew
+
+```
+
+## Transforming your data using the boxcox method
+
+### XXX is where you need to copy in the lamda with the highest likelihood (you can round this number to something more reasonable)
+
+```{r}
+
+#need non-zero data for boxcox method to add a small amount to every value
+DATAFRAME$COLUMN_t <- DATAFRAME$COLUMN+0.01 
+b=boxcox(COLUMN_t~COLUMN2,data=DATAFRAME)
+b #x is lambda and y is values of likelihood
+lamda=b$x
+lik=b$y
+bc=cbind(lamda,lik)
+bc
+bc[order(-lik),] #use the lamda with the highest likelihood to transform your data
+DATAFRAME$COLUMN_bc <- DATAFRAME$COLUMN^XXX 
+DATAFRAME$COLUMN_bc <- DATAFRAME$COLUMN_bc-1 
+DATAFRAME$COLUMN_bc <- DATAFRAME$COLUMN_bc/XXX
+
+```
+
+## Checking data for normality and homoscedasticity AFTER transformation
+
+```{r}
+
+ggplot() + geom_density(aes(x=COLUMN_bc), data=DATAFRAME)
+shapiro.test(DATAFRAME$COLUMN_bc)
+r1=lm(COLUMN_bc~COLUMN2,DATAFRAME)
+plot(DATAFRAME$COLUMN2, rstandard(r1))
+hist(r1$resid)
+qqnorm(r1$resid)
+qqline(r1$resid)
+skewness(r1$resid) #greater than zero is evidence for having skew
+
+# if data look normal and homoscedastic after transformation, proceed with parametric test
+# if data do not look normal and homoscedastic after transformation, proceed with non-parametric test
+
+```
+
+## ANOVA: parametric test for differences among groups
+
+### Use COLUMN_bc if using transformed data, otherwise use COLUMN
+
+```{r}
+
+ANOVA <- aov(COLUMN_bc ~ COLUMN2, data=DATAFRAME) 
+plot(ANOVA)
+summary(ANOVA) # display Type I ANOVA table
+drop1(ANOVA,~.,test="F") # type III SS and F Tests 
+
+# for post-hoc pairwise tests.....
+TukeyHSD(ANOVA) # where fit comes from aov()
+
+```
+
+## Kruskal-Wallis: non-parametric test for differences among groups
+
+```{r}
+
+kruskal.test(COLUMN~COLUMN2, data=DATAFRAME)
+
+# for post-hoc pairwise tests....
+DunnTest(x=DATAFRAME$COLUMN, g=DATAFRAME$COLUMN2, method="fdr") # note that these p-values are one-sided values; for two-sided p-values they need to be doubled
+
+```
+
