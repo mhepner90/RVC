@@ -859,12 +859,20 @@ write_csv(d, 'density_psu/psu_dt_density.csv')
 
 ```
 
+## Biomass 
+
+### Biomass data by domain 
+
 Katie working on calling biomass 
-```{r Florida Keys Domain Biomass}
+```{r fetch biomass data by year and domain}
+
 spp_list = read_csv('spp_list.csv')
+
 fk1999<- getRvcData(1999, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 biofk1999 <- getDomainBiomass(fk1999, spp_list, merge_protected = F)
-write_csv(biofk1999, 'big_csv/biomass_domain/biofk1999.csv') #1999 
+write_csv(biofk1999, 'big_csv/biomass_domain/FK/biofk1999.csv') #1999 
+
+
 
 #work on this later
 #trying to get push to work
