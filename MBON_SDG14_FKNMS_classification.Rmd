@@ -1515,7 +1515,6 @@ dygraph(dygraph_rich_simp_shannon, main = "Florida Keys Reef Fish Biodiversity")
   dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 2) %>% #drawGrid = F
   dyLegend(width = 400)
 
-
 ```
 
 # Coreal Reef Evaluation and Monitoring Project (CREMP)
