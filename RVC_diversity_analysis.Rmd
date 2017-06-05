@@ -1616,3 +1616,23 @@ dt_strata_diversity = strata_dtdensity_1999_2016 %>%
 
 #write_csv(fk_domain_abun_diversity, 'big_csv/abundance_domain/domain_fk_abun_diversity')
 ```
+
+
+```{r shapefiles}
+library(foreign)
+dbf = read.dbf('FL_files/FLGrid_100m_work8.dbf')
+dbf2 = read.dbf('FL_files/Unified_Florida_Hab.dbf')
+library(maptools)
+shape = readShapePoly("FL_files/Unified_Florida_Hab.shp")
+library(shapefiles)
+shx = read.shx("FL_files/Unified_Florida_Hab.shx")
+library(spatstat)
+library(lattice)
+library(maps)
+library(rgeos)
+library(rgdal)
+library(ggmap)
+library(tmap)
+library(marmap) #marine maps 
+
+```
