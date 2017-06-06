@@ -869,7 +869,7 @@ Katie working on calling biomass
 spp_list = read_csv('spp_list.csv')
 
 fk1999<- getRvcData(1999, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
-biofk1999 <- getDomainBiomass(fk1999, spp_list, merge_protected = F)
+biofk1999 <- getDomainBiomass(fk1999, species = fk1999$taxonomic_data$SPECIES_CD, growth_parameters = fk1999$taxonomic_data, merge_protected = F)
 write_csv(biofk1999, 'big_csv/biomass_domain/FK/biofk1999.csv') #1999 
 
 

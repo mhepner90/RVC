@@ -12,7 +12,6 @@ library("MASS")
 library("ggplot2")
 library("moments")
 library("DescTools")
-
 ```
 
 ## Checking data for normality and homoscedasticity
