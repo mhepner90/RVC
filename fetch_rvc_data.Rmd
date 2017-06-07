@@ -872,10 +872,143 @@ fk1999<- getRvcData(1999, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_a
 biofk1999 <- getDomainBiomass(fk1999, species = fk1999$taxonomic_data$SPECIES_CD, growth_parameters = fk1999$taxonomic_data, merge_protected = F)
 write_csv(biofk1999, 'big_csv/biomass_domain/FK/biofk1999.csv') #1999 
 
+fk2000<- getRvcData(2000, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+biofk2000 <- getDomainBiomass(fk2000, species = fk2000$taxonomic_data$SPECIES_CD, growth_parameters = fk2000$taxonomic_data, merge_protected = F)
+write_csv(biofk2000, 'big_csv/biomass_domain/FK/biofk2000.csv') #2000 
 
+fk2001<- getRvcData(2001, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+biofk2001 <- getDomainBiomass(fk2001, species = fk2001$taxonomic_data$SPECIES_CD, growth_parameters = fk2001$taxonomic_data, merge_protected = F)
+write_csv(biofk2001, 'big_csv/biomass_domain/FK/biofk2001.csv') #2001 
+
+fk2002<- getRvcData(2002, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+biofk2002 <- getDomainBiomass(fk2002, species = fk2002$taxonomic_data$SPECIES_CD, growth_parameters = fk2002$taxonomic_data, merge_protected = F)
+write_csv(biofk2002, 'big_csv/biomass_domain/FK/biofk2002.csv') #2002
+
+fk2003<- getRvcData(2003, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+biofk2003 <- getDomainBiomass(fk2003, species = fk2003$taxonomic_data$SPECIES_CD, growth_parameters = fk2003$taxonomic_data, merge_protected = F)
+write_csv(biofk2003, 'big_csv/biomass_domain/FK/biofk2003.csv') #2003
+
+fk2004<- getRvcData(2004, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+biofk2004 <- getDomainBiomass(fk2004, species = fk2004$taxonomic_data$SPECIES_CD, growth_parameters = fk2004$taxonomic_data, merge_protected = F)
+write_csv(biofk2004, 'big_csv/biomass_domain/FK/biofk2004.csv') #2004
+
+fk2005<- getRvcData(2005, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+biofk2005 <- getDomainBiomass(fk2005, species = fk2005$taxonomic_data$SPECIES_CD, growth_parameters = fk2005$taxonomic_data, merge_protected = F)
+write_csv(biofk2005, 'big_csv/biomass_domain/FK/biofk2005.csv') #2005
+
+fk2006<- getRvcData(2006, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+biofk2006 <- getDomainBiomass(fk2006, species = fk2006$taxonomic_data$SPECIES_CD, growth_parameters = fk2006$taxonomic_data, merge_protected = F)
+write_csv(biofk2006, 'big_csv/biomass_domain/FK/biofk2006.csv') #2006
+
+fk2007<- getRvcData(2007, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+biofk2007 <- getDomainBiomass(fk2007, species = fk2007$taxonomic_data$SPECIES_CD, growth_parameters = fk2007$taxonomic_data, merge_protected = F)
+write_csv(biofk2007, 'big_csv/biomass_domain/FK/biofk2007.csv') #2007
+
+fk2008<- getRvcData(2008, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+biofk2008 <- getDomainBiomass(fk2008, species = fk2008$taxonomic_data$SPECIES_CD, growth_parameters = fk2008$taxonomic_data, merge_protected = F)
+write_csv(biofk2008, 'big_csv/biomass_domain/FK/biofk2008.csv') #2008
+
+fk2009<- getRvcData(2009, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+biofk2009 <- getDomainBiomass(fk2009, species = fk2009$taxonomic_data$SPECIES_CD, growth_parameters = fk2009$taxonomic_data, merge_protected = F)
+write_csv(biofk2009, 'big_csv/biomass_domain/FK/biofk2009.csv') #2009
+
+fk2010<- getRvcData(2010, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+biofk2010 <- getDomainBiomass(fk2010, species = fk2010$taxonomic_data$SPECIES_CD, growth_parameters = fk2010$taxonomic_data, merge_protected = F)
+write_csv(biofk2010, 'big_csv/biomass_domain/FK/biofk2010.csv') #2010
+
+fk2011<- getRvcData(2011, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+biofk2011 <- getDomainBiomass(fk2011, species = fk2011$taxonomic_data$SPECIES_CD, growth_parameters = fk2011$taxonomic_data, merge_protected = F)
+write_csv(biofk2011, 'big_csv/biomass_domain/FK/biofk2011.csv') #2011
+
+fk2012<- getRvcData(2012, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+biofk2012 <- getDomainBiomass(fk2012, species = fk2012$taxonomic_data$SPECIES_CD, growth_parameters = fk2012$taxonomic_data, merge_protected = F)
+write_csv(biofk2012, 'big_csv/biomass_domain/FK/biofk2012.csv') #2012
+
+fk2014<- getRvcData(2014, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+biofk2014 <- getDomainBiomass(fk2014, species = fk2014$taxonomic_data$SPECIES_CD, growth_parameters = fk2014$taxonomic_data, merge_protected = F)
+write_csv(biofk2014, 'big_csv/biomass_domain/FK/biofk2014.csv') #2014
+
+fk2016<- getRvcData(2016, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+biofk2016 <- getDomainBiomass(fk2016, species = fk2016$taxonomic_data$SPECIES_CD, growth_parameters = fk2016$taxonomic_data, merge_protected = F)
+write_csv(biofk2016, 'big_csv/biomass_domain/FK/biofk2016.csv') #2016
+
+dt1999<- getRvcData(1999, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+biodt1999 <- getDomainBiomass(dt1999, species = dt1999$taxonomic_data$SPECIES_CD, growth_parameters = dt1999$taxonomic_data, merge_protected = F)  
+write_csv(biodt1999, 'big_csv/biomass_domain/DT/biodt1999.csv') #1999
+
+dt2000<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+biodt2000 <- getDomainBiomass(dt2000, species = dt2000$taxonomic_data$SPECIES_CD, growth_parameters = dt2000$taxonomic_data, merge_protected = F)  
+write_csv(biodt2000, 'big_csv/biomass_domain/DT/biodt2000.csv') #2000
+
+dt2004<- getRvcData(2004, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+biodt2004 <- getDomainBiomass(dt2004, species = dt2004$taxonomic_data$SPECIES_CD, growth_parameters = dt2004$taxonomic_data, merge_protected = F)  
+write_csv(biodt2004, 'big_csv/biomass_domain/DT/biodt2004.csv') #2004
+
+dt2006<- getRvcData(2006, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+biodt2006 <- getDomainBiomass(dt2006, species = dt2006$taxonomic_data$SPECIES_CD, growth_parameters = dt2006$taxonomic_data, merge_protected = F)  
+write_csv(biodt2006, 'big_csv/biomass_domain/DT/biodt2006.csv') #2006
+
+dt2008<- getRvcData(2008, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+biodt2008 <- getDomainBiomass(dt2008, species = dt2008$taxonomic_data$SPECIES_CD, growth_parameters = dt2008$taxonomic_data, merge_protected = F)  
+write_csv(biodt2008, 'big_csv/biomass_domain/DT/biodt2008.csv') #2008
+
+dt2010<- getRvcData(2010, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+biodt2010 <- getDomainBiomass(dt2010, species = dt2010$taxonomic_data$SPECIES_CD, growth_parameters = dt2010$taxonomic_data, merge_protected = F)  
+write_csv(biodt2010, 'big_csv/biomass_domain/DT/biodt2010.csv') #2010
+
+dt2012<- getRvcData(2012, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+biodt2012 <- getDomainBiomass(dt2012, species = dt2012$taxonomic_data$SPECIES_CD, growth_parameters = dt2012$taxonomic_data, merge_protected = F)  
+write_csv(biodt2012, 'big_csv/biomass_domain/DT/biodt2012.csv') #2012
+
+dt2014<- getRvcData(2014, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+biodt2014 <- getDomainBiomass(dt2014, species = dt2014$taxonomic_data$SPECIES_CD, growth_parameters = dt2014$taxonomic_data, merge_protected = F)  
+write_csv(biodt2014, 'big_csv/biomass_domain/DT/biodt2014.csv') #2014
+
+dt2016<- getRvcData(2016, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+biodt2016 <- getDomainBiomass(dt2016, species = dt2016$taxonomic_data$SPECIES_CD, growth_parameters = dt2016$taxonomic_data, merge_protected = F)  
+write_csv(biodt2016, 'big_csv/biomass_domain/DT/biodt2016.csv') #2016
 
 #work on this later
 #trying to get push to work
 
+```
+
+```{r bind domain biomass csv files, eval = F}
+
+#Combine all files into one file
+
+## FK biomass by domain
+cat("bind all csv's\n") #concatenate and print - character string naming the file to print to
+d_fk = data_frame()
+for (f in list.files('big_csv/biomass_domain/FK', pattern="\\.csv", full.names=T)){
+      cat(' ', f,'\n')
+      d_f = read_csv(
+        f, #path to a file 
+        progress=F, #progress: Display a progress bar
+        trim_ws=T, #trim_ws: leading and trailing whitespace are trimmed 
+        col_types = cols(
+          protected_status = col_character()))  #column specification - must contain one column specification for each column
+      d_fk = bind_rows(d_fk, d_f)
+} 
+
+write_csv(d_fk, 'big_csv/biomass_domain/domain_fk_biomass.csv')
+
+
+## DT biomass by domain 
+cat("bind all csv's\n") #concatenate and print - character string naming the file to print to
+d_dt = data_frame()
+for (f in list.files('big_csv/biomass_domain/DT', pattern="\\.csv", full.names=T)){
+      cat(' ', f,'\n')
+      d_f_dt = read_csv(
+        f, #path to a file 
+        progress=F, #progress: Display a progress bar
+        trim_ws=T, #trim_ws: leading and trailing whitespace are trimmed 
+        col_types = cols(
+          protected_status = col_character()))  #column specification - must contain one column specification for each column
+      d_dt = bind_rows(d_dt, d_f_dt)
+} 
+
+write_csv(d_dt, 'big_csv/biomass_domain/domain_dt_biomass.csv')
+  
 ```
 
