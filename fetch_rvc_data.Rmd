@@ -1171,6 +1171,7 @@ for (f in list.files('big_csv/biomass_strata/DT', pattern="\\.csv", full.names=T
 write_csv(d_dt, 'big_csv/biomass_strata/strata_dt_biomass.csv')
 ```
 
+
 ### Biomass data by primary sampling unit
 
 ```{r fetch biomass data by year and primary sampling unit, eval = F}
@@ -1221,11 +1222,99 @@ fk2009<- getRvcData(2009, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_a
 psu_biofk2009 <- getPSUBiomass(fk2009, species = fk2009$taxonomic_data$SPECIES_CD, growth_parameters = fk2009$taxonomic_data, merge_protected = F)
 write_csv(psu_biofk2009, 'big_csv/biomass_psu/FK/psu_biofk2009.csv') #2009
 
+fk2010<- getRvcData(2010, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+psu_biofk2010 <- getPSUBiomass(fk2010, species = fk2010$taxonomic_data$SPECIES_CD, growth_parameters = fk2010$taxonomic_data, merge_protected = F)
+write_csv(psu_biofk2010, 'big_csv/biomass_psu/FK/psu_biofk2010.csv') #2010
+
+fk2011<- getRvcData(2011, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+psu_biofk2011 <- getPSUBiomass(fk2011, species = fk2011$taxonomic_data$SPECIES_CD, growth_parameters = fk2011$taxonomic_data, merge_protected = F)
+write_csv(psu_biofk2011, 'big_csv/biomass_psu/FK/psu_biofk2011.csv') #2011
+
+fk2012<- getRvcData(2012, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+psu_biofk2012 <- getPSUBiomass(fk2012, species = fk2012$taxonomic_data$SPECIES_CD, growth_parameters = fk2012$taxonomic_data, merge_protected = F)
+write_csv(psu_biofk2012, 'big_csv/biomass_psu/FK/psu_biofk2012.csv') #2012
+
+fk2014<- getRvcData(2014, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+psu_biofk2014 <- getPSUBiomass(fk2014, species = fk2014$taxonomic_data$SPECIES_CD, growth_parameters = fk2014$taxonomic_data, merge_protected = F)
+write_csv(psu_biofk2014, 'big_csv/biomass_psu/FK/psu_biofk2014.csv') #2014
+
+fk2016<- getRvcData(2016, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+psu_biofk2016 <- getPSUBiomass(fk2016, species = fk2016$taxonomic_data$SPECIES_CD, growth_parameters = fk2016$taxonomic_data, merge_protected = F)
+write_csv(psu_biofk2016, 'big_csv/biomass_psu/FK/psu_biofk2016.csv') #2016
+
+dt1999<- getRvcData(1999, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+psu_biodt1999 <- getPSUBiomass(dt1999, species = dt1999$taxonomic_data$SPECIES_CD, growth_parameters = dt1999$taxonomic_data, merge_protected = F)  
+write_csv(psu_biodt1999, 'big_csv/biomass_psu/DT/psu_biodt1999.csv') #1999
+
+dt2000<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+psu_biodt2000 <- getPSUBiomass(dt2000, species = dt2000$taxonomic_data$SPECIES_CD, growth_parameters = dt2000$taxonomic_data, merge_protected = F)  
+write_csv(psu_biodt2000, 'big_csv/biomass_psu/DT/psu_biodt2000.csv') #2000
+
+dt2004<- getRvcData(2004, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+psu_biodt2004 <- getPSUBiomass(dt2004, species = dt2004$taxonomic_data$SPECIES_CD, growth_parameters = dt2004$taxonomic_data, merge_protected = F)  
+write_csv(psu_biodt2004, 'big_csv/biomass_psu/DT/psu_biodt2004.csv') #2004
+
+dt2006<- getRvcData(2006, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+psu_biodt2006 <- getPSUBiomass(dt2006, species = dt2006$taxonomic_data$SPECIES_CD, growth_parameters = dt2006$taxonomic_data, merge_protected = F)  
+write_csv(psu_biodt2006, 'big_csv/biomass_psu/DT/psu_biodt2006.csv') #2006
+
+dt2008<- getRvcData(2008, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+psu_biodt2008 <- getPSUBiomass(dt2008, species = dt2008$taxonomic_data$SPECIES_CD, growth_parameters = dt2008$taxonomic_data, merge_protected = F)  
+write_csv(psu_biodt2008, 'big_csv/biomass_psu/DT/psu_biodt2008.csv') #2008
+
+dt2010<- getRvcData(2010, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+psu_biodt2010 <- getPSUBiomass(dt2010, species = dt2010$taxonomic_data$SPECIES_CD, growth_parameters = dt2010$taxonomic_data, merge_protected = F)  
+write_csv(psu_biodt2010, 'big_csv/biomass_psu/DT/psu_biodt2010.csv') #2010
+
+dt2012<- getRvcData(2012, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+psu_biodt2012 <- getPSUBiomass(dt2012, species = dt2012$taxonomic_data$SPECIES_CD, growth_parameters = dt2012$taxonomic_data, merge_protected = F)  
+write_csv(psu_biodt2012, 'big_csv/biomass_psu/DT/psu_biodt2012.csv') #2012
+
+dt2014<- getRvcData(2014, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+psu_biodt2014 <- getPSUBiomass(dt2014, species = dt2014$taxonomic_data$SPECIES_CD, growth_parameters = dt2014$taxonomic_data, merge_protected = F)  
+write_csv(psu_biodt2014, 'big_csv/biomass_psu/DT/psu_biodt2014.csv') #2014
+
+dt2016<- getRvcData(2016, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+psu_biodt2016 <- getPSUBiomass(dt2016, species = dt2016$taxonomic_data$SPECIES_CD, growth_parameters = dt2016$taxonomic_data, merge_protected = F)  
+write_csv(psu_biodt2016, 'big_csv/biomass_psu/DT/psu_biodt2016.csv') #2016
+
+```
+
+```{r bind psu biomass csv files, eval = F}
+
+#Combine all files into one file
+
+## FK biomass by psu
+cat("bind all csv's\n") #concatenate and print - character string naming the file to print to
+d_fk = data_frame()
+for (f in list.files('big_csv/biomass_psu/FK', pattern="\\.csv", full.names=T)){
+      cat(' ', f,'\n')
+      d_f = read_csv(
+        f, #path to a file 
+        progress=F, #progress: Display a progress bar
+        trim_ws=T, #trim_ws: leading and trailing whitespace are trimmed 
+        col_types = cols(
+          protected_status = col_character()))  #column specification - must contain one column specification for each column
+      d_fk = bind_rows(d_fk, d_f)
+} 
+
+write_csv(d_fk, 'big_csv/biomass_psu/psu_fk_biomass.csv')
 
 
+## DT biomass by psu
+cat("bind all csv's\n") #concatenate and print - character string naming the file to print to
+d_dt = data_frame()
+for (f in list.files('big_csv/biomass_psu/DT', pattern="\\.csv", full.names=T)){
+      cat(' ', f,'\n')
+      d_f_dt = read_csv(
+        f, #path to a file 
+        progress=F, #progress: Display a progress bar
+        trim_ws=T, #trim_ws: leading and trailing whitespace are trimmed 
+        col_types = cols(
+          protected_status = col_character()))  #column specification - must contain one column specification for each column
+      d_dt = bind_rows(d_dt, d_f_dt)
+} 
 
-
-
-
+write_csv(d_dt, 'big_csv/biomass_psu/psu_dt_biomass.csv')
 ```
 
