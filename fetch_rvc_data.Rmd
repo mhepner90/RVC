@@ -1018,82 +1018,66 @@ write_csv(d_dt, 'big_csv/biomass_domain/domain_dt_biomass.csv')
 fk1999<- getRvcData(1999, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 strata_biofk1999 <- getStratumBiomass(fk1999, species = fk1999$taxonomic_data$SPECIES_CD, growth_parameters = fk1999$taxonomic_data, merge_protected = F)
 write_csv(strata_biofk1999, 'big_csv/biomass_strata/FK/strata_biofk1999.csv') #1999
-)
 
 fk2000<- getRvcData(2000, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 strata_biofk2000 <- getStratumBiomass(fk2000, species = fk2000$taxonomic_data$SPECIES_CD, growth_parameters = fk2000$taxonomic_data, merge_protected = F)
 write_csv(strata_biofk2000, 'big_csv/biomass_strata/FK/strata_biofk2000.csv') #2000
-)
 
 fk2001<- getRvcData(2001, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 strata_biofk2001 <- getStratumBiomass(fk2001, species = fk2001$taxonomic_data$SPECIES_CD, growth_parameters = fk2001$taxonomic_data, merge_protected = F)
 write_csv(strata_biofk2001, 'big_csv/biomass_strata/FK/strata_biofk2001.csv') #2001
-)
 
 fk2002<- getRvcData(2002, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 strata_biofk2002 <- getStratumBiomass(fk2002, species = fk2002$taxonomic_data$SPECIES_CD, growth_parameters = fk2002$taxonomic_data, merge_protected = F)
 write_csv(strata_biofk2002, 'big_csv/biomass_strata/FK/strata_biofk2002.csv') #2002
-)
 
 fk2003<- getRvcData(2003, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 strata_biofk2003 <- getStratumBiomass(fk2003, species = fk2003$taxonomic_data$SPECIES_CD, growth_parameters = fk2003$taxonomic_data, merge_protected = F)
 write_csv(strata_biofk2003, 'big_csv/biomass_strata/FK/strata_biofk2003.csv') #2003
-)
 
 fk2004<- getRvcData(2004, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 strata_biofk2004 <- getStratumBiomass(fk2004, species = fk2004$taxonomic_data$SPECIES_CD, growth_parameters = fk2004$taxonomic_data, merge_protected = F)
 write_csv(strata_biofk2004, 'big_csv/biomass_strata/FK/strata_biofk2004.csv') #2004
-)
 
 fk2005<- getRvcData(2005, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 strata_biofk2005 <- getStratumBiomass(fk2005, species = fk2005$taxonomic_data$SPECIES_CD, growth_parameters = fk2005$taxonomic_data, merge_protected = F)
 write_csv(strata_biofk2005, 'big_csv/biomass_strata/FK/strata_biofk2005.csv') #2005
-)
 
 fk2006<- getRvcData(2006, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 strata_biofk2006 <- getStratumBiomass(fk2006, species = fk2006$taxonomic_data$SPECIES_CD, growth_parameters = fk2006$taxonomic_data, merge_protected = F)
 write_csv(strata_biofk2006, 'big_csv/biomass_strata/FK/strata_biofk2006.csv') #2006
-)
 
 fk2007<- getRvcData(2007, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 strata_biofk2007 <- getStratumBiomass(fk2007, species = fk2007$taxonomic_data$SPECIES_CD, growth_parameters = fk2007$taxonomic_data, merge_protected = F)
 write_csv(strata_biofk2007, 'big_csv/biomass_strata/FK/strata_biofk2007.csv') #2007
-)
 
 fk2008<- getRvcData(2008, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 strata_biofk2008 <- getStratumBiomass(fk2008, species = fk2008$taxonomic_data$SPECIES_CD, growth_parameters = fk2008$taxonomic_data, merge_protected = F)
 write_csv(strata_biofk2008, 'big_csv/biomass_strata/FK/strata_biofk2008.csv') #2008
-)
 
 fk2009<- getRvcData(2009, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 strata_biofk2009 <- getStratumBiomass(fk2009, species = fk2009$taxonomic_data$SPECIES_CD, growth_parameters = fk2009$taxonomic_data, merge_protected = F)
 write_csv(strata_biofk2009, 'big_csv/biomass_strata/FK/strata_biofk2009.csv') #2009
-)
 
 fk2010<- getRvcData(2010, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 strata_biofk2010 <- getStratumBiomass(fk2010, species = fk2010$taxonomic_data$SPECIES_CD, growth_parameters = fk2010$taxonomic_data, merge_protected = F)
 write_csv(strata_biofk2010, 'big_csv/biomass_strata/FK/strata_biofk2010.csv') #2010
-)
 
 fk2011<- getRvcData(2011, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 strata_biofk2011 <- getStratumBiomass(fk2011, species = fk2011$taxonomic_data$SPECIES_CD, growth_parameters = fk2011$taxonomic_data, merge_protected = F)
 write_csv(strata_biofk2011, 'big_csv/biomass_strata/FK/strata_biofk2011.csv') #2011
-)
 
 fk2012<- getRvcData(2012, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 strata_biofk2012 <- getStratumBiomass(fk2012, species = fk2012$taxonomic_data$SPECIES_CD, growth_parameters = fk2012$taxonomic_data, merge_protected = F)
 write_csv(strata_biofk2012, 'big_csv/biomass_strata/FK/strata_biofk2012.csv') #2012
-)
 
 fk2014<- getRvcData(2014, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 strata_biofk2014 <- getStratumBiomass(fk2014, species = fk2014$taxonomic_data$SPECIES_CD, growth_parameters = fk2014$taxonomic_data, merge_protected = F)
 write_csv(strata_biofk2014, 'big_csv/biomass_strata/FK/strata_biofk2014.csv') #2014
-)
 
 fk2016<- getRvcData(2016, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 strata_biofk2016 <- getStratumBiomass(fk2016, species = fk2016$taxonomic_data$SPECIES_CD, growth_parameters = fk2016$taxonomic_data, merge_protected = F)
 write_csv(strata_biofk2016, 'big_csv/biomass_strata/FK/strata_biofk2016.csv') #2016
-)
 
 dt1999<- getRvcData(1999, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 strata_biodt1999 <- getStratumBiomass(dt1999, species = dt1999$taxonomic_data$SPECIES_CD, growth_parameters = dt1999$taxonomic_data, merge_protected = F)  
