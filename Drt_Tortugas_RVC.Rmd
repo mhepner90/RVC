@@ -5,6 +5,54 @@ date: "6/9/2017"
 output: html_document
 ---
 
+## Inputs 
+1. species-trait matrix
+1. domain abundance dataframe
+1. strata abundance dataframe 
+1. psu abundance dataframe
+1. domain biomass dataframe
+1. strata biomass dataframe 
+1. psu biomass dataframe
+
+## Outputs 
+1.  Functional dendogram
+1.  Trait-matrix visualization 
+1.  By *domain* for each sampling year and region  
+    + Species weighted abundance and plot
+    + Species weighted biomass and plot
+    + Species biodiversity 
+      + species richness and plot
+      + Simpson diversity as effective number of species and plot
+      + Shannon diversity as effective number of species and plot
+      + Functional diversity as effective number of species and plot
+1. By *upper keys and lower keys domain* for each sampling year and region 
+    + Species weighted abundance and plot
+    + Species weighted biomass and plot
+    + Species biodiversity 
+      + species richness and plot
+      + Simpson diversity as effective number of species and plot
+      + Shannon diversity as effective number of species and plot
+      + Functional diversity as effective number of species and plot
+1. By *strata* for each sampling year and region 
+    + Species weighted abundance and plot
+    + Species weighted biomass and plot
+    + Species biodiversity 
+      + species richness and plot
+      + Simpson diversity as effective number of species and plot
+      + Shannon diversity as effective number of species and plot
+      + Functional diversity as effective number of species and plot
+1. By *primary sampling unit* for each sampling year and region and plot
+    + Species weighted abundance and plot
+    + Species weighted biomass and plot
+    + Species biodiversity 
+      + species richness and plot
+      + Simpson diversity as effective number of species and plot
+      + Shannon diversity as effective number of species and plot
+      + Functional diversity as effective number of species and plot
+    + statistical tests by strata and year: Shapiro, homocasdicity, 2-way ANOVA
+1. Environmental factors from SERC 
+1. Heat map of the Florida Keys and Dry Tortugas for the diversity indices 
+
 ### Dry Tortugas domain
 Protected status:
 - 0 = Unprotected 
