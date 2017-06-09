@@ -8,10 +8,43 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
+# Packages to be used for chunk: Examining sample sizes (number of PSUs sampled) by YEAR and STRATUM
+library("dplyr")
+library("reshape2")
+
+# Packages for performing statistical tests
 library("MASS")
 library("ggplot2")
 library("moments")
 library("DescTools")
+
+```
+
+## Examining sample sizes (number of PSUs sampled) by YEAR and STRATUM
+
+```{r bind sample data csv files, eval = F}
+
+# Combine all sample data csv files into one file (1999 to 2016)
+
+## FK sample data
+cat("bind all csv's\n") #concatenate and print - character string naming the file to print to
+d_fk = data_frame()
+for (f in list.files('big_csv/sample_data/FK', pattern="\\.csv", full.names=T)){
+  cat(' ', f,'\n')
+  d_f = read_csv(
+    f) 
+  d_fk = bind_rows(d_fk, d_f)
+} 
+
+# Manipulate data frame to get total number of PSUs sampled per YEAR and STRATUM and also get total PSUs sampled for each YEAR
+d_fk$dum1 <- 1 
+d_fk_sum1 <- d_fk %>% group_by(YEAR,STRAT,PRIMARY_SAMPLE_UNIT) %>% summarise(sum1=sum(dum1))
+d_fk_sum1$dum2 <- 1
+d_fk_sum2 <- d_fk_sum1 %>% group_by(YEAR,STRAT) %>% summarise(sum2=sum(dum2))
+d_fk_sum3 <- dcast(d_fk_sum2, YEAR ~ STRAT, value.var="sum2")
+d_fk_sum3$total <- rowSums(d_fk_sum3[,-1], na.rm=TRUE)
+write.csv(d_fk_sum3, 'big_csv/sample_data/fk_sample_summary.csv',row.names=FALSE) # This file shows the breakdown of number of PSUs sampled by YEAR and STRATUM
+
 ```
 
 ## Checking data for normality and homoscedasticity
