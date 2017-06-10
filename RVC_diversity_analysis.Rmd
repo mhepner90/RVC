@@ -99,7 +99,7 @@ library(ape)
 library(phytools)
 #install.packages("FD")
 library(FD)
-## biocLite("BiocUpgrade") ## you may need this
+#biocLite("BiocUpgrade") ## you may need this
 #biocLite("ggtree", type = "source")
 devtools::install_github("GuangchuangYu/ggtree") #requires R>= 3.3.2
 library(tidyverse)
@@ -1027,121 +1027,121 @@ psu_fk_abun_diversity = read_csv("big_csv/diversity_without_spe/psu_fk_abun_dive
 
 ```
 
-## Normality
+# Statistical analysis 
 
-Checking data for normality and homoscedasticity
+For continuous response variable (diversity - richness, shannon, simpson, functional) and categorical predictor variable (strata)
 
-COLUMN is the column name of the variable of interest that you want to test (e.g., abundance) and DATAFRMAE is the dataframe from which you are working. COLUMN2 is the variable by which you are testing (e.g., year).
-
-```{r normality}
+```{r library's}
 
 library(MASS)
 library(moments)
 library(DescTools)
 library(rpsychi)
+library(AICcmodavg) #AIC
+library(ade4) #mantel.rtest
+library(ggplot2) #geom_boxplot 
+library(nortest) #checks for normality 
+library(psych) #pairs.panels 
 
-simpson_stat_dom_merged = fk_domain_abun_diversity_no_spp %>%
-  select(YEAR, simpson, protected_status) %>%
-  filter(protected_status != "0") %>%
-  filter(protected_status != "1") 
-#ggplot() + geom_density(aes(x=COLUMN), data=DATAFRAME) #first just plot the data to see what your distribution looks like
-shapiro.test(simpson_stat_dom_merged$simpson) # test for normality
-#data:  simpson_stat_dom_merged$simpson
-#W = 0.8214, p-value = 0.007013
-
-#to look at residuals....
-r1=lm(simpson_stat_dom_merged$simpson~simpson_stat_dom_merged$YEAR) 
-plot(simpson_stat_dom_merged$YEAR, rstandard(r1))
-hist(r1$resid)
-qqnorm(r1$resid)
-qqline(r1$resid)
-skewness(r1$resid) #greater than zero is evidence for having skew
-#-1.931305
 ```
 
-## Boxcox method 
+Parametric test require the data to meet assumptions of having a normal distribution and homoscedasticity
+Skewness is a measure of the extent to which a distribution has long tails on either side. A normal distribution is symmetrical and a skewness equal to zero
 
-Transforming your data using the boxcox method
+- Are diversity values and strata related? 
 
-XXX is where you need to copy in the lamda with the highest likelihood (you can round this number to something more reasonable)
+```{r parametric test}
 
-```{r transforming data}
+#1. Read in data 
+strata_diversity = read.csv("diversity_without_spe/strata_fk_abun_diversity_no_spp.csv")
+#protected_staus = 0 or 1 no all ??? 
 
+#2. Plot data - look at your distribution 
+ggplot(data = strata_diversity) +
+  geom_boxplot(mapping = aes(x = STRAT, y = simpson)) 
+
+#3. Check for normality using QQ plot 
+qqnorm(strata_diversity$simpson) 
+qqline(strata_diversity$simpson, lty=2)  # note that lty is the line type (2=medium dashes; try different values betweem 1-6)
+
+#4. Test whether data is NOT normal using Shapiro-Wilk Normaility Test
+shapiro.test(strata_diversity$simpson)
+
+#5. Check skewness 
+skew<-function(x){ 
+  m3<-sum((x-mean(x))^3)/length(x) # note that the length expression automatically determines the sample size of your data
+  s3<-sqrt(var(x))^3
+  m3/s3} 
+skew(strata_diversity$simpson)
+
+#6. Check whether the calculated skew value is significantly different than zero (i.e., not normal) using a t-test. To calulate the t-value, divide the skew by its standard error:
+skew(strata_diversity$simpson)/sqrt(6/length(strata_diversity$simpson)) 
+# note that a rough measure of the standard error of the skewness is "sqrt{6/n}" where n is the sample size
+
+#7. check the probability of this t-value by chance alone when the skew is zero using the following:
+1-pt(calculated_t_value, df) #pt=cummulative density function of t-dist 
+
+#8. Check for homoscedasticity: can use var.test, fligner.test, or bartlett.test
+bartlett.test(strata_diversity$simpson~strata_diversity$YEAR)
+
+#9. Transform data using Boxcox method 
 #need non-zero data for boxcox method to add a small amount to every value
-simpson_stat_dom_merged$simpson_t <- simpson_stat_dom_merged$simpson+0.01 
-b=boxcox(simpson_stat_dom_merged$simpson_t~simpson_stat_dom_merged$YEAR)
-b #x is lambda and y is values of likelihood
-lamda=b$x #lambda values 
-lik=b$y #y is values of liklihood 
-bc=cbind(lamda,lik)
-bc[order(-lik),] #use the lamda with the highest likelihood to transform your data
-#lambda of 2 is best transformation 
-simpson_stat_dom_merged$simpson_bc <- simpson_stat_dom_merged$simpson^2 
-simpson_stat_dom_merged$simpson_bc <- simpson_stat_dom_merged$simpson_bc-1 
-simpson_stat_dom_merged$simpson_bc <- simpson_stat_dom_merged$simpson_bc/2
+stat_diversity = stat_diversity %>% 
+  simpson+0.01 %>%
+  b = boxcox(simpson~YEAR) %>%
+  lamda = b$x %>% #lambda values  
+  lik = b$y %>% #y is values of liklihood %>%
+  bc = cbind(lamda,lik) %>%
+  bc[order(-lik),] %>% #use the lamda with the highest likelihood to transform your data #lambda of 2 is best transformation
+  mutate(
+    simpson_boxcox = ((simpson^2)-1)/2) #simpson_boxcox is now transformed using the boxcox method 
 
-#simpson_stat_dom_merged$simpson_bc is now transformed using the boxcox method 
-```
+#10. Check for normality of transformed data 
+ggplot(data = stat) +
+  geom_boxplot(mapping = aes(x = STRAT, y = simpson_boxcox)) 
 
-## Normality 
+qqnorm(stat_diversity$simpson_boxcox) 
+qqline(stat_diversity$simpson_boxcox, lty=2)
+shapiro.test(strata_diversity$simpson_boxcox)
+skew(strata_diversity$simpson_boxcox)
+skew(strata_diversity$simpson_boxcox)/sqrt(6/length(strata_diversity$simpson_boxcox)) 
+1-pt(calculated_t_value, df)
 
-Checking data for normality after transformation
+# if data is normal after transformation, proceed with parametric test 
 
-```{r check for normality}
+#10. Mann-Whitney or t-test parametric test 
 
-ggplot() + geom_density(aes(x=simpson_stat_dom_merged$simpson_bc))
-shapiro.test(simpson_stat_dom_merged$simpson_bc)
-#data:  simpson_stat_dom_merged$simpson_bc
-#W = 0.92366, p-value = 0.219
-r1=lm(simpson_stat_dom_merged$simpson_bc~simpson_stat_dom_merged$YEAR)
-plot(simpson_stat_dom_merged$YEAR, rstandard(r1))
-hist(r1$resid)
-qqnorm(r1$resid)
-qqline(r1$resid)
-skewness(r1$resid) #greater than zero is evidence for having skew
-#-1.204832
+#11. ANOVA Parametric test 
+stat_diversity = stat_diversity %>% 
+  ANOVA = aov(simpson_boxcox~YEAR) %>%
+  plot(ANOVA) %>%
+  summary(ANOVA)
 
-# if data look normal after transformation, proceed with parametric test
-# if data do not look normal and homoscedastic after transformation, proceed with non-parametric test
-
-```
-
-## ANOVA
-
-ANOVA: parametric test for differences among groups
-Use COLUMN_bc if using transformed data, otherwise use COLUMN
-
-```{r ANOVA}
-
-ANOVA <- aov(simpson_stat_dom_merged$simpson_bc ~ simpson_stat_dom_merged$YEAR) 
-plot(ANOVA)
-summary(ANOVA) # display Type I ANOVA table
-#Df Sum Sq Mean Sq F value Pr(>F)
-#simpson_stat_dom_merged$YEAR  1    460   459.6   0.277  0.607
-#Residuals                    13  21554  1658.0 
-
-#p value 0.6 so not significant 
 drop1(ANOVA,~.,test="F") # type III SS and F Tests 
-#                            Df Sum of Sq   RSS    AIC F value Pr(>F)
-#<none>                                    21554 113.05               
-#simpson_stat_dom_merged$YEAR  1    459.62 22014 111.37  0.2772 0.6074
 
 # for post-hoc pairwise tests
 #TukeyHSD(ANOVA) # where fit comes from aov()
 
-```
-
-## Kruskal-Wallis
-non-parametric test for differences among groups
-
-```{r Kruskal-Wallis}
-
-kruskal.test(COLUMN~COLUMN2, data=DATAFRAME)
-
-# for post-hoc pairwise tests....
-DunnTest(x=DATAFRAME$COLUMN, g=DATAFRAME$COLUMN2, method="fdr") # note that these p-values are one-sided values; for two-sided p-values they need to be doubled
 
 ```
+
+Are there correlations among continuous data (richness, shannon, simpson, functional)?
+
+```{r Correlations}
+
+stat_diversity = stat_diversity %>%
+  #Test significance of Spearman rank correlations
+  correlation1 = cor.test(simpson, shannon, method = "spearman") %>%
+  correlation2 = cor.test(simpson, functional, method = "spearman") %>% 
+  correlation3 = cor.test(shannon, functional, method = "spearman") %>%  
+  #Examine correlations between matrices using Mantel's test
+  mantel.rtest(simpson, shannon) %>% #R^2
+  mantel.rtest(simpson, functional) %>% #R^2
+  mantel.rtest(shannon, functional) #R^2
+
+
+```
+
 
 ```{r shapefiles}
 library(foreign)
@@ -1206,5 +1206,6 @@ SAT-S, SAT_B
 ```{r SERC environmental variables}
 
 serc_data = read_csv("big_csv/SERC_Water_Quality_FKNMS.csv")
+
 
 ```
