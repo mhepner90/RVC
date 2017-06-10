@@ -5,6 +5,15 @@ date: "April 28, 2017"
 output: html_document
 ---
 
+## Inputs 
+1. species-trait matrix
+1. domain abundance dataframe
+1. strata abundance dataframe 
+1. psu abundance dataframe
+1. domain biomass dataframe
+1. strata biomass dataframe 
+1. psu biomass dataframe
+
 ## Outputs 
 1.  Functional dendogram
 1.  Trait-matrix visualization 
@@ -521,7 +530,7 @@ fk_domain_abun_diversity_no_spp = domain_fk_abun_no_spp %>% #14,634 * 10
 fk_domain_abun_diversity_no_spp = fk_domain_abun_diversity_no_spp %>%
   select(YEAR, protected_status,richness,shannon,simpson)
 
-write_csv(fk_domain_abun_diversity_no_spp, 'big_csv/diversity_without_spp/domain_fk_abun_diversity_no_spp.csv')
+write_csv(fk_domain_abun_diversity_no_spp, 'big_csv/diversity_without_spe/domain_fk_abun_diversity_no_spp.csv')
 
 ```
 
@@ -822,7 +831,8 @@ fk_strata_abun_diversity_no_spp = strata_fk_abun_no_spp %>% #133,762 * 12
 
 fk_strata_abun_diversity_no_spp = fk_strata_abun_diversity_no_spp %>%
   select(YEAR, STRAT, protected_status, richness, simpson, shannon) 
-write_csv(fk_strata_abun_diversity, 'big_csv/abundance_strata/strata_fk_abun_diversity.csv')
+
+write_csv(fk_strata_abun_diversity_no_spp, 'big_csv/diversity_without_spe/strata_fk_abun_diversity_no_spp.csv')
 
 ```
 
@@ -988,46 +998,31 @@ col_types = cols(
 psu_fk_abun_no_spp = psu_fk_abun %>%
   filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species 
 
-fk_psu_abun_diversity_no_spp = psu_fk_abun_no_spp %>% #3,134,710 × 10
-  group_by(YEAR, PRIMARY_SAMPLE_UNIT, protected_status)%>% #8,814 groups 
+fk_psu_abun_diversity_no_spp = psu_fk_abun_no_spp %>% #3,107,408 x 10
+  group_by(YEAR, PRIMARY_SAMPLE_UNIT, STRAT, protected_status) %>% #9,6878 groups 
   nest(-YEAR) %>%
   mutate(
     data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abundance, fill =0)), 
-    psu_richness = map( #species richness
+    richness = map( #species richness
       data_wide, 
-      function(x) specnumber(x %>% select(-REGION, -STRAT, - PROT, -m, -var))),
-    psu_simpson = map( #simpson diversity as effective number of species 
+      function(x) specnumber(x %>% select(-REGION, - PROT, -m, -var))),
+    simpson = map( #simpson diversity as effective number of species 
       data_wide,
-      function(x) 1/(1 - diversity(x %>% select(-REGION, -STRAT, - PROT, -m, -var), index = 'simpson'))),
-    psu_shannon = map( #shannon diversity as effective number of species 
+      function(x) 1/(1 - diversity(x %>% select(-REGION, - PROT, -m, -var), index = 'simpson'))),
+    shannon = map( #shannon diversity as effective number of species 
       data_wide,
-      function(x) exp(diversity(x %>% select(-REGION, -STRAT, - PROT, -m, -var), index = 'shannon')))) %>% 
-  unnest(psu_richness,psu_simpson, psu_shannon)
- 
-psu_fk_abun_diversity_no_spp = fk_psu_abun_diversity_no_spp %>%
-  select(YEAR, PRIMARY_SAMPLE_UNIT, STRAT, protected_status, psu_richness, psu_simpson, psu_shannon) %>% 
-unnest(psu_richness,psu_simpson, psu_shannon) %>% 
-write_csv(psu_fk_abun_diversity, "big_csv/abundance_psu/psu_fk_abun_diversity.csv") 
+      function(x) exp(diversity(x %>% select(-REGION, - PROT, -m, -var), index = 'shannon')))) %>% 
+  unnest(richness,simpson, shannon)
+
+write_csv(fk_psu_abun_diversity_no_spp, "big_csv/diversity_without_spe/psu_fk_abun_diversity_no_spp.csv") 
 
 ```
 
 ```{r psu biodiversity plots and maps}
 
-psu_fk_abun_diversity = read_csv("big_csv/abundance_psu/psu_fk_abun_diversity.csv", 
+psu_fk_abun_diversity = read_csv("big_csv/diversity_without_spe/psu_fk_abun_diversity_no_spp.csv",
           col_types = cols(
-            YEAR = col_integer(),
-            PRIMARY_SAMPLE_UNIT = col_character(),
-            protected_status = col_character(),
-            psu_richness = col_integer(),
-            psu_simpson = col_double(),
-            psu_shannon = col_double()))
-
-```
-
-## Evironmental Variables from SERC 
-
-```{r SERC environmental variables}
-
+            protected_status = col_character())) 
 
 ```
 
@@ -1037,7 +1032,7 @@ Checking data for normality and homoscedasticity
 
 COLUMN is the column name of the variable of interest that you want to test (e.g., abundance) and DATAFRMAE is the dataframe from which you are working. COLUMN2 is the variable by which you are testing (e.g., year).
 
-```{r normality and homoscedasticity}
+```{r normality}
 
 library(MASS)
 library(moments)
@@ -1088,6 +1083,7 @@ simpson_stat_dom_merged$simpson_bc <- simpson_stat_dom_merged$simpson_bc/2
 ```
 
 ## Normality 
+
 Checking data for normality after transformation
 
 ```{r check for normality}
@@ -1112,7 +1108,6 @@ skewness(r1$resid) #greater than zero is evidence for having skew
 ## ANOVA
 
 ANOVA: parametric test for differences among groups
-
 Use COLUMN_bc if using transformed data, otherwise use COLUMN
 
 ```{r ANOVA}
@@ -1163,4 +1158,12 @@ library(rgdal)
 library(ggmap)
 library(tmap)
 library(marmap) #marine maps 
+```
+
+## Evironmental Variables from SERC 
+
+```{r SERC environmental variables}
+
+serc_data = read_csv("big_csv/SERC_Water_Quality_FKNMS.csv")
+
 ```
