@@ -1079,40 +1079,41 @@ fk2016<- getRvcData(2016, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_a
 strata_biofk2016 <- getStratumBiomass(fk2016, species = fk2016$taxonomic_data$SPECIES_CD, growth_parameters = fk2016$taxonomic_data, merge_protected = F)
 write_csv(strata_biofk2016, 'big_csv/biomass_strata/FK/strata_biofk2016.csv') #2016
 
+#had to change merge_protected from F to T to make the code for the Dry Tortugas work
 dt1999<- getRvcData(1999, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
-strata_biodt1999 <- getStratumBiomass(dt1999, species = dt1999$taxonomic_data$SPECIES_CD, growth_parameters = dt1999$taxonomic_data, merge_protected = F)  
+strata_biodt1999 <- getStratumBiomass(dt1999, species = dt1999$taxonomic_data$SPECIES_CD, growth_parameters = dt1999$taxonomic_data, merge_protected = T)  
 write_csv(strata_biodt1999, 'big_csv/biomass_strata/DT/strata_biodt1999.csv') #1999
 
 dt2000<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
-strata_biodt2000 <- getStratumBiomass(dt2000, species = dt2000$taxonomic_data$SPECIES_CD, growth_parameters = dt2000$taxonomic_data, merge_protected = F)  
+strata_biodt2000 <- getStratumBiomass(dt2000, species = dt2000$taxonomic_data$SPECIES_CD, growth_parameters = dt2000$taxonomic_data, merge_protected = T)  
 write_csv(strata_biodt2000, 'big_csv/biomass_strata/DT/strata_biodt2000.csv') #2000
 
 dt2004<- getRvcData(2004, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
-strata_biodt2004 <- getStratumBiomass(dt2004, species = dt2004$taxonomic_data$SPECIES_CD, growth_parameters = dt2004$taxonomic_data, merge_protected = F)  
+strata_biodt2004 <- getStratumBiomass(dt2004, species = dt2004$taxonomic_data$SPECIES_CD, growth_parameters = dt2004$taxonomic_data, merge_protected = T)  
 write_csv(strata_biodt2004, 'big_csv/biomass_strata/DT/strata_biodt2004.csv') #2004
 
 dt2006<- getRvcData(2006, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
-strata_biodt2006 <- getStratumBiomass(dt2006, species = dt2006$taxonomic_data$SPECIES_CD, growth_parameters = dt2006$taxonomic_data, merge_protected = F)  
+strata_biodt2006 <- getStratumBiomass(dt2006, species = dt2006$taxonomic_data$SPECIES_CD, growth_parameters = dt2006$taxonomic_data, merge_protected = T)  
 write_csv(strata_biodt2006, 'big_csv/biomass_strata/DT/strata_biodt2006.csv') #2006
 
 dt2008<- getRvcData(2008, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
-strata_biodt2008 <- getStratumBiomass(dt2008, species = dt2008$taxonomic_data$SPECIES_CD, growth_parameters = dt2008$taxonomic_data, merge_protected = F)  
+strata_biodt2008 <- getStratumBiomass(dt2008, species = dt2008$taxonomic_data$SPECIES_CD, growth_parameters = dt2008$taxonomic_data, merge_protected = T)  
 write_csv(strata_biodt2008, 'big_csv/biomass_strata/DT/strata_biodt2008.csv') #2008
 
 dt2010<- getRvcData(2010, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
-strata_biodt2010 <- getStratumBiomass(dt2010, species = dt2010$taxonomic_data$SPECIES_CD, growth_parameters = dt2010$taxonomic_data, merge_protected = F)  
+strata_biodt2010 <- getStratumBiomass(dt2010, species = dt2010$taxonomic_data$SPECIES_CD, growth_parameters = dt2010$taxonomic_data, merge_protected = T)  
 write_csv(strata_biodt2010, 'big_csv/biomass_strata/DT/strata_biodt2010.csv') #2010
 
 dt2012<- getRvcData(2012, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
-strata_biodt2012 <- getStratumBiomass(dt2012, species = dt2012$taxonomic_data$SPECIES_CD, growth_parameters = dt2012$taxonomic_data, merge_protected = F)  
+strata_biodt2012 <- getStratumBiomass(dt2012, species = dt2012$taxonomic_data$SPECIES_CD, growth_parameters = dt2012$taxonomic_data, merge_protected = T)  
 write_csv(strata_biodt2012, 'big_csv/biomass_strata/DT/strata_biodt2012.csv') #2012
 
 dt2014<- getRvcData(2014, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
-strata_biodt2014 <- getStratumBiomass(dt2014, species = dt2014$taxonomic_data$SPECIES_CD, growth_parameters = dt2014$taxonomic_data, merge_protected = F)  
+strata_biodt2014 <- getStratumBiomass(dt2014, species = dt2014$taxonomic_data$SPECIES_CD, growth_parameters = dt2014$taxonomic_data, merge_protected = T)  
 write_csv(strata_biodt2014, 'big_csv/biomass_strata/DT/strata_biodt2014.csv') #2014
 
 dt2016<- getRvcData(2016, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
-strata_biodt2016 <- getStratumBiomass(dt2016, species = dt2016$taxonomic_data$SPECIES_CD, growth_parameters = dt2016$taxonomic_data, merge_protected = F)  
+strata_biodt2016 <- getStratumBiomass(dt2016, species = dt2016$taxonomic_data$SPECIES_CD, growth_parameters = dt2016$taxonomic_data, merge_protected = T)  
 write_csv(strata_biodt2016, 'big_csv/biomass_strata/DT/strata_biodt2016.csv') #2016
 
 ```
@@ -1226,40 +1227,41 @@ fk2016<- getRvcData(2016, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_a
 psu_biofk2016 <- getPSUBiomass(fk2016, species = fk2016$taxonomic_data$SPECIES_CD, growth_parameters = fk2016$taxonomic_data, merge_protected = F)
 write_csv(psu_biofk2016, 'big_csv/biomass_psu/FK/psu_biofk2016.csv') #2016
 
+#had to change merge_protected from F to T to make the code for the Dry Tortugas work
 dt1999<- getRvcData(1999, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
-psu_biodt1999 <- getPSUBiomass(dt1999, species = dt1999$taxonomic_data$SPECIES_CD, growth_parameters = dt1999$taxonomic_data, merge_protected = F)  
+psu_biodt1999 <- getPSUBiomass(dt1999, species = dt1999$taxonomic_data$SPECIES_CD, growth_parameters = dt1999$taxonomic_data, merge_protected = T)  
 write_csv(psu_biodt1999, 'big_csv/biomass_psu/DT/psu_biodt1999.csv') #1999
 
 dt2000<- getRvcData(2000, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
-psu_biodt2000 <- getPSUBiomass(dt2000, species = dt2000$taxonomic_data$SPECIES_CD, growth_parameters = dt2000$taxonomic_data, merge_protected = F)  
+psu_biodt2000 <- getPSUBiomass(dt2000, species = dt2000$taxonomic_data$SPECIES_CD, growth_parameters = dt2000$taxonomic_data, merge_protected = T)  
 write_csv(psu_biodt2000, 'big_csv/biomass_psu/DT/psu_biodt2000.csv') #2000
 
 dt2004<- getRvcData(2004, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
-psu_biodt2004 <- getPSUBiomass(dt2004, species = dt2004$taxonomic_data$SPECIES_CD, growth_parameters = dt2004$taxonomic_data, merge_protected = F)  
+psu_biodt2004 <- getPSUBiomass(dt2004, species = dt2004$taxonomic_data$SPECIES_CD, growth_parameters = dt2004$taxonomic_data, merge_protected = T)  
 write_csv(psu_biodt2004, 'big_csv/biomass_psu/DT/psu_biodt2004.csv') #2004
 
 dt2006<- getRvcData(2006, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
-psu_biodt2006 <- getPSUBiomass(dt2006, species = dt2006$taxonomic_data$SPECIES_CD, growth_parameters = dt2006$taxonomic_data, merge_protected = F)  
+psu_biodt2006 <- getPSUBiomass(dt2006, species = dt2006$taxonomic_data$SPECIES_CD, growth_parameters = dt2006$taxonomic_data, merge_protected = T)  
 write_csv(psu_biodt2006, 'big_csv/biomass_psu/DT/psu_biodt2006.csv') #2006
 
 dt2008<- getRvcData(2008, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
-psu_biodt2008 <- getPSUBiomass(dt2008, species = dt2008$taxonomic_data$SPECIES_CD, growth_parameters = dt2008$taxonomic_data, merge_protected = F)  
+psu_biodt2008 <- getPSUBiomass(dt2008, species = dt2008$taxonomic_data$SPECIES_CD, growth_parameters = dt2008$taxonomic_data, merge_protected = T)  
 write_csv(psu_biodt2008, 'big_csv/biomass_psu/DT/psu_biodt2008.csv') #2008
 
 dt2010<- getRvcData(2010, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
-psu_biodt2010 <- getPSUBiomass(dt2010, species = dt2010$taxonomic_data$SPECIES_CD, growth_parameters = dt2010$taxonomic_data, merge_protected = F)  
+psu_biodt2010 <- getPSUBiomass(dt2010, species = dt2010$taxonomic_data$SPECIES_CD, growth_parameters = dt2010$taxonomic_data, merge_protected = T)  
 write_csv(psu_biodt2010, 'big_csv/biomass_psu/DT/psu_biodt2010.csv') #2010
 
 dt2012<- getRvcData(2012, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
-psu_biodt2012 <- getPSUBiomass(dt2012, species = dt2012$taxonomic_data$SPECIES_CD, growth_parameters = dt2012$taxonomic_data, merge_protected = F)  
+psu_biodt2012 <- getPSUBiomass(dt2012, species = dt2012$taxonomic_data$SPECIES_CD, growth_parameters = dt2012$taxonomic_data, merge_protected = T)  
 write_csv(psu_biodt2012, 'big_csv/biomass_psu/DT/psu_biodt2012.csv') #2012
 
 dt2014<- getRvcData(2014, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
-psu_biodt2014 <- getPSUBiomass(dt2014, species = dt2014$taxonomic_data$SPECIES_CD, growth_parameters = dt2014$taxonomic_data, merge_protected = F)  
+psu_biodt2014 <- getPSUBiomass(dt2014, species = dt2014$taxonomic_data$SPECIES_CD, growth_parameters = dt2014$taxonomic_data, merge_protected = T)  
 write_csv(psu_biodt2014, 'big_csv/biomass_psu/DT/psu_biodt2014.csv') #2014
 
 dt2016<- getRvcData(2016, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
-psu_biodt2016 <- getPSUBiomass(dt2016, species = dt2016$taxonomic_data$SPECIES_CD, growth_parameters = dt2016$taxonomic_data, merge_protected = F)  
+psu_biodt2016 <- getPSUBiomass(dt2016, species = dt2016$taxonomic_data$SPECIES_CD, growth_parameters = dt2016$taxonomic_data, merge_protected = T)  
 write_csv(psu_biodt2016, 'big_csv/biomass_psu/DT/psu_biodt2016.csv') #2016
 
 ```
