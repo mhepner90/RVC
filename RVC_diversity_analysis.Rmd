@@ -18,38 +18,38 @@ output: html_document
 1.  Functional dendogram
 1.  Trait-matrix visualization 
 1.  By *domain* for each sampling year and region  
-    + Species weighted abundance and plot
-    + Species weighted biomass and plot
-    + Species biodiversity 
-      + species richness and plot
-      + Simpson diversity as effective number of species and plot
-      + Shannon diversity as effective number of species and plot
-      + Functional diversity as effective number of species and plot
++ Species weighted abundance and plot
++ Species weighted biomass and plot
++ Species biodiversity 
++ species richness and plot
++ Simpson diversity as effective number of species and plot
++ Shannon diversity as effective number of species and plot
++ Functional diversity as effective number of species and plot
 1. By *upper keys and lower keys domain* for each sampling year and region 
-    + Species weighted abundance and plot
-    + Species weighted biomass and plot
-    + Species biodiversity 
-      + species richness and plot
-      + Simpson diversity as effective number of species and plot
-      + Shannon diversity as effective number of species and plot
-      + Functional diversity as effective number of species and plot
++ Species weighted abundance and plot
++ Species weighted biomass and plot
++ Species biodiversity 
++ species richness and plot
++ Simpson diversity as effective number of species and plot
++ Shannon diversity as effective number of species and plot
++ Functional diversity as effective number of species and plot
 1. By *strata* for each sampling year and region 
-    + Species weighted abundance and plot
-    + Species weighted biomass and plot
-    + Species biodiversity 
-      + species richness and plot
-      + Simpson diversity as effective number of species and plot
-      + Shannon diversity as effective number of species and plot
-      + Functional diversity as effective number of species and plot
++ Species weighted abundance and plot
++ Species weighted biomass and plot
++ Species biodiversity 
++ species richness and plot
++ Simpson diversity as effective number of species and plot
++ Shannon diversity as effective number of species and plot
++ Functional diversity as effective number of species and plot
 1. By *primary sampling unit* for each sampling year and region and plot
-    + Species weighted abundance and plot
-    + Species weighted biomass and plot
-    + Species biodiversity 
-      + species richness and plot
-      + Simpson diversity as effective number of species and plot
-      + Shannon diversity as effective number of species and plot
-      + Functional diversity as effective number of species and plot
-    + statistical tests by strata and year: Shapiro, homocasdicity, 2-way ANOVA
++ Species weighted abundance and plot
++ Species weighted biomass and plot
++ Species biodiversity 
++ species richness and plot
++ Simpson diversity as effective number of species and plot
++ Shannon diversity as effective number of species and plot
++ Functional diversity as effective number of species and plot
++ statistical tests by strata and year: Shapiro, homocasdicity, 2-way ANOVA
 1. Environmental factors from SERC 
 1. Heat map of the Florida Keys and Dry Tortugas for the diversity indices 
 
@@ -69,20 +69,20 @@ All indices were computed as effective number of species. Effective number of sp
 
 - Species Richness is the number of species in a habitat sampled  
 
-    $Richness = \sum_{i=1}^S p_i^0$  
+$Richness = \sum_{i=1}^S p_i^0$  
 
 - Simpson diversity measures the probability that two individuals randomly selected from a sample will belong to different species.   
 
-    $Simpson = 1 - \sum_{i=1}^S p_i^2$  
+$Simpson = 1 - \sum_{i=1}^S p_i^2$  
 
 - Shannon diveristy is a measure of entropy, it is the uncertainty in the species identity of a sample  
 
-    $Shannon = - \sum_{i=1}^S p_i \log_b p_i$  
+$Shannon = - \sum_{i=1}^S p_i \log_b p_i$  
 
 - Functional diversity (Rao's Q) is a measure of pairwise functional differences between species weighted by their relative abundances   
 
-    $Rao Q = \sum_{i=1}^S-1 \sum_{j=i+1}^S d_i p_i p_j$
-    
+$Rao Q = \sum_{i=1}^S-1 \sum_{j=i+1}^S d_i p_i p_j$
+
 ## Functional distance trait based matrix (from Lefcheck et al.,)
 
 Gowdis computes the Gower (1971) similarity coefficient exactly as described by Podani (1999), then converts it to a dissimilarity coefficient by using D = 1 - S
@@ -102,6 +102,7 @@ library(FD)
 ## biocLite("BiocUpgrade") ## you may need this
 #biocLite("ggtree", type = "source")
 devtools::install_github("GuangchuangYu/ggtree") #requires R>= 3.3.2
+library(tidyverse)
 
 trait_matrix = read_csv('functional_diversity/species_trait_matrix_348_spp.csv')
 
@@ -211,8 +212,8 @@ tree <- read.tree("functional_diversity/functional_dendrogram.nwk")
 #  $ Nnode      : int 347
 #  $ tip.label  : chr [1:348] 
 #  $ edge.length: num
- # - attr(*, "class")= chr "phylo"
- # - attr(*, "order")= chr "cladewise"
+# - attr(*, "class")= chr "phylo"
+# - attr(*, "order")= chr "cladewise"
 
 # Phylogenetic tree with 348 tips and 347 internal nodes.
 # Tip labels:
@@ -251,8 +252,8 @@ traits_nmds = metaMDS(traits.dist,k=traits.kclus$nc,trymax=20)
 #k = Number of dimensions
 
 #*** No convergence -- monoMDS stopping criteria:
-   #499: no. of iterations >= maxit
-     #1: stress ratio > sratmax
+#499: no. of iterations >= maxit
+#1: stress ratio > sratmax
 
 # Dimensions: 10 
 # Stress:     0.03545178 
@@ -271,11 +272,11 @@ groups=levels(factor(traits.kclus$pamobject$clustering))
 points.symbols=15:16
 points.colors=c("firebrick3","cornflowerblue")
 for(i in seq_along(groups)) {
-   points(traits_nmds$points[traits.kclus$pamobject$clustering==groups[i],],
-          pch=points.symbols[i],col=points.colors[i],cex=1.4) }
- ordispider(traits_nmds,factor(traits.kclus$pamobject$clustering),label=F)
- ordihull(traits_nmds,factor(traits.kclus$pamobject$clustering),lty="dotted")
- orditorp(traits_nmds,dis="sites",pcex=0,air=0.5,col="grey10",cex=0.8)
+  points(traits_nmds$points[traits.kclus$pamobject$clustering==groups[i],],
+         pch=points.symbols[i],col=points.colors[i],cex=1.4) }
+ordispider(traits_nmds,factor(traits.kclus$pamobject$clustering),label=F)
+ordihull(traits_nmds,factor(traits.kclus$pamobject$clustering),lty="dotted")
+orditorp(traits_nmds,dis="sites",pcex=0,air=0.5,col="grey10",cex=0.8)
 
 ```
 
@@ -307,7 +308,7 @@ trait_matrix_treemap = trait_matrix %>%
   summarise(n = n())%>% 
   ungroup() %>%
   as.data.frame()
-  
+
 treemap2 = 
   d3treeR::d3tree2(
     treemap(dtf = trait_matrix_treemap,
@@ -315,9 +316,9 @@ treemap2 =
             vSize = "n", 
             vColor = "Trophic_group",
             type = "index"),
-            #title = "Reef Fish Traits",
-            #fontsize.title = 14, 
-            #algorithm = "squarified"
+    #title = "Reef Fish Traits",
+    #fontsize.title = 14, 
+    #algorithm = "squarified"
     rootname = "Species Traits")
 
 ```
@@ -339,10 +340,10 @@ treemap2 =
 - MAPGRID_NR: A number indicating the primary sample unit.  
 - HABITAT_CD: A code indicating the habitat type. 
 - ZONE_NR: A code indicating the distance offshore: 
-    + 1 - Inshore
-    + 2 - Midchannel
-    + 3 - Offshore
-    + 4 - Fore-reef
++ 1 - Inshore
++ 2 - Midchannel
++ 3 - Offshore
++ 4 - Fore-reef
 - SUBREGION_NR: A number indicating the subregion.
 - MPA_NR: A number identifying the marine protected area in which the sample was collected. Zero indicates unprotected status)
 - SPECIES_NR: A number indicating the species for a sample 
@@ -351,18 +352,18 @@ treemap2 =
 - NUM: The number of individuals of a given species and length observed in a secondary sampling unit
 - TIME_SEEN: A number indicating when, during sampling, an individual was observed. 1: In the first five minutes, 2: From 5-10 minutes, 3: After 10 minutes. 
 - PROT: A boolean value indicating whether a sample was in a protected area or not 
-    + 1 - protected area
-    + 0 - not protected 
++ 1 - protected area
++ 0 - not protected 
 - STRAT: A code indicating the stratum in which a sample was taken. Differs by region.   
-    + FMLR
-    + FSLR
-    + HRRF
-    + INPR
-    + MCPR 
-    + OFPR
++ FMLR
++ FSLR
++ HRRF
++ INPR
++ MCPR 
++ OFPR
 - REGION: A code indicating the region in which a sample was taken.
-    + FLA KEYS (florida keys)
-    + DRY TORT (dry tortugas)
++ FLA KEYS (florida keys)
++ DRY TORT (dry tortugas)
 
 ### Stratum Data Variables 
 - REGION 
@@ -446,18 +447,18 @@ select = dplyr::select #override MASS::select
 ```{r domain abundance}
 
 domain_fk_abun <- read_csv('big_csv/abundance_domain/domain_fk_abun.csv', 
-col_types = cols(
-  YEAR = col_integer(),
-  REGION = col_character(),
-  SPECIES_CD = col_character(),
-  abundance = col_double(),
-  var = col_double(),
-  n = col_integer(),
-  nm = col_integer(),
-  N = col_double(),
-  NM = col_double(),
-  protected_status = col_character()
-))
+                           col_types = cols(
+                             YEAR = col_integer(),
+                             REGION = col_character(),
+                             SPECIES_CD = col_character(),
+                             abundance = col_double(),
+                             var = col_double(),
+                             n = col_integer(),
+                             nm = col_integer(),
+                             N = col_double(),
+                             NM = col_double(),
+                             protected_status = col_character()
+                           ))
 
 domain_fk_abun_no_spp = domain_fk_abun %>%
   filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species
@@ -467,9 +468,9 @@ domain_fk_abun_no_spp = domain_fk_abun %>%
 ```{r domain biomass}
 
 domain_fk_bio <- read_csv('big_csv/biomass_domain/domain_fk_biomass.csv', 
-col_types = cols(
-  protected_status = col_character()
-))
+                          col_types = cols(
+                            protected_status = col_character()
+                          ))
 
 domain_fk_bio_no_spp = domain_fk_bio %>%
   filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species
@@ -480,18 +481,18 @@ domain_fk_bio_no_spp = domain_fk_bio %>%
 trait_matrix = read_csv('functional_diversity/species_trait_matrix_348_spp.csv')
 
 domain_fk_abun <- read_csv('big_csv/abundance_domain/domain_fk_abun.csv', 
-col_types = cols(
-  YEAR = col_integer(),
-  REGION = col_character(),
-  SPECIES_CD = col_character(),
-  abundance = col_double(),
-  var = col_double(),
-  n = col_integer(),
-  nm = col_integer(),
-  N = col_double(),
-  NM = col_double(),
-  protected_status = col_character()
-))
+                           col_types = cols(
+                             YEAR = col_integer(),
+                             REGION = col_character(),
+                             SPECIES_CD = col_character(),
+                             abundance = col_double(),
+                             var = col_double(),
+                             n = col_integer(),
+                             nm = col_integer(),
+                             N = col_double(),
+                             NM = col_double(),
+                             protected_status = col_character()
+                           ))
 
 domain_fk_abun_no_spp = domain_fk_abun %>%
   filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species 
@@ -522,9 +523,9 @@ fk_domain_abun_diversity_no_spp = domain_fk_abun_no_spp %>% #14,634 * 10
     shannon = map( #shannon diversity as effective number of species 
       data_wide,
       function(x) exp(diversity(x, index = 'shannon')))) %>% #,
-    # func_div = map( 
-    #   data_wide, 
-    #   function(x) 1/(1 - dbFD(as.matrix(func.dist), x)))) %>% 
+  # func_div = map( 
+  #   data_wide, 
+  #   function(x) 1/(1 - dbFD(as.matrix(func.dist), x)))) %>% 
   unnest(richness,shannon,simpson)
 
 fk_domain_abun_diversity_no_spp = fk_domain_abun_diversity_no_spp %>%
@@ -552,7 +553,7 @@ dygraph(fk_simpson, main = "Simpson Reef Fish Diversity") %>%
   dyAxis("y", label = "Effective Number of Species", valueRange = c(0, 50)) %>%
   dyAxis("x", label = "Year") %>%
   dyOptions(stackedGraph = T) 
-  #dyRangeSelector(height = 20) 
+#dyRangeSelector(height = 20) 
 
 ## Shannon for protected and unprotected stacked 
 fk_shannon = domain_fk_abun_diversity %>% 
@@ -567,7 +568,7 @@ dygraph(fk_shannon, main = "Shannon Reef Fish Diversity") %>%
   dyAxis("y", label = "Effective Number of Species", valueRange = c(0, 75)) %>%
   dyAxis("x", label = "Year") %>%
   dyOptions(stackedGraph = T)
-  #dyRangeSelector(height = 20) 
+#dyRangeSelector(height = 20) 
 
 
 d = domain_fk_abun_diversity %>% 
@@ -679,7 +680,7 @@ protected_status_names <- c(
   "0" = "Unprotected",
   "1" = "Protected",
   "all" = "All"
-  )
+)
 #richness, simpson, shannon for domain FKNMS  
 FK_abun_RShSim <- ggplot(data = fk_domain_abun_diversity, aes(x = YEAR)) +
   geom_point(aes(y = dom_richness, color = "dom_richness")) +
@@ -761,19 +762,19 @@ FK_abun_Simp <- ggplot(data = fk_domain_abun_diversity, aes(x = YEAR)) +
 ```{r strata abundance}
 ## FK's abundance by strata 
 strata_fk_abun <- read_csv("big_csv/abundance_strata/strata_fk_abun.csv",
-col_types = cols(
-  YEAR = col_integer(),
-  REGION = col_character(),
-  STRAT = col_character(),
-  SPECIES_CD = col_character(),
-  abundance = col_double(),
-  var = col_double(),
-  n = col_integer(),
-  nm = col_integer(),
-  N = col_double(),
-  NM = col_double(),
-  protected_status = col_character()
-))
+                           col_types = cols(
+                             YEAR = col_integer(),
+                             REGION = col_character(),
+                             STRAT = col_character(),
+                             SPECIES_CD = col_character(),
+                             abundance = col_double(),
+                             var = col_double(),
+                             n = col_integer(),
+                             nm = col_integer(),
+                             N = col_double(),
+                             NM = col_double(),
+                             protected_status = col_character()
+                           ))
 
 strata_fk_abun_no_spp = strata_fk_abun %>%
   filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species 
@@ -782,9 +783,9 @@ strata_fk_abun_no_spp = strata_fk_abun %>%
 ```{r strata biomass}
 
 strata_fk_bio <- read_csv('big_csv/biomass_strata/strata_fk_biomass.csv', 
-col_types = cols(
-  protected_status = col_character()
-))
+                          col_types = cols(
+                            protected_status = col_character()
+                          ))
 
 strata_fk_bio_no_spp = strata_fk_bio %>%
   filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species
@@ -794,19 +795,19 @@ strata_fk_bio_no_spp = strata_fk_bio %>%
 
 ## FK's abundance by strata 
 strata_fk_abun <- read_csv("big_csv/abundance_strata/strata_fk_abun.csv",
-col_types = cols(
-  YEAR = col_integer(),
-  REGION = col_character(),
-  STRAT = col_character(),
-  SPECIES_CD = col_character(),
-  abundance = col_double(),
-  var = col_double(),
-  n = col_integer(),
-  nm = col_integer(),
-  N = col_double(),
-  NM = col_double(),
-  protected_status = col_character()
-))
+                           col_types = cols(
+                             YEAR = col_integer(),
+                             REGION = col_character(),
+                             STRAT = col_character(),
+                             SPECIES_CD = col_character(),
+                             abundance = col_double(),
+                             var = col_double(),
+                             n = col_integer(),
+                             nm = col_integer(),
+                             N = col_double(),
+                             NM = col_double(),
+                             protected_status = col_character()
+                           ))
 
 strata_fk_abun_no_spp = strata_fk_abun %>%
   filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species 
@@ -908,19 +909,19 @@ dygraph(fk_simp_unprotected, main = "Florida Keys Simpson Diversity by Strata - 
   dyOptions(stackedGraph = T, colors = colorRamps::blue2red(7), fillAlpha = .8, axisLineWidth = 2)
 
 strata_names <- c(
- "FMLR" = "FMLR",
- "FSLR" = "FSLR",
- "HRRF" = "HRRF", #(Spur and Groove)
- "INPR" = "INPR",
- "MCPR" = "MCPR",
- "OFPR" = "OFPR",
- "FDLR" = "FDLR")
+  "FMLR" = "FMLR",
+  "FSLR" = "FSLR",
+  "HRRF" = "HRRF", #(Spur and Groove)
+  "INPR" = "INPR",
+  "MCPR" = "MCPR",
+  "OFPR" = "OFPR",
+  "FDLR" = "FDLR")
 
 protected_status_names <- c(
   "0" = "Unprotected",
   "1" = "Protected",
   "all" = "All"
-  )
+)
 
 #simpson diversity by protected status by strata in FKNMS
 fk_strata_ab_simpson <- ggplot(data = strata_fk_abun_diversity, aes(x = YEAR)) +
@@ -928,7 +929,7 @@ fk_strata_ab_simpson <- ggplot(data = strata_fk_abun_diversity, aes(x = YEAR)) +
   geom_line(aes(y = simpson, color = "simpson"), color = "blue") +
   facet_grid(STRAT ~ protected_status, 
              labeller = labeller(.rows = strata_names, .cols = protected_status_names)) +
-             #labeller(strata_names = label_wrap_gen(3))) + 
+  #labeller(strata_names = label_wrap_gen(3))) + 
   labs(x = "Year", y = "Effective Number of Species") +
   ggtitle("Simpson Diveristy of Reef Fish in the Florida Keys") + 
   theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 12)) +
@@ -954,17 +955,17 @@ FK_strata_ab_shannon <- ggplot(data = fk_strata_abun_diversity, aes(x = YEAR)) +
 ```{r psu abundance}
 
 psu_fk_abun <- read_csv("big_csv/abundance_psu/psu_fk_abun.csv",
-col_types = cols(
-  YEAR = col_integer(),
-  REGION = col_character(),
-  STRAT = col_character(),
-  PROT = col_integer(),
-  PRIMARY_SAMPLE_UNIT = col_character(),
-  SPECIES_CD = col_character(),
-  m = col_integer(),
-  var = col_double(),
-  abundance = col_double(),
-  protected_status = col_character()))
+                        col_types = cols(
+                          YEAR = col_integer(),
+                          REGION = col_character(),
+                          STRAT = col_character(),
+                          PROT = col_integer(),
+                          PRIMARY_SAMPLE_UNIT = col_character(),
+                          SPECIES_CD = col_character(),
+                          m = col_integer(),
+                          var = col_double(),
+                          abundance = col_double(),
+                          protected_status = col_character()))
 
 psu_fk_abun_no_spp = psu_fk_abun %>%
   filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species 
@@ -972,28 +973,28 @@ psu_fk_abun_no_spp = psu_fk_abun %>%
 
 ```{r psu biomass}
 psu_fk_bio <- read_csv('big_csv/biomass_psu/psu_fk_biomass.csv', 
-col_types = cols(
-  protected_status = col_character()
-))
+                       col_types = cols(
+                         protected_status = col_character()
+                       ))
 
 psu_fk_bio_no_spp = psu_fk_bio %>%
   filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species
 ```
 
-```{r psu biodiversity, eval = F}
+```{r psu biodiversity}
 
 psu_fk_abun <- read_csv("big_csv/abundance_psu/psu_fk_abun.csv",
-col_types = cols(
-  YEAR = col_integer(),
-  REGION = col_character(),
-  STRAT = col_character(),
-  PROT = col_integer(),
-  PRIMARY_SAMPLE_UNIT = col_character(),
-  SPECIES_CD = col_character(),
-  m = col_integer(),
-  var = col_double(),
-  abundance = col_double(),
-  protected_status = col_character()))
+                        col_types = cols(
+                          YEAR = col_integer(),
+                          REGION = col_character(),
+                          STRAT = col_character(),
+                          PROT = col_integer(),
+                          PRIMARY_SAMPLE_UNIT = col_character(),
+                          SPECIES_CD = col_character(),
+                          m = col_integer(),
+                          var = col_double(),
+                          abundance = col_double(),
+                          protected_status = col_character()))
 
 psu_fk_abun_no_spp = psu_fk_abun %>%
   filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species 
@@ -1021,8 +1022,8 @@ write_csv(fk_psu_abun_diversity_no_spp, "big_csv/diversity_without_spe/psu_fk_ab
 ```{r psu biodiversity plots and maps}
 
 psu_fk_abun_diversity = read_csv("big_csv/diversity_without_spe/psu_fk_abun_diversity_no_spp.csv",
-          col_types = cols(
-            protected_status = col_character())) 
+                                 col_types = cols(
+                                   protected_status = col_character())) 
 
 ```
 
@@ -1115,13 +1116,13 @@ Use COLUMN_bc if using transformed data, otherwise use COLUMN
 ANOVA <- aov(simpson_stat_dom_merged$simpson_bc ~ simpson_stat_dom_merged$YEAR) 
 plot(ANOVA)
 summary(ANOVA) # display Type I ANOVA table
-                              #Df Sum Sq Mean Sq F value Pr(>F)
+#Df Sum Sq Mean Sq F value Pr(>F)
 #simpson_stat_dom_merged$YEAR  1    460   459.6   0.277  0.607
 #Residuals                    13  21554  1658.0 
 
 #p value 0.6 so not significant 
 drop1(ANOVA,~.,test="F") # type III SS and F Tests 
- #                            Df Sum of Sq   RSS    AIC F value Pr(>F)
+#                            Df Sum of Sq   RSS    AIC F value Pr(>F)
 #<none>                                    21554 113.05               
 #simpson_stat_dom_merged$YEAR  1    459.62 22014 111.37  0.2772 0.6074
 
@@ -1161,6 +1162,46 @@ library(marmap) #marine maps
 ```
 
 ## Evironmental Variables from SERC 
+SURV = col_integer(),
+BASIN = col_character(),
+SEGMENT = col_character(),
+ZONE = col_character(),
+DATE = col_character(),
+TIME = col_time(format = ""),
+STATION = col_integer(),
+SITE = col_character(),
+CHLA-B` = col_character()
+LATDEC
+LONDEC
+DEPTH
+NOX-S, NOX-B
+NO3_S, NO3_B 
+NO2-S, NO2-B
+NH4-S, NH4-B 
+TN-S, TN-B
+DIN-S, DIN-B 
+TON-S, TON-B
+TP-S, TP-B
+SRP-S, SRP-B
+APA-S, APA-B
+CHLA-S, CHLA-B
+TOC-S, TOC-B
+SiO2-S, SiO2-B
+TURB-S, TURB-B
+SAL-S,SAL-B
+TEMP-S, TEMP-B
+DO-S, DO-B
+Kd pH 
+TN:TP  
+N:P
+DIN:TP
+Si:DIN
+SAT-S, SAT_B
+Io
+DSIGT
+TS, TS_B 
+SIGT-S, SIGT-B
+SAT-S, SAT_B
 
 ```{r SERC environmental variables}
 
