@@ -12,6 +12,9 @@ knitr::opts_chunk$set(echo = TRUE)
 library("dplyr")
 library("reshape2")
 
+# Packages to be used for chunk: 
+library("rpsychi")
+
 # Packages for performing statistical tests
 library("MASS")
 library("ggplot2")
@@ -44,6 +47,12 @@ d_fk_sum2 <- d_fk_sum1 %>% group_by(YEAR,STRAT) %>% summarise(sum2=sum(dum2))
 d_fk_sum3 <- dcast(d_fk_sum2, YEAR ~ STRAT, value.var="sum2")
 d_fk_sum3$total <- rowSums(d_fk_sum3[,-1], na.rm=TRUE)
 write.csv(d_fk_sum3, 'big_csv/sample_data/fk_sample_summary.csv',row.names=FALSE) # This file shows the breakdown of number of PSUs sampled by YEAR and STRATUM
+
+```
+
+## Performing a two-way ANOVA using summary statistics
+
+```{r perform two-way ANOVA using summary statistics, eval = F}
 
 ```
 
