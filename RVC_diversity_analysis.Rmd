@@ -1046,7 +1046,6 @@ library(psych) #pairs.panels
 ```
 
 Parametric test require the data to meet assumptions of having a normal distribution and homoscedasticity
-Skewness is a measure of the extent to which a distribution has long tails on either side. A normal distribution is symmetrical and a skewness equal to zero
 
 - Are diversity values and strata related? 
 
@@ -1138,7 +1137,6 @@ stat_diversity = stat_diversity %>%
   mantel.rtest(simpson, shannon) %>% #R^2
   mantel.rtest(simpson, functional) %>% #R^2
   mantel.rtest(shannon, functional) #R^2
-
 
 ```
 
