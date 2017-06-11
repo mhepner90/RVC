@@ -815,10 +815,13 @@ strata_fk_abun_no_spp = strata_fk_abun %>%
 fk_strata_abun_diversity_no_spp = strata_fk_abun_no_spp %>% #133,762 * 12
   filter(protected_status!='all') %>% #66,881 * 12
   select(YEAR, STRAT, protected_status, SPECIES_CD, abundance) %>% #66,881 * 5
-  group_by(YEAR, STRAT, protected_status) %>% #294 groups (15 years *7 strata *3prot = 315)??
-  nest() %>%  # 294 * 4 
+  group_by(YEAR, STRAT, protected_status) %>% #294 groups 
+  nest() %>%  # 191 * 4 
   mutate(
-    data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abundance, fill =0)), 
+    data_wide = map(data, function(x) 
+      full_join(x, trait_matrix %>% select(SPECIES_CD), by='SPECIES_CD') %>%
+        mutate(abundance = ifelse(is.na(abundance), 0, abundance)) %>%
+        spread(SPECIES_CD, abundance, fill =0)),
     richness = map( #species richness
       data_wide, 
       function(x) specnumber(x)),
@@ -834,6 +837,34 @@ fk_strata_abun_diversity_no_spp = fk_strata_abun_diversity_no_spp %>%
   select(YEAR, STRAT, protected_status, richness, simpson, shannon) 
 
 write_csv(fk_strata_abun_diversity_no_spp, 'big_csv/diversity_without_spe/strata_fk_abun_diversity_no_spp.csv')
+
+#merge all 
+fk_strata_abun_diversity_no_spp = strata_fk_abun_no_spp %>% #124,116 * 12
+  select(YEAR, STRAT, protected_status, SPECIES_CD, abundance) %>% #124,116*5
+  filter(protected_status =='all') %>% #62,058 * 12#62,058 * 5
+  group_by(YEAR, STRAT, protected_status) %>% #103 groups (15 years, 7 stratas)
+  nest() %>%  # 103*4 
+  mutate(   ##TODO: Why are there 678 species? why are the species repeated?
+    data_wide = map(data, function(x) 
+      full_join(x, trait_matrix %>% select(SPECIES_CD), by='SPECIES_CD') %>%
+        mutate(abundance = ifelse(is.na(abundance), 0, abundance)) %>%
+        spread(SPECIES_CD, abundance, fill =0)),
+    richness = map( #species richness
+      data_wide, 
+      function(x) specnumber(x)),
+    simpson = map( #simpson diversity as effective number of species 
+      data_wide,
+      function(x) 1/(1 - diversity(x, index = 'simpson'))),
+    shannon = map( #shannon diversity as effective number of species 
+      data_wide,
+      function(x) exp(diversity(x, index = 'shannon')))) %>%
+  unnest(richness, simpson, shannon)
+
+fk_strata_abun_diversity_no_spp = fk_strata_abun_diversity_no_spp %>%
+  select(YEAR, STRAT, protected_status, richness, simpson, shannon) 
+
+write_csv(fk_strata_abun_diversity_no_spp, 'big_csv/diversity_without_spe/strata_fk_abun_diversity_no_spp.csv')
+
 
 ```
 
