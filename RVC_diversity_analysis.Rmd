@@ -791,6 +791,8 @@ strata_fk_bio_no_spp = strata_fk_bio %>%
   filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species
 ```
 
+Is reef fish biodiversity and strata type related? 
+
 ```{r strata biodiversity}
 
 ## FK's abundance by strata 
@@ -842,6 +844,8 @@ write_csv(fk_strata_abun_diversity_no_spp, 'big_csv/diversity_without_spe/strata
 #   select(YEAR, STRAT, PROT, SPECIES_CD, abundance) %>% 
 #   group_by(YEAR, STRAT, PROT) %>% #7 groups --- 4,745*11 ---- #13 groups, 4,745*5
 #   nest() #now 365 species in each 
+
+
 
 
 ```
