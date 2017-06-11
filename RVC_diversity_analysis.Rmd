@@ -838,32 +838,10 @@ fk_strata_abun_diversity_no_spp = fk_strata_abun_diversity_no_spp %>%
 
 write_csv(fk_strata_abun_diversity_no_spp, 'big_csv/diversity_without_spe/strata_fk_abun_diversity_no_spp.csv')
 
-#merge all 
-fk_strata_abun_diversity_no_spp = strata_fk_abun_no_spp %>% #124,116 * 12
-  select(YEAR, STRAT, protected_status, SPECIES_CD, abundance) %>% #124,116*5
-  filter(protected_status =='all') %>% #62,058 * 12#62,058 * 5
-  group_by(YEAR, STRAT, protected_status) %>% #103 groups (15 years, 7 stratas)
-  nest() %>%  # 103*4 
-  mutate(   ##TODO: Why are there 678 species? why are the species repeated?
-    data_wide = map(data, function(x) 
-      full_join(x, trait_matrix %>% select(SPECIES_CD), by='SPECIES_CD') %>%
-        mutate(abundance = ifelse(is.na(abundance), 0, abundance)) %>%
-        spread(SPECIES_CD, abundance, fill =0)),
-    richness = map( #species richness
-      data_wide, 
-      function(x) specnumber(x)),
-    simpson = map( #simpson diversity as effective number of species 
-      data_wide,
-      function(x) 1/(1 - diversity(x, index = 'simpson'))),
-    shannon = map( #shannon diversity as effective number of species 
-      data_wide,
-      function(x) exp(diversity(x, index = 'shannon')))) %>%
-  unnest(richness, simpson, shannon)
-
-fk_strata_abun_diversity_no_spp = fk_strata_abun_diversity_no_spp %>%
-  select(YEAR, STRAT, protected_status, richness, simpson, shannon) 
-
-write_csv(fk_strata_abun_diversity_no_spp, 'big_csv/diversity_without_spe/strata_fk_abun_diversity_no_spp.csv')
+# abun2007 = strata_abunfk2007 %>%
+#   select(YEAR, STRAT, PROT, SPECIES_CD, abundance) %>% 
+#   group_by(YEAR, STRAT, PROT) %>% #7 groups --- 4,745*11 ---- #13 groups, 4,745*5
+#   nest() #now 365 species in each 
 
 
 ```
@@ -1073,6 +1051,7 @@ library(ade4) #mantel.rtest
 library(ggplot2) #geom_boxplot 
 library(nortest) #checks for normality 
 library(psych) #pairs.panels 
+library(tidyverse)
 
 ```
 
@@ -1083,12 +1062,31 @@ Parametric test require the data to meet assumptions of having a normal distribu
 ```{r parametric test}
 
 #1. Read in data 
-strata_diversity = read.csv("diversity_without_spe/strata_fk_abun_diversity_no_spp.csv")
-#protected_staus = 0 or 1 no all ??? 
+strata_diversity = read.csv("diversity_without_spe/strata_fk_abun_diversity_no_spp.csv") %>%
+  filter(protected_status == "0") #only strata values in unprotected
 
+#wide format 
+strata_simp = strata_diversity %>%
+  filter(protected_status == "0") %>% #only strata values in unprotected 
+  select(YEAR, STRAT, simpson) %>%
+  group_by(YEAR, STRAT) %>% #103 groups 
+  spread(STRAT, simpson) 
+  
 #2. Plot data - look at your distribution 
 ggplot(data = strata_diversity) +
   geom_boxplot(mapping = aes(x = STRAT, y = simpson)) 
+
+ggplot(data = strata_diversity) + 
+  geom_density(aes(x = STRAT))
+
+ggplot(data = strata_diversity) + 
+  geom_density(aes(x = simpson))
+
+hist(strata_diversity$simpson, main ="")
+
+summary(strata_diversity$simpson)
+#  Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+#  1.670   9.942  12.542  12.025  14.441  19.560 
 
 #3. Check for normality using QQ plot 
 qqnorm(strata_diversity$simpson) 
@@ -1096,58 +1094,91 @@ qqline(strata_diversity$simpson, lty=2)  # note that lty is the line type (2=med
 
 #4. Test whether data is NOT normal using Shapiro-Wilk Normaility Test
 shapiro.test(strata_diversity$simpson)
+#W = 0.95986, p-value = 0.003292
 
 #5. Check skewness 
 skew<-function(x){ 
   m3<-sum((x-mean(x))^3)/length(x) # note that the length expression automatically determines the sample size of your data
   s3<-sqrt(var(x))^3
   m3/s3} 
-skew(strata_diversity$simpson)
+skew(strata_diversity$simpson) #-0.5078343
 
 #6. Check whether the calculated skew value is significantly different than zero (i.e., not normal) using a t-test. To calulate the t-value, divide the skew by its standard error:
 skew(strata_diversity$simpson)/sqrt(6/length(strata_diversity$simpson)) 
+#-2.104094 
 # note that a rough measure of the standard error of the skewness is "sqrt{6/n}" where n is the sample size
 
 #7. check the probability of this t-value by chance alone when the skew is zero using the following:
-1-pt(calculated_t_value, df) #pt=cummulative density function of t-dist 
+1-pt(-2.104094, 102) #pt=cummulative density function of t-dist, first number=calculated t-value; second=df
+#0.9810857
 
 #8. Check for homoscedasticity: can use var.test, fligner.test, or bartlett.test
-bartlett.test(strata_diversity$simpson~strata_diversity$YEAR)
+bartlett.test(strata_diversity$simpson~strata_diversity$YEAR) #between simpson and year 
+#Bartlett's K-squared = 11.393, df = 14, p-value = 0.6549
+
+bartlett.test(strata_diversity$simpson~strata_diversity$STRAT) #between simpson and strata
+#Bartlett's K-squared = 12.154, df = 6, p-value = 0.05862
 
 #9. Transform data using Boxcox method 
 #need non-zero data for boxcox method to add a small amount to every value
-stat_diversity = stat_diversity %>% 
-  simpson+0.01 %>%
-  b = boxcox(simpson~YEAR) %>%
-  lamda = b$x %>% #lambda values  
-  lik = b$y %>% #y is values of liklihood %>%
-  bc = cbind(lamda,lik) %>%
-  bc[order(-lik),] %>% #use the lamda with the highest likelihood to transform your data #lambda of 2 is best transformation
-  mutate(
-    simpson_boxcox = ((simpson^2)-1)/2) #simpson_boxcox is now transformed using the boxcox method 
+strata_diversity$simpson_t = strata_diversity$simpson+0.01
+b = boxcox(strata_diversity$simpson_t~strata_diversity$YEAR) 
+lamda = b$x #lambda values  
+lik = b$y  #y is values of liklihood %>%
+bc = cbind(lamda,lik) 
+bc[order(-lik),] #use the lamda with the highest likelihood to transform your data #lambda of 1.3939 is best transformation
+strata_diversity$simpson_boxcox = strata_diversity$simpson^1.4 #simpson_boxcox is now transformed using the boxcox method 
+strata_diversity$simpson_boxcox = strata_diversity$simpson-1
+strata_diversity$simpson_boxcox = strata_diversity$simpson/1.4
 
 #10. Check for normality of transformed data 
-ggplot(data = stat) +
-  geom_boxplot(mapping = aes(x = STRAT, y = simpson_boxcox)) 
+ggplot() + geom_density(aes(x=strata_diversity$simpson_boxcox))
 
-qqnorm(stat_diversity$simpson_boxcox) 
-qqline(stat_diversity$simpson_boxcox, lty=2)
+qqnorm(strata_diversity$simpson_boxcox) 
+qqline(strata_diversity$simpson_boxcox, lty=2)
 shapiro.test(strata_diversity$simpson_boxcox)
+#W = 0.95986, p-value = 0.003292
 skew(strata_diversity$simpson_boxcox)
+#-0.5078343
 skew(strata_diversity$simpson_boxcox)/sqrt(6/length(strata_diversity$simpson_boxcox)) 
-1-pt(calculated_t_value, df)
+#-2.104094
+1-pt(-2.104094, 102)
+# 0.9810857 
 
 # if data is normal after transformation, proceed with parametric test 
 
 #10. Mann-Whitney or t-test parametric test 
 
 #11. ANOVA Parametric test 
-stat_diversity = stat_diversity %>% 
-  ANOVA = aov(simpson_boxcox~YEAR) %>%
-  plot(ANOVA) %>%
+  ANOVA = aov(strata_diversity$simpson_boxcox~strata_diversity$YEAR) 
+  plot(ANOVA)
   summary(ANOVA)
+#                       Df   Sum Sq    Mean Sq  F value    Pr(>F)
+#strata_diversity$YEAR1 1     1.1      1.130    0.131      0.718             --- ??WHY IS DF 1 AND NOT 14?
+#Residuals              101   871.5    8.629  
 
 drop1(ANOVA,~.,test="F") # type III SS and F Tests 
+
+ANOVA = aov(strata_diversity$simpson_boxcox~strata_diversity$STRAT) 
+  plot(ANOVA)
+  summary(ANOVA)
+#                       Df  Sum Sq  Mean Sq   F value   Pr(>F)    
+#strata_diversity$STRAT  6  269.5   44.91     7.148     2.56e-06 ***
+#Residuals              96  603.2    6.28  
+  
+  ANOVA = aov(simpson~YEAR, data = strata_diversity) 
+  plot(ANOVA)
+  summary(ANOVA)
+            #Df Sum Sq  Mean Sq   F value  Pr(>F)
+#YEAR          1    2.2   2.214   0.131    0.718
+#Residuals   101 1708.1  16.912
+  
+  ANOVA = aov(simpson~STRAT, data = strata_diversity) 
+  plot(ANOVA)
+  summary(ANOVA)
+#            Df Sum Sq   Mean Sq  F value   Pr(>F)    
+#STRAT        6  528.1   88.02    7.148     2.56e-06 ***
+#Residuals   96 1182.2   12.31
 
 # for post-hoc pairwise tests
 #TukeyHSD(ANOVA) # where fit comes from aov()
@@ -1159,14 +1190,14 @@ Are there correlations among continuous data (richness, shannon, simpson, functi
 
 ```{r Correlations}
 
-stat_diversity = stat_diversity %>%
-  #Test significance of Spearman rank correlations
-  correlation1 = cor.test(simpson, shannon, method = "spearman") %>%
-  correlation2 = cor.test(simpson, functional, method = "spearman") %>% 
-  correlation3 = cor.test(shannon, functional, method = "spearman") %>%  
-  #Examine correlations between matrices using Mantel's test
-  mantel.rtest(simpson, shannon) %>% #R^2
-  mantel.rtest(simpson, functional) %>% #R^2
+#Test significance of Spearman rank correlations
+  correlation1 = cor.test(strata_diversity$simpson, strata_diversity$shannon, method = "spearman") 
+  correlation2 = cor.test(strata_diversity$simpson, strata_diversity$functional, method = "spearman") 
+  correlation3 = cor.test(strata_diversity$shannon, strata_diversity$functional, method = "spearman")  
+  
+#Examine correlations between matrices using Mantel's test
+  mantel.rtest(strata_diversity$simpson, strata_diversity$shannon) #R^2
+  mantel.rtest(simpson, functional) #R^2
   mantel.rtest(shannon, functional) #R^2
 
 ```
