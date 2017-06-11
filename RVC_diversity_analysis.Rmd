@@ -1055,7 +1055,7 @@ psu_diversity_no_spp_merged = fk_psu_abun_diversity_no_spp_merged %>% #1,553,704
 psu_diversity_no_spp_merged = psu_diversity_no_spp_merged %>%
   select(YEAR, PRIMARY_SAMPLE_UNIT, richness,simpson, shannon)
 
-write_csv(psu_diversity_no_spp_merged, "diversity_without_spe/psu_diversity_no_spp_merged.csv") 
+write_csv(psu_diversity_no_spp_merged, "big_csv/diversity_without_spe/psu_diversity_no_spp_merged.csv") 
 
 #bind lat and long to psu 
 
