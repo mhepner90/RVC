@@ -814,16 +814,29 @@ strata_fk_abun <- read_csv("big_csv/abundance_strata/strata_fk_abun.csv",
 strata_fk_abun_no_spp = strata_fk_abun %>%
   filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species 
 
-fk_strata_abun_diversity_no_spp = strata_fk_abun_no_spp %>% #133,762 * 12
-  filter(protected_status!='all') %>% #66,881 * 12
-  select(YEAR, STRAT, protected_status, SPECIES_CD, abundance) %>% #66,881 * 5
-  group_by(YEAR, STRAT, protected_status) %>% #294 groups 
-  nest() %>%  # 191 * 4 
+fk_strata_abun_diversity_no_spp = strata_fk_abun_no_spp %>% #124,116 * 12
+  filter(protected_status == 'all') %>% #66,058 * 12
+  select(YEAR, STRAT, protected_status, SPECIES_CD, abundance) %>% #62,058 * 5
+  group_by(YEAR, STRAT, SPECIES_CD) %>% #33,468 gruops    
+  summarise(
+    abun_merged = sum(abundance))
+
+trait_matrix = read_csv('functional_diversity/species_trait_matrix_348_spp.csv')
+
+trait_matrix = trait_matrix %>%
+  as.tibble() %>%
+  mutate(
+    SPECIES_CD = toupper(as.character(SPECIES_CD))) %>% 
+  arrange(SPECIES_CD)
+
+strata_merged = fk_strata_abun_diversity_no_spp %>%
+  group_by(YEAR, STRAT) %>% #103 groups 
+  nest() %>%  #data 339*2
   mutate(
     data_wide = map(data, function(x) 
-      full_join(x, trait_matrix %>% select(SPECIES_CD), by='SPECIES_CD') %>%
-        mutate(abundance = ifelse(is.na(abundance), 0, abundance)) %>%
-        spread(SPECIES_CD, abundance, fill =0)),
+      full_join(x, trait_matrix %>% select(SPECIES_CD), by='SPECIES_CD') %>% 
+        mutate(abun_merged = ifelse(is.na(abun_merged), 0, abun_merged)) %>%
+        spread(SPECIES_CD, abun_merged, fill =0)),
     richness = map( #species richness
       data_wide, 
       function(x) specnumber(x)),
@@ -835,18 +848,10 @@ fk_strata_abun_diversity_no_spp = strata_fk_abun_no_spp %>% #133,762 * 12
       function(x) exp(diversity(x, index = 'shannon')))) %>%
   unnest(richness, simpson, shannon)
 
-fk_strata_abun_diversity_no_spp = fk_strata_abun_diversity_no_spp %>%
-  select(YEAR, STRAT, protected_status, richness, simpson, shannon) 
+strata_diversity_no_spp_merged = strata_merged %>%
+  select(YEAR, STRAT, richness, simpson, shannon) 
 
-write_csv(fk_strata_abun_diversity_no_spp, 'big_csv/diversity_without_spe/strata_fk_abun_diversity_no_spp.csv')
-
-# abun2007 = strata_abunfk2007 %>%
-#   select(YEAR, STRAT, PROT, SPECIES_CD, abundance) %>% 
-#   group_by(YEAR, STRAT, PROT) %>% #7 groups --- 4,745*11 ---- #13 groups, 4,745*5
-#   nest() #now 365 species in each 
-
-
-
+write_csv(strata_diversity_no_spp_merged, 'diversity_without_spe/strata_fk_abun_diversity_no_spp_merged.csv')
 
 ```
 
@@ -1012,23 +1017,48 @@ psu_fk_abun <- read_csv("big_csv/abundance_psu/psu_fk_abun.csv",
 psu_fk_abun_no_spp = psu_fk_abun %>%
   filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species 
 
-fk_psu_abun_diversity_no_spp = psu_fk_abun_no_spp %>% #3,107,408 x 10
-  group_by(YEAR, PRIMARY_SAMPLE_UNIT, STRAT, protected_status) %>% #9,6878 groups 
+trait_matrix = read_csv('functional_diversity/species_trait_matrix_348_spp.csv')
+
+trait_matrix = trait_matrix %>%
+  as.tibble() %>%
+  mutate(
+    SPECIES_CD = toupper(as.character(SPECIES_CD))) %>% 
+  arrange(SPECIES_CD)
+
+fk_psu_abun_diversity_no_spp_merged = psu_fk_abun_no_spp %>% #3,107,408 x 10
+  select(YEAR, PRIMARY_SAMPLE_UNIT, STRAT, protected_status, SPECIES_CD, abundance) %>% #3,107,408*5
+  filter(protected_status == 'all') %>% #1,553,704*10
+  group_by(YEAR, STRAT, PRIMARY_SAMPLE_UNIT, SPECIES_CD) %>% #1,553,704 groups  
+  summarise(
+    abun_merged = sum(abundance)) 
+  
+psu_diversity_no_spp_merged = fk_psu_abun_diversity_no_spp_merged %>% #1,553,704 x 5
+  group_by(YEAR, PRIMARY_SAMPLE_UNIT) %>% #4,839 groups
   nest(-YEAR) %>%
   mutate(
-    data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abundance, fill =0)), 
+    data_wide = map(data, function(x) 
+      full_join(x, trait_matrix %>% select(SPECIES_CD), by='SPECIES_CD') %>%
+        mutate(abun_merged = ifelse(is.na(abun_merged), 0, abun_merged)) %>%
+        spread(SPECIES_CD, abun_merged, fill =0)),
+    data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abun_merged, fill =0)), 
     richness = map( #species richness
       data_wide, 
-      function(x) specnumber(x %>% select(-REGION, - PROT, -m, -var))),
+      function(x) specnumber(x %>% select(-STRAT))),
     simpson = map( #simpson diversity as effective number of species 
       data_wide,
-      function(x) 1/(1 - diversity(x %>% select(-REGION, - PROT, -m, -var), index = 'simpson'))),
+      function(x) 1/(1 - diversity(x %>% select(-STRAT), index = 'simpson'))),
     shannon = map( #shannon diversity as effective number of species 
       data_wide,
-      function(x) exp(diversity(x %>% select(-REGION, - PROT, -m, -var), index = 'shannon')))) %>% 
+      function(x) exp(diversity(x %>% select(-STRAT), index = 'shannon')))) %>% 
   unnest(richness,simpson, shannon)
 
-write_csv(fk_psu_abun_diversity_no_spp, "big_csv/diversity_without_spe/psu_fk_abun_diversity_no_spp.csv") 
+psu_diversity_no_spp_merged = psu_diversity_no_spp_merged %>%
+  select(YEAR, PRIMARY_SAMPLE_UNIT, richness,simpson, shannon)
+
+write_csv(psu_diversity_no_spp_merged, "diversity_without_spe/psu_diversity_no_spp_merged.csv") 
+
+#bind lat and long to psu 
+
 
 ```
 
@@ -1066,12 +1096,11 @@ Parametric test require the data to meet assumptions of having a normal distribu
 ```{r parametric test}
 
 #1. Read in data 
-strata_diversity = read.csv("diversity_without_spe/strata_fk_abun_diversity_no_spp.csv") %>%
-  filter(protected_status == "0") #only strata values in unprotected
+strata_diversity = read_csv("diversity_without_spe/strata_fk_abun_diversity_no_spp_merged.csv") 
+
 
 #wide format 
 strata_simp = strata_diversity %>%
-  filter(protected_status == "0") %>% #only strata values in unprotected 
   select(YEAR, STRAT, simpson) %>%
   group_by(YEAR, STRAT) %>% #103 groups 
   spread(STRAT, simpson) 
@@ -1089,8 +1118,8 @@ ggplot(data = strata_diversity) +
 hist(strata_diversity$simpson, main ="")
 
 summary(strata_diversity$simpson)
-#  Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-#  1.670   9.942  12.542  12.025  14.441  19.560 
+#  Min.    1st Qu.  Median    Mean    3rd Qu.    Max. 
+#  1.670   9.751    12.787    12.227  14.962     19.871  
 
 #3. Check for normality using QQ plot 
 qqnorm(strata_diversity$simpson) 
@@ -1098,7 +1127,7 @@ qqline(strata_diversity$simpson, lty=2)  # note that lty is the line type (2=med
 
 #4. Test whether data is NOT normal using Shapiro-Wilk Normaility Test
 shapiro.test(strata_diversity$simpson)
-#W = 0.95986, p-value = 0.003292
+#W = 0.95774, p-value = 0.002318
 
 #5. Check skewness 
 skew<-function(x){ 
@@ -1109,19 +1138,19 @@ skew(strata_diversity$simpson) #-0.5078343
 
 #6. Check whether the calculated skew value is significantly different than zero (i.e., not normal) using a t-test. To calulate the t-value, divide the skew by its standard error:
 skew(strata_diversity$simpson)/sqrt(6/length(strata_diversity$simpson)) 
-#-2.104094 
+#-2.112694
 # note that a rough measure of the standard error of the skewness is "sqrt{6/n}" where n is the sample size
 
 #7. check the probability of this t-value by chance alone when the skew is zero using the following:
-1-pt(-2.104094, 102) #pt=cummulative density function of t-dist, first number=calculated t-value; second=df
-#0.9810857
+1-pt(-2.112694, 102) #pt=cummulative density function of t-dist, first number=calculated t-value; second=df
+#0.981466
 
 #8. Check for homoscedasticity: can use var.test, fligner.test, or bartlett.test
 bartlett.test(strata_diversity$simpson~strata_diversity$YEAR) #between simpson and year 
-#Bartlett's K-squared = 11.393, df = 14, p-value = 0.6549
+#Bartlett's K-squared = 15.863, df = 14, p-value = 0.3218
 
 bartlett.test(strata_diversity$simpson~strata_diversity$STRAT) #between simpson and strata
-#Bartlett's K-squared = 12.154, df = 6, p-value = 0.05862
+#Bartlett's K-squared = 16.359, df = 6, p-value = 0.01195
 
 #9. Transform data using Boxcox method 
 #need non-zero data for boxcox method to add a small amount to every value
@@ -1131,9 +1160,9 @@ lamda = b$x #lambda values
 lik = b$y  #y is values of liklihood %>%
 bc = cbind(lamda,lik) 
 bc[order(-lik),] #use the lamda with the highest likelihood to transform your data #lambda of 1.3939 is best transformation
-strata_diversity$simpson_boxcox = strata_diversity$simpson^1.4 #simpson_boxcox is now transformed using the boxcox method 
+strata_diversity$simpson_boxcox = strata_diversity$simpson^1.353 #simpson_boxcox is now transformed using the boxcox method 
 strata_diversity$simpson_boxcox = strata_diversity$simpson-1
-strata_diversity$simpson_boxcox = strata_diversity$simpson/1.4
+strata_diversity$simpson_boxcox = strata_diversity$simpson/1.353
 
 #10. Check for normality of transformed data 
 ggplot() + geom_density(aes(x=strata_diversity$simpson_boxcox))
@@ -1141,13 +1170,13 @@ ggplot() + geom_density(aes(x=strata_diversity$simpson_boxcox))
 qqnorm(strata_diversity$simpson_boxcox) 
 qqline(strata_diversity$simpson_boxcox, lty=2)
 shapiro.test(strata_diversity$simpson_boxcox)
-#W = 0.95986, p-value = 0.003292
+#W = 0.95774, p-value =0.002318
 skew(strata_diversity$simpson_boxcox)
-#-0.5078343
+#-0.50991
 skew(strata_diversity$simpson_boxcox)/sqrt(6/length(strata_diversity$simpson_boxcox)) 
-#-2.104094
-1-pt(-2.104094, 102)
-# 0.9810857 
+#-2.112694
+1-pt(-2.112694, 102)
+# 0.981466
 
 # if data is normal after transformation, proceed with parametric test 
 
@@ -1155,34 +1184,37 @@ skew(strata_diversity$simpson_boxcox)/sqrt(6/length(strata_diversity$simpson_box
 
 #11. ANOVA Parametric test 
   ANOVA = aov(strata_diversity$simpson_boxcox~strata_diversity$YEAR) 
-  plot(ANOVA)
+  #plot(ANOVA)
   summary(ANOVA)
 #                       Df   Sum Sq    Mean Sq  F value    Pr(>F)
-#strata_diversity$YEAR1 1     1.1      1.130    0.131      0.718             --- ??WHY IS DF 1 AND NOT 14?
-#Residuals              101   871.5    8.629  
-
+#strata_diversity$YEAR1 1     .5       0.471    0.047      0.829        
+#Residuals              101   1020.3  10.102  
+#??WHY IS DF 1 AND NOT 14?
 drop1(ANOVA,~.,test="F") # type III SS and F Tests 
+#                      Df Sum of Sq    RSS    AIC F value Pr(>F)
+#<none>                             1020.3 240.19               
+#strata_diversity$YEAR  1   0.47104 1020.8 238.24  0.0466 0.8295
 
 ANOVA = aov(strata_diversity$simpson_boxcox~strata_diversity$STRAT) 
-  plot(ANOVA)
+  #plot(ANOVA)
   summary(ANOVA)
 #                       Df  Sum Sq  Mean Sq   F value   Pr(>F)    
-#strata_diversity$STRAT  6  269.5   44.91     7.148     2.56e-06 ***
-#Residuals              96  603.2    6.28  
+#strata_diversity$STRAT  6  351.2   58.53     8.391     2.54e-07 ***
+#Residuals              96  669.6    6.97 
   
-  ANOVA = aov(simpson~YEAR, data = strata_diversity) 
-  plot(ANOVA)
+ANOVA = aov(simpson~YEAR, data = strata_diversity) 
+  #plot(ANOVA)
   summary(ANOVA)
-            #Df Sum Sq  Mean Sq   F value  Pr(>F)
-#YEAR          1    2.2   2.214   0.131    0.718
-#Residuals   101 1708.1  16.912
+#             Df Sum Sq Mean Sq   F value  Pr(>F)
+#YEAR          1    0.9   0.862   0.047    0.829
+#Residuals   101 1867.7  18.493
   
-  ANOVA = aov(simpson~STRAT, data = strata_diversity) 
-  plot(ANOVA)
-  summary(ANOVA)
-#            Df Sum Sq   Mean Sq  F value   Pr(>F)    
-#STRAT        6  528.1   88.02    7.148     2.56e-06 ***
-#Residuals   96 1182.2   12.31
+ANOVA = aov(simpson~STRAT, data = strata_diversity) 
+  #plot(ANOVA)
+summary(ANOVA)
+#            Df Sum Sq Mean Sq   F value   Pr(>F)    
+#STRAT        6  642.8  107.14   8.391     2.54e-07 ***
+#Residuals   96 1225.8   12.77
 
 # for post-hoc pairwise tests
 #TukeyHSD(ANOVA) # where fit comes from aov()
