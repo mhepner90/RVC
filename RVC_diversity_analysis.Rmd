@@ -567,10 +567,13 @@ fd_attempt = fk_domain_abun_diversity_no_spp %>%
   mutate(
     #functional diversity as effective number of species 
     abun.sum2=map(data_wide, 
-                   function(x) apply(x, 2, sum)), 
-    if (any(abun.sum2 == 0) ) stop("At least one species does not occur in any community (zero total abundance across all communities).","\n"),
-    functional = map(data_wide, 
-                   function(x) 1/(1 - dbFD(as.matrix(func.dist), x)))) #%>% 
+                   function(x) apply(x, 2, sum))) %>%
+  unnest(abun.sum2)
+
+if(any(fd_attempt$abun.sum2 == 0)) 
+  stop("At least one species does not occur in any community (zero total abundance across all communities).") #,
+    #functional = map(data_wide, 
+                   #function(x) 1/(1 - dbFD(as.matrix(func.dist), x)))) #%>% 
   
 #6/12/90 - Error in mutate_impl(.data, dots) : At least one species does not occur in any community (zero total abundance across all communities).
 
