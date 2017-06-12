@@ -1,0 +1,135 @@
+---
+title: "iNEXT"
+author: "Megan Hepner"
+date: "6/11/2017"
+output: html_document
+---
+## example for abundance based data (list of vector)
+data(spider)
+out1 <- iNEXT(spider, q=0, datatype="abundance")
+out1$DataInfo # showing basic data information.
+out1$iNextEst # showing diversity estimates with rarefied and extrapolated and related statistics.
+out1$AsyEst # showing asymptotic diversity estimates with related statistics.
+
+
+$DataInfo: 
+n - returns basic data information including the reference sample size 
+S.obs - observed species richness 
+SC - a sample coverage estimate 
+f1-f10 - the first ten frequency counts
+
+$iNextEst: 
+m - the sample size 
+method - the method (interpolated, observed, or extrapolated, depending on whether the size m is less than, equal to, or greater than the reference sample size
+order - the diversity order
+qD - the diversity estimate of order q
+qD.LCL, qD.UCL- the 95% lower and upper confidence limits of diversity 
+SC - the sample coverage estimate
+SC.LCL, SC.UC - the 95% lower and upper confidence limits of sample coverage.
+
+$AsyEst: asymptotic diversity estimates along with related statistics.
+Observed - observed diversity, 
+Estimator - asymptotic estimates, 
+EST_s.e. - estimated bootstrap s.e. 
+Lower_CI, Upper_CI - 95% confidence intervals 
+
+```{r setup, include=FALSE}
+library(iNEXT)
+library(tidyverse)
+library(data.table)
+
+trait_matrix = read_csv('functional_diversity/species_trait_matrix_348_spp.csv')
+trait_matrix = trait_matrix %>%
+  as.tibble() %>%
+  mutate(
+    SPECIES_CD = toupper(as.character(SPECIES_CD))) 
+
+#domain_fk_abun <- read_csv('big_csv/abundance_domain/domain_fk_abun.csv'
+
+domain_fk_abun <- read_csv('C:/Users/mhepn/Dropbox/github/RVC/big_csv/abundance_domain/domain_fk_abun.csv', 
+                           col_types = cols(
+                             YEAR = col_integer(),
+                             REGION = col_character(),
+                             SPECIES_CD = col_character(),
+                             abundance = col_double(),
+                             var = col_double(),
+                             n = col_integer(),
+                             nm = col_integer(),
+                             N = col_double(),
+                             NM = col_double(),
+                             protected_status = col_character()
+                           ))
+
+domain_fk_abun_no_spp = domain_fk_abun %>%
+  filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species 
+
+## FK's domain abundance only identified to species level (without spp.) 
+fk_domain_abun_diversity_no_spp = domain_fk_abun_no_spp %>% #14,634 * 10
+  filter(protected_status == "all") %>% 
+  group_by(YEAR, SPECIES_CD) %>% ##45 groups (fk 15*3)
+  summarise(abundance = sum(abundance)) %>%
+  select(YEAR, SPECIES_CD, abundance) %>%
+  spread(SPECIES_CD, abundance, fill =0) %>%
+  t()
+
+colnames(fk_domain_abun_diversity_no_spp) = fk_domain_abun_diversity_no_spp[1,] #make the first row "year" as the header
+ fk_domain_abun_diversity_no_spp = fk_domain_abun_diversity_no_spp[-1,] #remove the first row "year"
+
+species_by_sites_df = iNEXT(fk_domain_abun_diversity_no_spp, q=0, datatype = "abundance") #data needs to be species by sites 
+
+#sample-site based R/E curves, seperating by "site" aka year 
+ggiNEXT(species_by_sites_df, type=3, facet.var = "site") +
+  theme_bw(base_size = 18)
+#sample-site based R/E curves, seperating by "order" aka richness, simpson, shannon
+ggiNEXT(species_by_sites_df, type=1, facet.var = "order")
+ggiNEXT(species_by_sites_df, type=1, facet.var = "order")
+
+ggiNEXT(species_by_sites_df, type=3, facet.var = "order", color.var = "site")
+  
+```
+
+```{r iNEXT example}
+data(spider)
+out1 <- iNEXT(spider, q=0, datatype="abundance")
+```
+
+```{r psu}
+
+psu_fk_abun <- read_csv("C:/Users/mhepn/Dropbox/github/RVC/big_csv/abundance_psu/psu_fk_abun.csv",
+                           col_types = cols(protected_status = col_character()))
+
+psu_fk_abun_no_spp = psu_fk_abun %>%
+  filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species 
+
+psu_abun_no_spp = psu_fk_abun_no_spp %>% #14,634 * 10
+  filter(protected_status == "all") %>% 
+  group_by(YEAR, PRIMARY_SAMPLE_UNIT, SPECIES_CD) %>% ##45 groups (fk 15*3)
+  summarise(abundance = sum(abundance)) 
+
+psu_fk_abun_no_spp = psu_abun_no_spp %>%
+  group_by(YEAR, PRIMARY_SAMPLE_UNIT) %>%
+  nest() %>%
+  mutate(
+    data_wide = map(data, function(x) 
+      full_join(x, trait_matrix %>% select(SPECIES_CD), by='SPECIES_CD') %>%
+        mutate(abundance = ifelse(is.na(abundance), 0, abundance)) %>%
+        spread(SPECIES_CD, abundance, fill =0)),
+    data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abundance, fill =0)),
+    data_wide_t = map(data_wide, function(x) t(x)))
+
+trial = psu_fk_abun_no_spp %>% 
+  select(YEAR, PRIMARY_SAMPLE_UNIT, data, data_wide_t) %>%
+  unnest(data, data_wide_t) 
+
+trial2 = trial %>% 
+  select(YEAR, PRIMARY_SAMPLE_UNIT, SPECIES_CD, data_wide_t) %>%
+  spread(SPECIES_CD, PRIMARY_SAMPLE_UNIT)
+
+  mutate(
+    sup = map(data_wide_t, function(x) iNEXT(x, q=0, datatype = "abundance"))) 
+  
+#colnames(psu_fk_abun_no_spp$data_wide) = psu_fk_abun_no_spp$data_wide[1,] #make the first row "year" as the header
+#psu_div = psu_fk_abun_no_spp$data_wide[-1,] #remove the first row "year"
+
+```
+

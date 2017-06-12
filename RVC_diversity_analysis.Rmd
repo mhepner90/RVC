@@ -16,7 +16,8 @@ output: html_document
 
 ## Outputs 
 1.  Functional dendogram
-1.  Trait-matrix visualization 
++ Trait-matrix visualization 
+
 1.  By *domain* for each sampling year and region  
 + Species weighted abundance and plot
 + Species weighted biomass and plot
@@ -25,6 +26,7 @@ output: html_document
 + Simpson diversity as effective number of species and plot
 + Shannon diversity as effective number of species and plot
 + Functional diversity as effective number of species and plot
+
 1. By *upper keys and lower keys domain* for each sampling year and region 
 + Species weighted abundance and plot
 + Species weighted biomass and plot
@@ -33,6 +35,7 @@ output: html_document
 + Simpson diversity as effective number of species and plot
 + Shannon diversity as effective number of species and plot
 + Functional diversity as effective number of species and plot
+
 1. By *strata* for each sampling year and region 
 + Species weighted abundance and plot
 + Species weighted biomass and plot
@@ -41,6 +44,7 @@ output: html_document
 + Simpson diversity as effective number of species and plot
 + Shannon diversity as effective number of species and plot
 + Functional diversity as effective number of species and plot
+
 1. By *primary sampling unit* for each sampling year and region and plot
 + Species weighted abundance and plot
 + Species weighted biomass and plot
@@ -49,9 +53,19 @@ output: html_document
 + Simpson diversity as effective number of species and plot
 + Shannon diversity as effective number of species and plot
 + Functional diversity as effective number of species and plot
-+ statistical tests by strata and year: Shapiro, homocasdicity, 2-way ANOVA
-1. Environmental factors from SERC 
-1. Heat map of the Florida Keys and Dry Tortugas for the diversity indices 
+1. Bivariate Relationships 
++ correlation with spearman rank 
+
+1. Parametric tets
++ statistical tests by strata and year: Shapiro, homoscedacity, 2-way ANOVA
+
+1. Generalized Additive Model
++ temporal variable: YEAR
++ spatial variable: Latitude, longitude
++ environmental variable: STRAT, habitat_cd, depth, bottom temperature 
+
+1.Diversity heat Map
++ Kriging  
 
 ## Reef Visual Census Background 
 
@@ -87,7 +101,8 @@ $Rao Q = \sum_{i=1}^S-1 \sum_{j=i+1}^S d_i p_i p_j$
 
 Gowdis computes the Gower (1971) similarity coefficient exactly as described by Podani (1999), then converts it to a dissimilarity coefficient by using D = 1 - S
 
-```{r Functional distance matrix}
+```{r Functional distance matrix, eval = F}
+knitr::opts_chunk$set(echo = TRUE)
 
 #install.packages("clue")
 library(clue) #calls cl_ultrametric 
@@ -102,6 +117,7 @@ library(FD)
 #biocLite("BiocUpgrade") ## you may need this
 #biocLite("ggtree", type = "source")
 devtools::install_github("GuangchuangYu/ggtree") #requires R>= 3.3.2
+library(ggtree)
 library(tidyverse)
 
 trait_matrix = read_csv('functional_diversity/species_trait_matrix_348_spp.csv')
@@ -195,7 +211,7 @@ func.dist=func.dist/max(func.dist)
 #Plot the best tree - average 
 par(mfrow=c(1,1))
 par(mar=c(2,1,0,2))
-par(pin=c(10,15))
+#par(pin=c(10,15))
 plot(func.dist,horiz=TRUE)
 #Save plot: 10" x 15"
 
@@ -288,6 +304,7 @@ orditorp(traits_nmds,dis="sites",pcex=0,air=0.5,col="grey10",cex=0.8)
 
 ```{r trait visualization}
 
+library(tidyverse)
 library(treemap)
 devtools::install_github("gluc/data.tree")
 devtools::install_github("timelyportfolio/d3treeR")
@@ -311,15 +328,29 @@ trait_matrix_treemap = trait_matrix %>%
 
 treemap2 = 
   d3treeR::d3tree2(
-    treemap(dtf = trait_matrix_treemap,
-            index = c("Trophic_group", "Trophic_level", "Water_column", "Complexity", "Substrate_type", "Diel_activity"),
-            vSize = "n", 
-            vColor = "Trophic_group",
-            type = "index"),
+    treemap(
+      dtf = trait_matrix_treemap,
+      index = c("Trophic_group", "Trophic_level"), #, "Water_column", "Complexity", "Substrate_type", "Diel_activity"),
+      vSize = "n", 
+      vColor = "Trophic_group",
+      type = "index"),
     #title = "Reef Fish Traits",
     #fontsize.title = 14, 
     #algorithm = "squarified"
-    rootname = "Species Traits")
+    rootname = "Species_Traits")
+
+#treemap example 
+data(GNI2014)
+d3tree2(
+  treemap(
+    GNI2014
+    ,index=c("continent", "iso3")
+    ,vSize="population"
+    ,vColor="GNI"
+    ,type="value"
+  )
+  , rootname = "World"
+)
 
 ```
 
@@ -437,6 +468,9 @@ library(webshot)
 #install.packages("htmlwidgets")
 library(htmlwidgets)
 #install.packages("FD")
+library(FD)
+#install.packages("iNEXT")
+library(iNEXT)
 
 map = purrr::map # override maps::map
 select = dplyr::select #override MASS::select 
@@ -479,6 +513,11 @@ domain_fk_bio_no_spp = domain_fk_bio %>%
 ```{r domain biodiversity}
 
 trait_matrix = read_csv('functional_diversity/species_trait_matrix_348_spp.csv')
+trait_matrix = trait_matrix %>%
+  as.tibble() %>%
+  mutate(
+    SPECIES_CD = toupper(as.character(SPECIES_CD))) %>% 
+  arrange(SPECIES_CD)
 
 domain_fk_abun <- read_csv('big_csv/abundance_domain/domain_fk_abun.csv', 
                            col_types = cols(
@@ -500,12 +539,11 @@ domain_fk_abun_no_spp = domain_fk_abun %>%
 #length(unique(domain_fk_abun_no_spp$SPECIES_CD)) # 348
 #length(unique(trait_matrix$SPECIES_CD))          # 348
 
-# check if one species has total abundance of zero (never occurs)
-abun.sum2 <- apply(a, 2, sum)
-if (any(abun.sum2 == 0) ) stop("At least one species does not occur in any community (zero total abundance across all communities).","\n")
+
 
 ## FK's domain abundance only identified to species level (without spp.) 
 fk_domain_abun_diversity_no_spp = domain_fk_abun_no_spp %>% #14,634 * 10
+  #filter(protected_status != "all") %>% 
   select(YEAR, protected_status, SPECIES_CD, abundance) %>% #14,634 * 4
   group_by(YEAR, protected_status) %>% ##45 groups (fk 15*3)
   nest(-YEAR) %>%  
@@ -514,24 +552,41 @@ fk_domain_abun_diversity_no_spp = domain_fk_abun_no_spp %>% #14,634 * 10
       full_join(x, trait_matrix %>% select(SPECIES_CD), by='SPECIES_CD') %>%
         mutate(abundance = ifelse(is.na(abundance), 0, abundance)) %>%
         spread(SPECIES_CD, abundance, fill =0)), 
-    richness = map( #species richness 
-      data_wide, 
-      function(x) specnumber(x)),
-    simpson = map( #simpson diversity as effective number of species 
-      data_wide,
-      function(x) 1/(1 - diversity(x, index = 'simpson'))),
-    shannon = map( #shannon diversity as effective number of species 
-      data_wide,
-      function(x) exp(diversity(x, index = 'shannon')))) %>% #,
-  # func_div = map( 
-  #   data_wide, 
-  #   function(x) 1/(1 - dbFD(as.matrix(func.dist), x)))) %>% 
-  unnest(richness,shannon,simpson)
+    #species richness
+    richness=map(data_wide,   
+                 function(x) specnumber(x)),
+    #simpson diversity as effective number of species 
+    simpson=map(data_wide, 
+                function(x) 1/(1 - diversity(x, index = 'simpson'))),
+    #shannon diversity as effective number of species 
+    shannon=map(data_wide, 
+                function(x) exp(diversity(x, index = 'shannon')))) #,
+    
 
-fk_domain_abun_diversity_no_spp = fk_domain_abun_diversity_no_spp %>%
+fd_attempt = fk_domain_abun_diversity_no_spp %>%
+  mutate(
+    #functional diversity as effective number of species 
+    abun.sum2=map(data_wide, 
+                   function(x) apply(x, 2, sum))) %>%
+  unnest(abun.sum2)
+
+if(any(fd_attempt$abun.sum2 == 0)) 
+  stop("At least one species does not occur in any community (zero total abundance across all communities).") #,
+    #functional = map(data_wide, 
+                   #function(x) 1/(1 - dbFD(as.matrix(func.dist), x)))) #%>% 
+  
+#6/12/90 - Error in mutate_impl(.data, dots) : At least one species does not occur in any community (zero total abundance across all communities).
+
+# check if one species has total abundance of zero (never occurs)
+abun.sum2 <- apply(a, 2, sum)
+if (any(abun.sum2 == 0) ) stop("At least one species does not occur in any community (zero total abundance across all communities).","\n")
+  
+#unnest(richness,shannon,simpson)  
+  
+#fk_domain_abun_diversity_no_spp = fk_domain_abun_diversity_no_spp %>%
   select(YEAR, protected_status,richness,shannon,simpson)
 
-write_csv(fk_domain_abun_diversity_no_spp, 'big_csv/diversity_without_spe/domain_fk_abun_diversity_no_spp.csv')
+#write_csv(fk_domain_abun_diversity_no_spp, 'big_csv/diversity_without_spe/domain_fk_abun_diversity_no_spp.csv')
 
 ```
 
@@ -1057,7 +1112,7 @@ psu_diversity_no_spp_merged = psu_diversity_no_spp_merged %>%
 
 write_csv(psu_diversity_no_spp_merged, "big_csv/diversity_without_spe/psu_diversity_no_spp_merged.csv") 
 
-#bind lat and long to psu 
+#bind lat,long, and depth to PSU 
 
 
 ```
@@ -1074,7 +1129,7 @@ psu_fk_abun_diversity = read_csv("big_csv/diversity_without_spe/psu_fk_abun_dive
 
 For continuous response variable (diversity - richness, shannon, simpson, functional) and categorical predictor variable (strata)
 
-```{r library's}
+```{r librarys}
 
 library(MASS)
 library(moments)
@@ -1236,6 +1291,37 @@ Are there correlations among continuous data (richness, shannon, simpson, functi
   mantel.rtest(simpson, functional) #R^2
   mantel.rtest(shannon, functional) #R^2
 
+```
+
+## Sample Data Variables
+- PRIMARY_SAMPLE_UNIT: A code indicating the primary sample unit in which a sample was collected.
+- YEAR: A number indicating the calendar year.
+- STATION_NR: A number indicating the secondary sampling unit within a given primary sample unit.
+- LAT_DEGREES: Latitude of secondary sampling unit in decimal degrees).
+- LON_DEGREES: Longitude of secondary sampling unit in decimal degrees).
+- DEPTH: Average depth, in meters, of secondary sampling unit).
+- UNDERWATER_VISIBILITY: visibility, in meters, at secondary sampling unit..  
+- HABITAT_CD: A code indicating the habitat type. 
+- ZONE_NR: A code indicating the distance offshore: 
++ 1 - Inshore
++ 2 - Midchannel
++ 3 - Offshore
++ 4 - Fore-reef
+- MPA_NR: A number identifying the marine protected area in which the sample was collected. Zero indicates unprotected status)
+- PROT: A boolean value indicating whether a sample was in a protected area or not 
++ 1 - protected area
++ 0 - not protected 
+- STRAT: A code indicating the stratum in which a sample was taken. Differs by region.   
++ FMLR
++ FSLR
++ HRRF
++ INPR
++ MCPR 
++ OFPR
+
+```{r sample data}
+
+sample_data = read_csv()
 ```
 
 
