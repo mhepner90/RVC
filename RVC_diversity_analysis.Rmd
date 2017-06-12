@@ -1109,6 +1109,7 @@ psu_diversity_no_spp_merged = fk_psu_abun_diversity_no_spp_merged %>% #1,553,704
   unnest(richness,simpson, shannon)
 
 psu_diversity_no_spp_merged = psu_diversity_no_spp_merged %>%
+  unnest(data)
   select(YEAR, PRIMARY_SAMPLE_UNIT, richness,simpson, shannon)
 
 write_csv(psu_diversity_no_spp_merged, "big_csv/diversity_without_spe/psu_diversity_no_spp_merged.csv") 
@@ -1152,45 +1153,42 @@ Parametric test require the data to meet assumptions of having a normal distribu
 ```{r parametric test}
 
 #1. Read in data 
-strata_diversity = read_csv("diversity_without_spe/strata_fk_abun_diversity_no_spp_merged.csv") 
-psu_diversity_variables = read_csv("big_csv/bind_psu_variables.csv")
-# Parsed with column specification:
-# cols(
-#   YEAR.x = col_integer(),
-#   PRIMARY_SAMPLE_UNIT = col_character(),
-#   LAT_DEGREES = col_double(),
-#   LON_DEGREES = col_double(),
-#   HABITAT_CD = col_character(),
-#   ZONE_NR = col_integer(),
-#   MPA_NR = col_integer(),
-#   STRAT = col_character(),
-#   YEAR.y = col_integer(),
-#   richness = col_integer(),
-#   simpson = col_double(),
-#   shannon = col_double()
-# )
+#strata_diversity = read_csv("diversity_without_spe/strata_fk_abun_diversity_no_spp_merged.csv") 
+psu_diversity = read.csv("diversity_without_spe/psu_diversity_no_spp.csv")  
 
 #wide format 
-strata_simp = strata_diversity %>%
-  select(YEAR, STRAT, simpson) %>%
-  group_by(YEAR, STRAT) %>% #103 groups 
-  spread(STRAT, simpson) 
+psu_diversity = psu_diversity_no_spp_merged %>%
+  unnest(data) %>%
+  group_by(YEAR, PRIMARY_SAMPLE_UNIT)
+
+# strata_simp = strata_diversity %>%
+#   select(YEAR, STRAT, simpson) %>%
+#   group_by(YEAR, STRAT) %>% #103 groups 
+#   spread(STRAT, simpson) 
   
 #2. Plot data - look at your distribution 
-ggplot(data = strata_diversity) +
+ggplot(data = psu_diversity) +
   geom_boxplot(mapping = aes(x = STRAT, y = simpson)) 
 
-ggplot(data = strata_diversity) + 
+ggplot(data = psu_diversity) +
+  geom_boxplot(mapping = aes(x = YEAR, y = simpson)) 
+
+ggplot(data = psu_diversity) + 
   geom_density(aes(x = STRAT))
 
-ggplot(data = strata_diversity) + 
+ggplot(data = psu_diversity) + 
   geom_density(aes(x = simpson))
 
 hist(strata_diversity$simpson, main ="")
 
-summary(strata_diversity$simpson)
-#  Min.    1st Qu.  Median    Mean    3rd Qu.    Max. 
-#  1.670   9.751    12.787    12.227  14.962     19.871  
+ggplot(data = psu_diversity, aes(x = YEAR)) +
+  geom_point(aes(y = simpson, color = "simpson"),color = "blue") +
+  geom_line(aes(y = simpson, color = "simpson"), color = "blue") +
+  facet_grid(STRAT ~ .,) 
+
+summary(psu_diversity$simpson)
+#Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+#1.000   5.789   8.078   8.221  10.432  22.017 
 
 #3. Check for normality using QQ plot 
 qqnorm(strata_diversity$simpson) 
@@ -1347,12 +1345,14 @@ sample_data = FK_sample_data %>%
   group_by(YEAR, PRIMARY_SAMPLE_UNIT) #5,241 groups 
 
 psu_diversity = psu_diversity_no_spp_merged %>%
-  select(YEAR, PRIMARY_SAMPLE_UNIT, richness,simpson,shannon)
+  select(YEAR, PRIMARY_SAMPLE_UNIT, richness, simpson, shannon) %>%
+  group_by(YEAR, PRIMARY_SAMPLE_UNIT)
 
-bind_psu_variables = left_join(sample_data, psu_diversity, by="PRIMARY_SAMPLE_UNIT")
+bind_psu_variables = full_join(sample_data, psu_diversity, by="PRIMARY_SAMPLE_UNIT")
 
 write_csv(bind_psu_variables, "big_csv/bind_psu_variables.csv")
 
+##why is this joining funny 
 ```
 
 
