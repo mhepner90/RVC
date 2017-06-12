@@ -1153,7 +1153,22 @@ Parametric test require the data to meet assumptions of having a normal distribu
 
 #1. Read in data 
 strata_diversity = read_csv("diversity_without_spe/strata_fk_abun_diversity_no_spp_merged.csv") 
-
+psu_diversity_variables = read_csv("big_csv/bind_psu_variables.csv")
+# Parsed with column specification:
+# cols(
+#   YEAR.x = col_integer(),
+#   PRIMARY_SAMPLE_UNIT = col_character(),
+#   LAT_DEGREES = col_double(),
+#   LON_DEGREES = col_double(),
+#   HABITAT_CD = col_character(),
+#   ZONE_NR = col_integer(),
+#   MPA_NR = col_integer(),
+#   STRAT = col_character(),
+#   YEAR.y = col_integer(),
+#   richness = col_integer(),
+#   simpson = col_double(),
+#   shannon = col_double()
+# )
 
 #wide format 
 strata_simp = strata_diversity %>%
