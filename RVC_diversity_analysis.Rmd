@@ -560,7 +560,11 @@ fk_domain_abun_diversity_no_spp = domain_fk_abun_no_spp %>% #14,634 * 10
                 function(x) 1/(1 - diversity(x, index = 'simpson'))),
     #shannon diversity as effective number of species 
     shannon=map(data_wide, 
-                function(x) exp(diversity(x, index = 'shannon')))) #,
+                function(x) exp(diversity(x, index = 'shannon')))) %>%
+  unnest(richness,shannon,simpson)  
+  
+#fk_domain_abun_diversity_no_spp = fk_domain_abun_diversity_no_spp %>%
+  #select(YEAR, protected_status,richness,shannon,simpson)
     
 
 fd_attempt = fk_domain_abun_diversity_no_spp %>%
@@ -581,10 +585,7 @@ if(any(fd_attempt$abun.sum2 == 0))
 abun.sum2 <- apply(a, 2, sum)
 if (any(abun.sum2 == 0) ) stop("At least one species does not occur in any community (zero total abundance across all communities).","\n")
   
-#unnest(richness,shannon,simpson)  
-  
-#fk_domain_abun_diversity_no_spp = fk_domain_abun_diversity_no_spp %>%
-  select(YEAR, protected_status,richness,shannon,simpson)
+
 
 #write_csv(fk_domain_abun_diversity_no_spp, 'big_csv/diversity_without_spe/domain_fk_abun_diversity_no_spp.csv')
 
@@ -1321,7 +1322,22 @@ Are there correlations among continuous data (richness, shannon, simpson, functi
 
 ```{r sample data}
 
-sample_data = read_csv()
+RVCdata_FK = read_rds("big_csv/RVCdata_FK.rds")
+
+FK_sample_data = RVCdata_FK$sample_data
+
+sample_data = FK_sample_data %>%
+  select(YEAR, PRIMARY_SAMPLE_UNIT, LAT_DEGREES, LON_DEGREES, HABITAT_CD, ZONE_NR, MPA_NR, STRAT) %>% #4420893*8
+  dplyr::distinct() %>% #8,678*8  
+  group_by(YEAR, PRIMARY_SAMPLE_UNIT) #5,241 groups 
+
+psu_diversity = psu_diversity_no_spp_merged %>%
+  select(YEAR, PRIMARY_SAMPLE_UNIT, richness,simpson,shannon)
+
+bind_psu_variables = left_join(sample_data, psu_diversity, by="PRIMARY_SAMPLE_UNIT")
+
+write_csv(bind_psu_variables, "big_csv/bind_psu_variables.csv")
+
 ```
 
 
