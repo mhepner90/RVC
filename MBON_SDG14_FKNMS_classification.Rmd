@@ -1517,29 +1517,65 @@ dygraph(dygraph_rich_simp_shannon, main = "Florida Keys Reef Fish Biodiversity")
 
 ```
 
-# Coreal Reef Evaluation and Monitoring Project (CREMP)
 
-## Stony Corals 
-```{r Stony corals}
+
+## Other Groups
+```{r Other Groups}
+
+
+
+#### Corals, Lobster, Queen Conch
+
+
+
+sc_maxrich      = read.csv("C:/Users/luke.mceachron/Documents/Git/RVC/OtherGroups/CREMP_MaxRichness.csv")
+sc_pcover       = read.csv("C:/Users/luke.mceachron/Documents/Git/RVC/OtherGroups/CREMP_Pcover_group.csv")
+sc_pcov_spp       = read.csv("C:/Users/luke.mceachron/Documents/Git/RVC/OtherGroups/CREMP_Pcover_spp_tpose.csv")
+lobster = read.csv("C:/Users/luke.mceachron/Documents/Git/RVC/OtherGroups/Lobster_landings.csv")
+conch = read.csv("C:/Users/luke.mceachron/Documents/Git/RVC/OtherGroups/QueenConchData.csv")
+
+head(sc_maxrich)
+
+
+  #fk diversity
+names(sc_pcov_spp)
+
+  #diversity
+y96=sc_pcov_spp[which(sc_pcov_spp$Year==1996),]
+y96=y96[-c(1)]
+
+
+library(vegan)
+
+#Richness
+S1=specnumber(y96); S1
+
+#calculate shannon diversity, favors all species equally(q=1), assumes all species are represented and a random sample
+
+H1=diversity(y96,index="shannon")
+HE1=exp(diversity(y96,index="shannon"))
+
+#calculate simpson diversity, favors more common species (q=2)
+
+D1=diversity(y96,index="simpson"); D1
+
+#convert simpson to effective number
+DE1=1/(1-D1); DE1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ```
 
-## Sea turtles
-```{Turtles}
 
-```
-
-## Queen conch
-```{Queen conch}
-
-```
-
-## Caribbean spiny lobster 
-```{Caribbean spiny lobster}
-
-```
-
-## Long-spinned sea urchin 
-```{Long Spinned Sea Urchin}
-
-```
