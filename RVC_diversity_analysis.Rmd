@@ -1057,7 +1057,7 @@ psu_diversity_no_spp_merged = psu_diversity_no_spp_merged %>%
 
 write_csv(psu_diversity_no_spp_merged, "big_csv/diversity_without_spe/psu_diversity_no_spp_merged.csv") 
 
-#bind lat and long to psu 
+#bind lat,long, and depth to PSU 
 
 
 ```
