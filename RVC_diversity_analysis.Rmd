@@ -49,7 +49,7 @@ output: html_document
 + Simpson diversity as effective number of species and plot
 + Shannon diversity as effective number of species and plot
 + Functional diversity as effective number of species and plot
-+ statistical tests by strata and year: Shapiro, homocasdicity, 2-way ANOVA
++ statistical tests by strata and year: Shapiro, homoscedacity, 2-way ANOVA
 1. Environmental factors from SERC 
 1. Heat map of the Florida Keys and Dry Tortugas for the diversity indices 
 
