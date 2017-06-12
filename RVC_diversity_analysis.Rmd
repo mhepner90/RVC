@@ -16,7 +16,8 @@ output: html_document
 
 ## Outputs 
 1.  Functional dendogram
-1.  Trait-matrix visualization 
++ Trait-matrix visualization 
+
 1.  By *domain* for each sampling year and region  
 + Species weighted abundance and plot
 + Species weighted biomass and plot
@@ -25,6 +26,7 @@ output: html_document
 + Simpson diversity as effective number of species and plot
 + Shannon diversity as effective number of species and plot
 + Functional diversity as effective number of species and plot
+
 1. By *upper keys and lower keys domain* for each sampling year and region 
 + Species weighted abundance and plot
 + Species weighted biomass and plot
@@ -33,6 +35,7 @@ output: html_document
 + Simpson diversity as effective number of species and plot
 + Shannon diversity as effective number of species and plot
 + Functional diversity as effective number of species and plot
+
 1. By *strata* for each sampling year and region 
 + Species weighted abundance and plot
 + Species weighted biomass and plot
@@ -41,6 +44,7 @@ output: html_document
 + Simpson diversity as effective number of species and plot
 + Shannon diversity as effective number of species and plot
 + Functional diversity as effective number of species and plot
+
 1. By *primary sampling unit* for each sampling year and region and plot
 + Species weighted abundance and plot
 + Species weighted biomass and plot
@@ -49,9 +53,19 @@ output: html_document
 + Simpson diversity as effective number of species and plot
 + Shannon diversity as effective number of species and plot
 + Functional diversity as effective number of species and plot
+1. Bivariate Relationships 
++ correlation with spearman rank 
+
+1. Parametric tets
 + statistical tests by strata and year: Shapiro, homoscedacity, 2-way ANOVA
-1. Environmental factors from SERC 
-1. Heat map of the Florida Keys and Dry Tortugas for the diversity indices 
+
+1. Generalized Additive Model
++ temporal variable: YEAR
++ spatial variable: Latitude, longitude
++ environmental variable: STRAT, habitat_cd, depth, bottom temperature 
+
+1.Diversity heat Map
++ Kriging  
 
 ## Reef Visual Census Background 
 
@@ -87,7 +101,8 @@ $Rao Q = \sum_{i=1}^S-1 \sum_{j=i+1}^S d_i p_i p_j$
 
 Gowdis computes the Gower (1971) similarity coefficient exactly as described by Podani (1999), then converts it to a dissimilarity coefficient by using D = 1 - S
 
-```{r Functional distance matrix}
+```{r Functional distance matrix, eval = F}
+knitr::opts_chunk$set(echo = TRUE)
 
 #install.packages("clue")
 library(clue) #calls cl_ultrametric 
@@ -288,6 +303,7 @@ orditorp(traits_nmds,dis="sites",pcex=0,air=0.5,col="grey10",cex=0.8)
 
 ```{r trait visualization}
 
+library(tidyverse)
 library(treemap)
 devtools::install_github("gluc/data.tree")
 devtools::install_github("timelyportfolio/d3treeR")
@@ -1083,7 +1099,7 @@ psu_fk_abun_diversity = read_csv("big_csv/diversity_without_spe/psu_fk_abun_dive
 
 For continuous response variable (diversity - richness, shannon, simpson, functional) and categorical predictor variable (strata)
 
-```{r library's}
+```{r librarys}
 
 library(MASS)
 library(moments)
