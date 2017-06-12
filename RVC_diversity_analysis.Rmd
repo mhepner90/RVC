@@ -437,6 +437,9 @@ library(webshot)
 #install.packages("htmlwidgets")
 library(htmlwidgets)
 #install.packages("FD")
+library(FD)
+#install.packages("iNEXT")
+library(iNEXT)
 
 map = purrr::map # override maps::map
 select = dplyr::select #override MASS::select 
@@ -479,6 +482,11 @@ domain_fk_bio_no_spp = domain_fk_bio %>%
 ```{r domain biodiversity}
 
 trait_matrix = read_csv('functional_diversity/species_trait_matrix_348_spp.csv')
+trait_matrix = trait_matrix %>%
+  as.tibble() %>%
+  mutate(
+    SPECIES_CD = toupper(as.character(SPECIES_CD))) %>% 
+  arrange(SPECIES_CD)
 
 domain_fk_abun <- read_csv('big_csv/abundance_domain/domain_fk_abun.csv', 
                            col_types = cols(
@@ -506,6 +514,7 @@ if (any(abun.sum2 == 0) ) stop("At least one species does not occur in any commu
 
 ## FK's domain abundance only identified to species level (without spp.) 
 fk_domain_abun_diversity_no_spp = domain_fk_abun_no_spp %>% #14,634 * 10
+  #filter(protected_status != "all") %>% 
   select(YEAR, protected_status, SPECIES_CD, abundance) %>% #14,634 * 4
   group_by(YEAR, protected_status) %>% ##45 groups (fk 15*3)
   nest(-YEAR) %>%  
