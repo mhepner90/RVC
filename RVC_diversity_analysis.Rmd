@@ -1104,17 +1104,15 @@ psu_diversity_no_spp_merged = fk_psu_abun_diversity_no_spp_merged %>% #1,553,704
       data_wide,
       function(x) 1/(1 - diversity(x %>% select(-STRAT), index = 'simpson'))),
     shannon = map( #shannon diversity as effective number of species 
-      data_wide,
+      data_wide, 
       function(x) exp(diversity(x %>% select(-STRAT), index = 'shannon')))) %>% 
   unnest(richness,simpson, shannon)
 
 psu_diversity_no_spp_merged = psu_diversity_no_spp_merged %>%
-  unnest(data)
-  select(YEAR, PRIMARY_SAMPLE_UNIT, richness,simpson, shannon)
+  unnest(data) 
 
 write_csv(psu_diversity_no_spp_merged, "big_csv/diversity_without_spe/psu_diversity_no_spp_merged.csv") 
 
-#bind lat,long, and depth to PSU 
 
 
 ```
@@ -1154,12 +1152,27 @@ Parametric test require the data to meet assumptions of having a normal distribu
 
 #1. Read in data 
 #strata_diversity = read_csv("diversity_without_spe/strata_fk_abun_diversity_no_spp_merged.csv") 
-psu_diversity = read.csv("diversity_without_spe/psu_diversity_no_spp.csv")  
-
+psu_diversity = read_csv("big_csv/diversity_without_spe/psu_diversity_no_spp_merged.csv")  
+# Parsed with column specification:
+# cols(
+#   YEAR = col_integer(),
+#   PRIMARY_SAMPLE_UNIT = col_character(),
+#   richness = col_integer(),
+#   simpson = col_double(),
+#   shannon = col_double(),
+#   STRAT = col_character(),
+#   SPECIES_CD = col_character(),
+#   abun_merged = col_double()
+# )
 #wide format 
-psu_diversity = psu_diversity_no_spp_merged %>%
-  unnest(data) %>%
-  group_by(YEAR, PRIMARY_SAMPLE_UNIT)
+psu_div = psu_diversity %>% 
+  select(YEAR, PRIMARY_SAMPLE_UNIT, STRAT, richness, simpson, shannon) %>%
+  group_by(YEAR, PRIMARY_SAMPLE_UNIT, STRAT) %>%
+  summarize(
+    richness = first(richness),
+    simpson = first(simpson),
+    shannon = first(shannon))
+  
 
 # strata_simp = strata_diversity %>%
 #   select(YEAR, STRAT, simpson) %>%
@@ -1167,123 +1180,113 @@ psu_diversity = psu_diversity_no_spp_merged %>%
 #   spread(STRAT, simpson) 
   
 #2. Plot data - look at your distribution 
-ggplot(data = psu_diversity) +
+ggplot(data = psu_div) +
   geom_boxplot(mapping = aes(x = STRAT, y = simpson)) 
 
-ggplot(data = psu_diversity) +
-  geom_boxplot(mapping = aes(x = YEAR, y = simpson)) 
-
-ggplot(data = psu_diversity) + 
-  geom_density(aes(x = STRAT))
+#ggplot(data = psu_diversity) + 
+ # geom_density(aes(x = STRAT))
 
 ggplot(data = psu_diversity) + 
   geom_density(aes(x = simpson))
 
-hist(strata_diversity$simpson, main ="")
+hist(psu_diversity$simpson, main ="")
 
-ggplot(data = psu_diversity, aes(x = YEAR)) +
+ggplot(data = psu_div, aes(x = YEAR)) +
   geom_point(aes(y = simpson, color = "simpson"),color = "blue") +
   geom_line(aes(y = simpson, color = "simpson"), color = "blue") +
   facet_grid(STRAT ~ .,) 
 
-summary(psu_diversity$simpson)
+summary(psu_div$simpson)
 #Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-#1.000   5.789   8.078   8.221  10.432  22.017 
+ #1.000   5.804   8.103   8.247  10.465  22.017 
 
 #3. Check for normality using QQ plot 
-qqnorm(strata_diversity$simpson) 
-qqline(strata_diversity$simpson, lty=2)  # note that lty is the line type (2=medium dashes; try different values betweem 1-6)
+qqnorm(psu_div$simpson) 
+qqline(psu_div$simpson, lty=2)  # note that lty is the line type (2=medium dashes; try different values betweem 1-6)
 
 #4. Test whether data is NOT normal using Shapiro-Wilk Normaility Test
-shapiro.test(strata_diversity$simpson)
-#W = 0.95774, p-value = 0.002318
+shapiro.test(psu_div$simpson)
+#W = 0.99184, p-value = 4.496e-16
 
 #5. Check skewness 
 skew<-function(x){ 
   m3<-sum((x-mean(x))^3)/length(x) # note that the length expression automatically determines the sample size of your data
   s3<-sqrt(var(x))^3
   m3/s3} 
-skew(strata_diversity$simpson) #-0.5078343
+skew(psu_div$simpson) #0.3071657
 
 #6. Check whether the calculated skew value is significantly different than zero (i.e., not normal) using a t-test. To calulate the t-value, divide the skew by its standard error:
-skew(strata_diversity$simpson)/sqrt(6/length(strata_diversity$simpson)) 
-#-2.112694
+skew(psu_div$simpson)/sqrt(6/length(psu_div$simpson)) 
+#8.723182
 # note that a rough measure of the standard error of the skewness is "sqrt{6/n}" where n is the sample size
 
 #7. check the probability of this t-value by chance alone when the skew is zero using the following:
-1-pt(-2.112694, 102) #pt=cummulative density function of t-dist, first number=calculated t-value; second=df
+1-pt(8.723182, 4838) #pt=cummulative density function of t-dist, first number=calculated t-value; second=df
 #0.981466
 
 #8. Check for homoscedasticity: can use var.test, fligner.test, or bartlett.test
-bartlett.test(strata_diversity$simpson~strata_diversity$YEAR) #between simpson and year 
-#Bartlett's K-squared = 15.863, df = 14, p-value = 0.3218
+bartlett.test(psu_div$simpson~psu_div$YEAR) #between simpson and year 
+#Bartlett's K-squared = 38.613, df = 14, p-value = 0.0004185
 
-bartlett.test(strata_diversity$simpson~strata_diversity$STRAT) #between simpson and strata
-#Bartlett's K-squared = 16.359, df = 6, p-value = 0.01195
+bartlett.test(psu_div$simpson~psu_div$STRAT) #between simpson and strata
+#Bartlett's K-squared = 71.143, df = 6, p-value = 2.382e-13
 
 #9. Transform data using Boxcox method 
 #need non-zero data for boxcox method to add a small amount to every value
-strata_diversity$simpson_t = strata_diversity$simpson+0.01
-b = boxcox(strata_diversity$simpson_t~strata_diversity$YEAR) 
+psu_div$simpson_t = psu_div$simpson+0.01
+b = boxcox(psu_div$simpson_t~psu_div$YEAR) 
 lamda = b$x #lambda values  
 lik = b$y  #y is values of liklihood %>%
 bc = cbind(lamda,lik) 
 bc[order(-lik),] #use the lamda with the highest likelihood to transform your data #lambda of 1.3939 is best transformation
-strata_diversity$simpson_boxcox = strata_diversity$simpson^1.353 #simpson_boxcox is now transformed using the boxcox method 
-strata_diversity$simpson_boxcox = strata_diversity$simpson-1
-strata_diversity$simpson_boxcox = strata_diversity$simpson/1.353
+psu_div$simpson_boxcox = psu_div$simpson^0.70707071 #simpson_boxcox is now transformed using the boxcox method 
+psu_div$simpson_boxcox = psu_div$simpson-1
+psu_div$simpson_boxcox = psu_div$simpson/0.70707071
 
 #10. Check for normality of transformed data 
-ggplot() + geom_density(aes(x=strata_diversity$simpson_boxcox))
+ggplot() + geom_density(aes(x=psu_div$simpson_boxcox))
 
-qqnorm(strata_diversity$simpson_boxcox) 
-qqline(strata_diversity$simpson_boxcox, lty=2)
-shapiro.test(strata_diversity$simpson_boxcox)
-#W = 0.95774, p-value =0.002318
-skew(strata_diversity$simpson_boxcox)
-#-0.50991
-skew(strata_diversity$simpson_boxcox)/sqrt(6/length(strata_diversity$simpson_boxcox)) 
-#-2.112694
-1-pt(-2.112694, 102)
-# 0.981466
+qqnorm(psu_div$simpson_boxcox) 
+qqline(psu_div$simpson_boxcox, lty=2)
+shapiro.test(psu_div$simpson_boxcox)
+#W = 0.99184, p-value = 4.496e-16
+skew(psu_div$simpson_boxcox)
+#0.3071657
+skew(psu_div$simpson_boxcox)/sqrt(6/length(psu_div$simpson_boxcox)) 
+#8.723182
+1-pt(8.723182, 4838)
+# 0
 
 # if data is normal after transformation, proceed with parametric test 
 
 #10. Mann-Whitney or t-test parametric test 
 
 #11. ANOVA Parametric test 
-  ANOVA = aov(strata_diversity$simpson_boxcox~strata_diversity$YEAR) 
+  ANOVA = aov(psu_div$simpson_boxcox~psu_div$YEAR) 
   #plot(ANOVA)
   summary(ANOVA)
-#                       Df   Sum Sq    Mean Sq  F value    Pr(>F)
-#strata_diversity$YEAR1 1     .5       0.471    0.047      0.829        
-#Residuals              101   1020.3  10.102  
+#               Df Sum Sq Mean Sq F value Pr(>F)
+#psu_div$YEAR    1     26   25.82   1.155  0.283
+#Residuals    4837 108147   22.36    
 #??WHY IS DF 1 AND NOT 14?
+  
 drop1(ANOVA,~.,test="F") # type III SS and F Tests 
 #                      Df Sum of Sq    RSS    AIC F value Pr(>F)
-#<none>                             1020.3 240.19               
-#strata_diversity$YEAR  1   0.47104 1020.8 238.24  0.0466 0.8295
+#<none>                    108147 15038               
+#psu_div$YEAR  1    25.816 108172 15037  1.1546 0.2826
 
-ANOVA = aov(strata_diversity$simpson_boxcox~strata_diversity$STRAT) 
+ANOVA = aov(psu_div$simpson_boxcox~psu_div$STRAT) 
   #plot(ANOVA)
   summary(ANOVA)
-#                       Df  Sum Sq  Mean Sq   F value   Pr(>F)    
-#strata_diversity$STRAT  6  351.2   58.53     8.391     2.54e-07 ***
-#Residuals              96  669.6    6.97 
   
-ANOVA = aov(simpson~YEAR, data = strata_diversity) 
+ANOVA = aov(simpson~YEAR, data = psu_div) 
   #plot(ANOVA)
   summary(ANOVA)
-#             Df Sum Sq Mean Sq   F value  Pr(>F)
-#YEAR          1    0.9   0.862   0.047    0.829
-#Residuals   101 1867.7  18.493
   
-ANOVA = aov(simpson~STRAT, data = strata_diversity) 
+ANOVA = aov(simpson~STRAT, data = psu_div) 
   #plot(ANOVA)
 summary(ANOVA)
-#            Df Sum Sq Mean Sq   F value   Pr(>F)    
-#STRAT        6  642.8  107.14   8.391     2.54e-07 ***
-#Residuals   96 1225.8   12.77
+
 
 # for post-hoc pairwise tests
 #TukeyHSD(ANOVA) # where fit comes from aov()
