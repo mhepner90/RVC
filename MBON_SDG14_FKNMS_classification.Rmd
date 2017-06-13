@@ -1529,7 +1529,7 @@ dygraph(dygraph_rich_simp_shannon, main = "Florida Keys Reef Fish Biodiversity")
 
 
 
-sc_pcover       = read.csv("C:/Users/luke.mceachron/Documents/Git/RVC/OtherGroups/CREMP_Pcover_group.csv")
+cremp_abund       = read.csv("C:/Users/luke.mceachron/Documents/Git/RVC/OtherGroups/CREMP_Pcover_group.csv")
 lobster = read.csv("C:/Users/luke.mceachron/Documents/Git/RVC/OtherGroups/Lobster_landings.csv")
 conch = read.csv("C:/Users/luke.mceachron/Documents/Git/RVC/OtherGroups/QueenConchData.csv")
 crichness<-read.csv("C:/Users/luke.mceachron/Documents/Git/RVC/OtherGroups/CREMP_Domain_Coral_Richness.csv")
@@ -1557,7 +1557,61 @@ colnames(years)[1]<-"Year"
 coral_diversity<-cbind(coral1,years)
 coral_diversity
 
-##
+## Everything else is basically just relative abundance data via mean site level % cover (CREMP data), landings (lobster), and Abundance per aggregation (conch)
+
+algaecover<-cremp_abund[c(1:2)]
+octocover<-cremp_abund[c(1,4)]
+stonycover<-cremp_abund[c(1,8)]
+lobster
+conch
+
+
+dygraph(algaecover, main = 'Macroalgae Mean % Cover') %>% 
+    dyAxis("y", label = "Macroalgae") %>%
+    dyAxis("x", label = "Year") %>%
+    dyOptions(stackedGraph = T)
+
+dygraph(octocover, main = 'Octocoral Mean % Cover') %>% 
+    dyAxis("y", label = "Octocoral") %>%
+    dyAxis("x", label = "Year") %>%
+    dyOptions(stackedGraph = T)
+
+dygraph(stonycover, main = 'Stony Coral Mean % Cover') %>% 
+    dyAxis("y", label = "Stony Coral") %>%
+    dyAxis("x", label = "Year") %>%
+    dyOptions(stackedGraph = T)
+
+
+lobster1=lobster[-c(4)]
+dygraph(lobster1, main = 'Lobster Commercial and Recreational Landings') %>% 
+    dyAxis("y", label = "Landings (Lbs.)") %>%
+    dyAxis("x", label = "Year") %>%
+    dySeries("Commercial_lbs", label = "Commercial Landings", color = "blue") %>% 
+    dySeries("Recreational_lbs", label = "Recreational Landings", color = "red") %>% 
+    dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 1.5) %>% #drawGrid = F
+    dyLegend(width = 400)
+
+
+conch1=conch[-c(3:4)]
+dygraph(conch1, main = 'Queen Conch, Relative Abundance in Sampled Breeding Aggregations') %>% 
+    dyAxis("y", label = "Abundance") %>%
+    dyAxis("x", label = "Year") %>%
+    dyOptions(stackedGraph = T)
+
+
+
+#######For some reason, the Y axis values are not representing the data. E.g., In 1996, the Species Richness line starts at 60 on the y axis, but the data (when you roll over) indicate Richness equals 43.######
+
+coraldiv<-as.data.frame(coral_diversity)
+coraldiv1=coraldiv[-c(2,4)]
+dygraph(coraldiv1, main = 'Coral Diversity') %>% 
+       dyAxis("x", label = "Year") %>%
+     dyAxis("y", label = "Diversity") %>%
+    dySeries("Richness", label = "Species Richness", color = "blue") %>% 
+    dySeries("Shannon_Effective_Number", label = "Shannon Effective Number", color = "red") %>% 
+    dySeries("Simpson_Effective_Number", label = "Simpson Effective Number", color = "green") %>% 
+    dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 1.5) %>% #drawGrid = F
+    dyLegend(width = 400)
 
 
 
