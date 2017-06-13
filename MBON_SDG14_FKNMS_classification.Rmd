@@ -1528,50 +1528,36 @@ dygraph(dygraph_rich_simp_shannon, main = "Florida Keys Reef Fish Biodiversity")
 
 
 
-sc_maxrich      = read.csv("C:/Users/luke.mceachron/Documents/Git/RVC/OtherGroups/CREMP_MaxRichness.csv")
+
 sc_pcover       = read.csv("C:/Users/luke.mceachron/Documents/Git/RVC/OtherGroups/CREMP_Pcover_group.csv")
-sc_pcov_spp       = read.csv("C:/Users/luke.mceachron/Documents/Git/RVC/OtherGroups/CREMP_Pcover_spp_tpose.csv")
 lobster = read.csv("C:/Users/luke.mceachron/Documents/Git/RVC/OtherGroups/Lobster_landings.csv")
 conch = read.csv("C:/Users/luke.mceachron/Documents/Git/RVC/OtherGroups/QueenConchData.csv")
+crichness<-read.csv("C:/Users/luke.mceachron/Documents/Git/RVC/OtherGroups/CREMP_Domain_Coral_Richness.csv")
 
-head(sc_maxrich)
+head(sc_pcov_spp)
+names(crichness)
 
-
-  #fk diversity
-names(sc_pcov_spp)
-
-  #diversity
-y96=sc_pcov_spp[which(sc_pcov_spp$Year==1996),]
-y96=y96[-c(1)]
-
-
+  #Estimate Coral Diversity using Average Full Domain Percent Cover by 40 monitored species
 library(vegan)
 
-#Richness
-S1=specnumber(y96); S1
+sc_pcov_spp       = read.csv("C:/Users/luke.mceachron/Documents/Git/RVC/OtherGroups/CREMP_Pcover_spp_tpose.csv")
+sc_pcov_spp=sc_pcov_spp[-c(1)]
 
-#calculate shannon diversity, favors all species equally(q=1), assumes all species are represented and a random sample
+for (i in 1:nrow(sc_pcov_spp)) {
+  Richness<-(crichness$Domain.Richness)
+  Shannon<-(diversity(sc_pcov_spp,index="shannon"))
+  Shannon_Effective_Number<-(exp(diversity(sc_pcov_spp,index="shannon")))
+  Simpson<-(diversity(sc_pcov_spp,index="simpson"))
+  Simpson_Effective_Number<-(1/(1-(diversity(sc_pcov_spp,index="simpson"))))
+  coral1<-cbind(Richness,Shannon,Shannon_Effective_Number,Simpson,Simpson_Effective_Number)
+  }
 
-H1=diversity(y96,index="shannon")
-HE1=exp(diversity(y96,index="shannon"))
+years<-rbind(1996,1997,1998,1999,2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015)
+colnames(years)[1]<-"Year"
+coral_diversity<-cbind(coral1,years)
+coral_diversity
 
-#calculate simpson diversity, favors more common species (q=2)
-
-D1=diversity(y96,index="simpson"); D1
-
-#convert simpson to effective number
-DE1=1/(1-D1); DE1
-
-
-
-
-
-
-
-
-
-
-
+##
 
 
 
