@@ -1537,7 +1537,7 @@ crichness<-read.csv("C:/Users/luke.mceachron/Documents/Git/RVC/OtherGroups/CREMP
 head(sc_pcov_spp)
 names(crichness)
 
-  #Estimate Coral Diversity using Average Full Domain Percent Cover by 40 monitored species
+  #Estimate Coral shannon/simpson diversity using Average site level percent cover. Richness is estimated from the full domain of CREMP samples, rather than average site level richness.
 library(vegan)
 
 sc_pcov_spp       = read.csv("C:/Users/luke.mceachron/Documents/Git/RVC/OtherGroups/CREMP_Pcover_spp_tpose.csv")
@@ -1604,6 +1604,7 @@ dygraph(conch1, main = 'Queen Conch, Relative Abundance in Sampled Breeding Aggr
 
 coraldiv<-as.data.frame(coral_diversity)
 coraldiv1=coraldiv[-c(2,4)]
+
 dygraph(coraldiv1, main = 'Coral Diversity') %>% 
        dyAxis("x", label = "Year") %>%
      dyAxis("y", label = "Diversity") %>%
