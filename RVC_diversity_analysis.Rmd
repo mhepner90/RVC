@@ -1048,11 +1048,23 @@ psu_fk_abun_no_spp = psu_fk_abun %>%
 ```{r psu biomass}
 psu_fk_bio <- read_csv('big_csv/biomass_psu/psu_fk_biomass.csv', 
                        col_types = cols(
-                         protected_status = col_character()
-                       ))
-
+                          YEAR = col_integer(),
+                          REGION = col_character(),
+                          STRAT = col_character(),
+                          PROT = col_integer(),
+                          PRIMARY_SAMPLE_UNIT = col_character(),
+                          SPECIES_CD = col_character(),
+                          m = col_integer(),
+                          var = col_double(),
+                          biomass = col_double(),
+                          protected_status = col_character())) #3,429,476 x 10
 psu_fk_bio_no_spp = psu_fk_bio %>%
-  filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species
+  filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species and 3,219,344 x 10
+psu_fk_bio_no_spp_merged = psu_fk_bio_no_spp %>%
+  filter(stringr::str_detect(protected_status, 'all')) #1,609,672 x 10 (this is half the number of rows as the original as it should be)
+
+write_csv(psu_fk_bio_no_spp_merged, "big_csv/biomass_psu/psu_fk_biomass_no_spp_merged.csv")
+
 ```
 
 ```{r psu biodiversity}
@@ -1134,13 +1146,65 @@ For continuous response variable (diversity - richness, shannon, simpson, functi
 library(MASS)
 library(moments)
 library(DescTools)
-library(rpsychi)
+library(rpsychi) #statistical tests using summary data
 library(AICcmodavg) #AIC
 library(ade4) #mantel.rtest
 library(ggplot2) #geom_boxplot 
 library(nortest) #checks for normality 
 library(psych) #pairs.panels 
 library(tidyverse)
+
+```
+
+```{r stat testing with biomass data}
+
+#1. Read in data 
+psu_bio <- read_csv('big_csv/biomass_psu/psu_fk_biomass_no_spp_merged.csv', 
+                       col_types = cols(
+                          YEAR = col_integer(),
+                          REGION = col_character(),
+                          STRAT = col_character(),
+                          PROT = col_integer(),
+                          PRIMARY_SAMPLE_UNIT = col_character(),
+                          SPECIES_CD = col_character(),
+                          m = col_integer(),
+                          var = col_double(),
+                          biomass = col_double(),
+                          protected_status = col_character())) #1,609,672  x 10
+
+#this dataframe has a biomass for each species for each psu so sum biomass across species for each psu
+psu_bio_sum <- psu_bio %>%
+  group_by(YEAR, PRIMARY_SAMPLE_UNIT, STRAT) %>%
+  summarize(
+    biomass_sum = sum(biomass))
+##### IS IT OKAY TO SUM BIOMASS ACROSS SPECIES FOR EACH PSU AND THEN USE THESE SUMS AS VALUES IN TESTS THAT EXAMINE MEAN AND VARIANCE OF BIOMASS BY YEAR AND STRATUM?
+
+
+#2. Plot data by year and stratum
+#summarize data to get mean and standard error for each year/stratum combination  
+psu_bio_forPlot = psu_bio_sum %>% 
+  group_by(YEAR, STRAT) %>%
+  summarize(
+    biomass_mean = mean(biomass_sum),
+    biomass_n = length(biomass_sum),
+    biomass_sd = sd(biomass_sum),
+    biomass_se = biomass_sd / sqrt(biomass_n))
+
+#plot mean and se across strat and year using bar graphs
+ggplot(psu_bio_forPlot, aes(x=STRAT, y=biomass_mean)) + geom_bar(position=position_dodge(), stat="identity") + geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2, position=position_dodge(.9)) + theme_classic() + theme(axis.text.x = element_text(angle=90)) + facet_wrap(~YEAR, scales='free_y')
+ggsave(file="fk_MeanBiomass_ByStratumForEachYear.pdf", path="big_csv/plots")
+
+ggplot(psu_bio_forPlot, aes(x=YEAR, y=biomass_mean, group=YEAR)) + geom_bar(position=position_dodge(), stat="identity") + geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2, position=position_dodge(.9)) + theme_classic() + theme(axis.text.x = element_text(angle=90)) + facet_wrap(~STRAT, scales='free_y')
+ggsave(file="fk_MeanBiomass_ByYearForEachStratum.pdf", path="big_csv/plots")
+
+#tried using boxplots but they don't look good
+#ggplot(data = psu_bio_sum) + geom_boxplot(mapping = aes(x = STRAT, y = biomass_sum)) + facet_wrap(~YEAR, scales="free_y")
+#ggplot(data = psu_bio_sum) + geom_boxplot(mapping = aes(x = YEAR, y = biomass_sum, group = YEAR)) + facet_wrap(~STRAT, scales="free_y")
+
+
+#3. Check for normality using QQ plot 
+qqnorm(psu_bio_sum$biomass_sum) 
+qqline(psu_div$simpson, lty=2)  # note that lty is the line type (2=medium dashes; try different values betweem 1-6)
 
 ```
 
