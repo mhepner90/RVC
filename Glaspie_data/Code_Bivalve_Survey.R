@@ -3,9 +3,7 @@
 
 #R version 3.2.5 (2016-04-14)
 
-setwd("....")
-
-mya=read.csv("Bivalve_Survey.csv",header=T)
+mya=read.csv("Glaspie_data/Bivalve_Survey.csv",header=T)
 
 #Remove metadata
 

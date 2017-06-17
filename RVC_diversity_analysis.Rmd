@@ -1126,7 +1126,6 @@ psu_diversity_no_spp_merged = psu_diversity_no_spp_merged %>%
 write_csv(psu_diversity_no_spp_merged, "big_csv/diversity_without_spe/psu_diversity_no_spp_merged.csv") 
 
 
-
 ```
 
 ```{r psu biodiversity plots and maps}
@@ -1215,7 +1214,6 @@ Parametric test require the data to meet assumptions of having a normal distribu
 ```{r parametric test}
 
 #1. Read in data 
-#strata_diversity = read_csv("diversity_without_spe/strata_fk_abun_diversity_no_spp_merged.csv") 
 psu_diversity = read_csv("big_csv/diversity_without_spe/psu_diversity_no_spp_merged.csv")  
 # Parsed with column specification:
 # cols(
@@ -1229,6 +1227,7 @@ psu_diversity = read_csv("big_csv/diversity_without_spe/psu_diversity_no_spp_mer
 #   abun_merged = col_double()
 # )
 #wide format 
+
 psu_div = psu_diversity %>% 
   select(YEAR, PRIMARY_SAMPLE_UNIT, STRAT, richness, simpson, shannon) %>%
   group_by(YEAR, PRIMARY_SAMPLE_UNIT, STRAT) %>%
@@ -1237,40 +1236,38 @@ psu_div = psu_diversity %>%
     simpson = first(simpson),
     shannon = first(shannon))
   
-
-# strata_simp = strata_diversity %>%
-#   select(YEAR, STRAT, simpson) %>%
-#   group_by(YEAR, STRAT) %>% #103 groups 
-#   spread(STRAT, simpson) 
-  
 #2. Plot data - look at your distribution 
 ggplot(data = psu_div) +
   geom_boxplot(mapping = aes(x = STRAT, y = simpson)) 
 
-#ggplot(data = psu_diversity) + 
- # geom_density(aes(x = STRAT))
-
-ggplot(data = psu_diversity) + 
-  geom_density(aes(x = simpson))
-
-hist(psu_diversity$simpson, main ="")
+# ggplot(data = psu_div, aes(x = YEAR, color = simpson)) + 
+#   geom_density()
+# 
+# hist(psu_div$simpson, main ="")
 
 ggplot(data = psu_div, aes(x = YEAR)) +
   geom_point(aes(y = simpson, color = "simpson"),color = "blue") +
   geom_line(aes(y = simpson, color = "simpson"), color = "blue") +
-  facet_grid(STRAT ~ .,) 
+  facet_grid(STRAT ~ .) 
 
+summary(psu_div$richness)
+#   Min.    1st Qu.  Median    Mean    3rd Qu.    Max. 
+#   1.00    32.00    39.00     38.64   46.00      73.00
+summary(psu_div$shannon)
+#   Min.    1st Qu.  Median    Mean    3rd Qu.    Max.
+#   1.00    10.27    13.48     13.45   16.55      30.15
 summary(psu_div$simpson)
-#Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
- #1.000   5.804   8.103   8.247  10.465  22.017 
+#   Min.    1st Qu.  Median    Mean    3rd Qu.    Max. 
+#   1.000   5.804    8.103     8.247   10.465     22.017 
 
-#3. Check for normality using QQ plot 
+#3. Check for normality using quantile-quantile plot 
 qqnorm(psu_div$simpson) 
 qqline(psu_div$simpson, lty=2)  # note that lty is the line type (2=medium dashes; try different values betweem 1-6)
 
 #4. Test whether data is NOT normal using Shapiro-Wilk Normaility Test
 shapiro.test(psu_div$simpson)
-#W = 0.99184, p-value = 4.496e-16
+#W = 0.99184, p-value = 4.496e-16      
+#p-value is less then 0.5 so the data is NOT normally distributed. 
 
 #5. Check skewness 
 skew<-function(x){ 

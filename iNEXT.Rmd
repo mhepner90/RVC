@@ -91,45 +91,58 @@ ggiNEXT(species_by_sites_df, type=3, facet.var = "order", color.var = "site")
 ```{r iNEXT example}
 data(spider)
 out1 <- iNEXT(spider, q=0, datatype="abundance")
+
+data(bird)
+str(bird)
+out2 <- iNEXT(bird, q=0, datatype="abundance")
+ggiNEXT(out2)
+
 ```
 
-```{r psu}
-
-psu_fk_abun <- read_csv("C:/Users/mhepn/Dropbox/github/RVC/big_csv/abundance_psu/psu_fk_abun.csv",
-                           col_types = cols(protected_status = col_character()))
+```{r psu inext}
+psu_fk_abun <- read_csv("big_csv/abundance_psu/psu_fk_abun.csv",
+                        col_types = cols(
+                          YEAR = col_integer(),
+                          REGION = col_character(),
+                          STRAT = col_character(),
+                          PROT = col_integer(),
+                          PRIMARY_SAMPLE_UNIT = col_character(),
+                          SPECIES_CD = col_character(),
+                          m = col_integer(),
+                          var = col_double(),
+                          abundance = col_double(),
+                          protected_status = col_character()))
 
 psu_fk_abun_no_spp = psu_fk_abun %>%
   filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species 
 
-psu_abun_no_spp = psu_fk_abun_no_spp %>% #14,634 * 10
-  filter(protected_status == "all") %>% 
-  group_by(YEAR, PRIMARY_SAMPLE_UNIT, SPECIES_CD) %>% ##45 groups (fk 15*3)
-  summarise(abundance = sum(abundance)) 
+trait_matrix = read_csv('functional_diversity/species_trait_matrix_348_spp.csv')
 
-psu_fk_abun_no_spp = psu_abun_no_spp %>%
-  group_by(YEAR, PRIMARY_SAMPLE_UNIT) %>%
-  nest() %>%
-  mutate(
-    data_wide = map(data, function(x) 
-      full_join(x, trait_matrix %>% select(SPECIES_CD), by='SPECIES_CD') %>%
-        mutate(abundance = ifelse(is.na(abundance), 0, abundance)) %>%
-        spread(SPECIES_CD, abundance, fill =0)),
-    data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abundance, fill =0)),
-    data_wide_t = map(data_wide, function(x) t(x)))
+trait_matrix = trait_matrix %>%
+   as.tibble() %>%
+   mutate(
+     SPECIES_CD = toupper(as.character(SPECIES_CD))) %>%
+   arrange(SPECIES_CD)
 
-trial = psu_fk_abun_no_spp %>% 
-  select(YEAR, PRIMARY_SAMPLE_UNIT, data, data_wide_t) %>%
-  unnest(data, data_wide_t) 
+ fk_psu_abun_diversity_no_spp_merged = psu_fk_abun_no_spp %>% #3,107,408 x 10
+   select(YEAR, PRIMARY_SAMPLE_UNIT, STRAT, protected_status, SPECIES_CD, abundance) %>% #3,107,408*5
+   filter(protected_status == 'all') %>% #1,553,704*10
+   group_by(YEAR, STRAT, PRIMARY_SAMPLE_UNIT, SPECIES_CD) %>% #1,553,704 groups
+   summarise(
+     abun_merged = sum(abundance))
 
-trial2 = trial %>% 
-  select(YEAR, PRIMARY_SAMPLE_UNIT, SPECIES_CD, data_wide_t) %>%
-  spread(SPECIES_CD, PRIMARY_SAMPLE_UNIT)
+idk = psu_fk_abun_no_spp %>% #3,107,408 x 10
+  group_by(STRAT, SPECIES_CD) %>% #2,436 groups 
+  mutate(abundance = as.integer(abundance)) %>% 
+  summarise(abun = sum(abundance)) %>%
+  spread(SPECIES_CD, abun) %>% #7*349 
+  t() 
 
-  mutate(
-    sup = map(data_wide_t, function(x) iNEXT(x, q=0, datatype = "abundance"))) 
-  
-#colnames(psu_fk_abun_no_spp$data_wide) = psu_fk_abun_no_spp$data_wide[1,] #make the first row "year" as the header
-#psu_div = psu_fk_abun_no_spp$data_wide[-1,] #remove the first row "year"
+colnames(idk) = idk[1,] #make the first row "year" as the header
+idk = idk[-1,] #remove the first row "year"
+idk = as.data.frame(idk)
+
+species_by_strata = iNEXT(idk, q=c(0,1,2), datatype = "abundance")
 
 ```
 
