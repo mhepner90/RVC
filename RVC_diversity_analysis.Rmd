@@ -1125,7 +1125,6 @@ psu_diversity_no_spp_merged = psu_diversity_no_spp_merged %>%
 
 write_csv(psu_diversity_no_spp_merged, "big_csv/diversity_without_spe/psu_diversity_no_spp_merged.csv") 
 
-
 ```
 
 ```{r psu biodiversity plots and maps}
@@ -1237,9 +1236,12 @@ psu_div = psu_diversity %>%
     shannon = first(shannon))
   
 #2. Plot data - look at your distribution 
-ggplot(data = psu_div) +
-  geom_boxplot(mapping = aes(x = STRAT, y = simpson)) 
+ggplot(data = psu_div, aes(x = STRAT)) +
+  geom_point(aes(y = simpson, color = "simpson"), color = "blue") +
+  geom_line(aes(y = simpson, color = "simpson"), color = "blue")
 
+ggplot(data = psu_div) +
+ (mapping = aes(x = YEAR, y = simpson)) 
 # ggplot(data = psu_div, aes(x = YEAR, color = simpson)) + 
 #   geom_density()
 # 
@@ -1281,6 +1283,8 @@ skew(psu_div$simpson)/sqrt(6/length(psu_div$simpson))
 #8.723182
 # note that a rough measure of the standard error of the skewness is "sqrt{6/n}" where n is the sample size
 
+length(psu_div$simpson) #4839
+
 #7. check the probability of this t-value by chance alone when the skew is zero using the following:
 1-pt(8.723182, 4838) #pt=cummulative density function of t-dist, first number=calculated t-value; second=df
 #0.981466
@@ -1299,7 +1303,7 @@ b = boxcox(psu_div$simpson_t~psu_div$YEAR)
 lamda = b$x #lambda values  
 lik = b$y  #y is values of liklihood %>%
 bc = cbind(lamda,lik) 
-bc[order(-lik),] #use the lamda with the highest likelihood to transform your data #lambda of 1.3939 is best transformation
+bc[order(-lik),] #use the lamda with the highest likelihood to transform your data #lambda of 0.70707071 is best transformation
 psu_div$simpson_boxcox = psu_div$simpson^0.70707071 #simpson_boxcox is now transformed using the boxcox method 
 psu_div$simpson_boxcox = psu_div$simpson-1
 psu_div$simpson_boxcox = psu_div$simpson/0.70707071
