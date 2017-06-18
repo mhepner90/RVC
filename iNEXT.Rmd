@@ -76,11 +76,13 @@ idk = psu_fk_abun_no_spp %>% #3,107,408 x 10
   #filter(abun != 0) %>% #1,417*3
   spread(SPECIES_CD, abun) %>% #7*293
   t() 
-
+  
 colnames(idk) = idk[1,] #make the first row "STRAT" as the header
 idk = idk[-1,] #remove the first row "year"
+spec_by_strata = as.data.frame(idk)
 
-iNEXT(idk, q = 0, datatype = "abundance")
+
+iNEXT(spec_by_strata, q = 0, datatype = "abundance")
 # Error in FUN(newX[, i], ...) : invalid data structure
 # In addition: Warning messages:
 # 1: In EstiBootComm.Ind(Spec) :
