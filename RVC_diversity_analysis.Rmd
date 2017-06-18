@@ -1085,6 +1085,12 @@ psu_fk_abun <- read_csv("big_csv/abundance_psu/psu_fk_abun.csv",
 psu_fk_abun_no_spp = psu_fk_abun %>%
   filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species 
 
+# psu_fk_abun_no_spp = psu_fk_abun_no_spp %>%
+#   arrange(desc(abundance)) %>% #49500.0 of HYP HARR in 2001?!
+#   group_by(YEAR, PRIMARY_SAMPLE_UNIT) %>%
+#   summarise(abundance = sum(abundance)) %>%
+#   arrange(abundance)
+
 trait_matrix = read_csv('functional_diversity/species_trait_matrix_348_spp.csv')
 
 trait_matrix = trait_matrix %>%
@@ -1120,10 +1126,71 @@ psu_diversity_no_spp_merged = fk_psu_abun_diversity_no_spp_merged %>% #1,553,704
       function(x) exp(diversity(x %>% select(-STRAT), index = 'shannon')))) %>% 
   unnest(richness,simpson, shannon)
 
-psu_diversity_no_spp_merged = psu_diversity_no_spp_merged %>%
+psu_diversity_no_spp_merged_rel_abun = psu_diversity_no_spp_merged %>%
   unnest(data) 
 
 write_csv(psu_diversity_no_spp_merged, "big_csv/diversity_without_spe/psu_diversity_no_spp_merged.csv") 
+
+#----------------------------------------------------------------------------------------------------------------------
+#RELATIVE ABUNDANCE VALUES RETURN SAME DIVERSITY VALUES WITH REG ABUNDANCE. 
+#diversity with species relative abundance at PSU 
+fk_psu_abun_ntot = psu_fk_abun_no_spp %>% #3,107,408 x 10
+  filter(protected_status == 'all') %>% #1,553,704*10
+  group_by(YEAR, PRIMARY_SAMPLE_UNIT) %>% #4,839 groups 
+  mutate(
+    ntot = sum(abundance)) %>%
+  group_by(YEAR, PRIMARY_SAMPLE_UNIT, SPECIES_CD) %>%
+  mutate(
+    rel_abun = (abundance/ntot)) 
+  
+#summarise(ntot = sum(abundance))
+
+psu_diversity_rel_abun = fk_psu_abun_ntot %>% #1,553,704 x 5
+  select(YEAR, PRIMARY_SAMPLE_UNIT, STRAT, SPECIES_CD, rel_abun) %>% 
+  group_by(YEAR, PRIMARY_SAMPLE_UNIT) %>% #4,839 groups
+  nest(-YEAR) %>%
+  mutate(
+    data_wide = map(data, function(x) 
+      full_join(x, trait_matrix %>% select(SPECIES_CD), by='SPECIES_CD') %>%
+        mutate(rel_abun = ifelse(is.na(rel_abun), 0, rel_abun)) %>%
+        spread(SPECIES_CD, rel_abun, fill =0)),
+    data_wide = map(data, ~ spread(data=.x, SPECIES_CD, rel_abun, fill =0)), 
+    richness = map( #species richness
+      data_wide, 
+      function(x) specnumber(x %>% select(-STRAT))),
+    simpson = map( #simpson diversity as effective number of species 
+      data_wide,
+      function(x) 1/(1 - diversity(x %>% select(-STRAT), index = 'simpson'))),
+    shannon = map( #shannon diversity as effective number of species 
+      data_wide, 
+      function(x) exp(diversity(x %>% select(-STRAT), index = 'shannon')))) 
+
+psu_diversity_rel_abun_unnest = psu_diversity_rel_abun %>%
+  unnest(richness,simpson,shannon) %>%
+  unnest(data)
+
+psu_div_rel = psu_diversity_rel_abun_unnest %>% 
+  select(YEAR, PRIMARY_SAMPLE_UNIT, STRAT, richness, simpson, shannon) %>%
+  group_by(YEAR, PRIMARY_SAMPLE_UNIT, STRAT) %>%
+  summarize(
+    richness = first(richness),
+    simpson = first(simpson),
+    shannon = first(shannon))
+
+# A tibble: 4,839 x 6
+#     YEAR PRIMARY_SAMPLE_UNIT STRAT richness   simpson  shannon
+#    <int>               <chr> <chr>    <int>     <dbl>    <dbl>
+#  1  1999                001U  FMLR       49 10.784669 19.02063
+#  2  1999                002U  FMLR       42  4.322159 10.35351
+#  3  1999                003U  FMLR       46  6.607255 14.41026
+#  4  1999                004U  FSLR       67  9.911565 16.41751
+#  5  1999                005U  HRRF       63  8.981397 15.61857
+#  6  1999                006U  FMLR       65 12.358859 19.01685
+#  7  1999                007U  HRRF       54  9.387404 17.15362
+#  8  1999                008U  FMLR       47  8.938282 16.81934
+#  9  1999                009U  FMLR       47  8.426184 15.56927
+# 10  1999                010U  FMLR       44  9.264376 16.35954
+# ... with 4,829 more rows
 
 ```
 
