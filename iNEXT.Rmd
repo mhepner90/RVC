@@ -69,7 +69,7 @@ trait_matrix = trait_matrix %>%
    summarise(
      abun_merged = sum(abundance))
 
-idk = psu_fk_abun_no_spp %>% #3,107,408 x 10
+trial = psu_fk_abun_no_spp %>% #3,107,408 x 10
   group_by(STRAT, SPECIES_CD) %>% #2,436*3 groups 
   mutate(abundance = as.integer(abundance)) %>% 
   summarise(abun = sum(abundance)) %>% 
@@ -77,9 +77,9 @@ idk = psu_fk_abun_no_spp %>% #3,107,408 x 10
   spread(SPECIES_CD, abun) %>% #7*293
   t() 
   
-colnames(idk) = idk[1,] #make the first row "STRAT" as the header
-idk = idk[-1,] #remove the first row "year"
-spec_by_strata = as.data.frame(idk)
+colnames(trial) = trial[1,] #make the first row "STRAT" as the header
+trial = trial[-1,] #remove the first row "year"
+spec_by_strata = as.data.frame(trial)
 
 
 iNEXT(spec_by_strata, q = 0, datatype = "abundance")
