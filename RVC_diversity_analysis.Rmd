@@ -471,6 +471,7 @@ library(htmlwidgets)
 library(FD)
 #install.packages("iNEXT")
 library(iNEXT)
+RVCdata_FK = read_rds('big_csv/RVCdata_FK.rds')
 
 map = purrr::map # override maps::map
 select = dplyr::select #override MASS::select 
