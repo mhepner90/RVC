@@ -914,7 +914,15 @@ write_csv(strata_diversity_no_spp_merged, 'diversity_without_spe/strata_fk_abun_
 
 ```{r strata biodiversity plots, eval = F}
 
-strata_fk_abun_diversity = read_csv("big_csv/abundance_strata/strata_fk_abun_diversity.csv")
+strata_diversity_no_spp_merged = read_csv("diversity_without_spe/strata_fk_abun_diversity_no_spp_merged.csv")
+# Parsed with column specification:
+# cols(
+#   YEAR = col_integer(),
+#   STRAT = col_character(),
+#   richness = col_integer(),
+#   simpson = col_double(),
+#   shannon = col_double()
+# )
 
 # strata_names <- c(
 #  "FMLR" = "Forereef Midchannel Linear Reef",
@@ -998,13 +1006,13 @@ protected_status_names <- c(
   "all" = "All"
 )
 
+#strata_diversity_no_spp_merged - not by level of protection  
+
 #simpson diversity by protected status by strata in FKNMS
-fk_strata_ab_simpson <- ggplot(data = strata_fk_abun_diversity, aes(x = YEAR)) +
+ggplot(data = strata_diversity_no_spp_merged, aes(x = YEAR)) +
   geom_point(aes(y = simpson, color = "simpson"),color = "blue") +
   geom_line(aes(y = simpson, color = "simpson"), color = "blue") +
-  facet_grid(STRAT ~ protected_status, 
-             labeller = labeller(.rows = strata_names, .cols = protected_status_names)) +
-  #labeller(strata_names = label_wrap_gen(3))) + 
+  facet_grid(STRAT ~.) +
   labs(x = "Year", y = "Effective Number of Species") +
   ggtitle("Simpson Diveristy of Reef Fish in the Florida Keys") + 
   theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 12)) +
