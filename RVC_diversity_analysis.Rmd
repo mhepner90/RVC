@@ -1232,6 +1232,11 @@ library(tidyverse)
 
 ```{r stat testing with biomass data}
 
+library(ggplot2)
+library(magrittr) #need to call library separate from one in tidyverse in order to get functionality of github version not found in CRAN version
+library(moments) #contains skewness function
+library(MASS) #contains boxcox function
+
 #1. Read in data 
 psu_bio <- read_csv('big_csv/biomass_psu/psu_fk_biomass_no_spp_merged.csv', 
                        col_types = cols(
@@ -1246,7 +1251,7 @@ psu_bio <- read_csv('big_csv/biomass_psu/psu_fk_biomass_no_spp_merged.csv',
                           biomass = col_double(),
                           protected_status = col_character())) #1,609,672  x 10
 
-#this dataframe has a biomass for each species for each psu so sum biomass across species for each psu
+#this dataframe has a biomass for each species for each psu so sum biomass across species for each psu...skip this step for diversity indices
 psu_bio_sum <- psu_bio %>%
   group_by(YEAR, PRIMARY_SAMPLE_UNIT, STRAT) %>%
   summarize(
@@ -1263,7 +1268,6 @@ psu_bio_forPlot = psu_bio_sum %>%
     biomass_n = length(biomass_sum),
     biomass_sd = sd(biomass_sum),
     biomass_se = biomass_sd / sqrt(biomass_n))
-
 #plot mean and se across strat and year using bar graphs
 ggplot(psu_bio_forPlot, aes(x=STRAT, y=biomass_mean)) + geom_bar(position=position_dodge(), stat="identity") + geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2, position=position_dodge(.9)) + theme_classic() + theme(axis.text.x = element_text(angle=90)) + facet_wrap(~YEAR, scales='free_y')
 ggsave(file="fk_MeanBiomass_ByStratumForEachYear.pdf", path="big_csv/plots")
@@ -1276,9 +1280,70 @@ ggsave(file="fk_MeanBiomass_ByYearForEachStratum.pdf", path="big_csv/plots")
 #ggplot(data = psu_bio_sum) + geom_boxplot(mapping = aes(x = YEAR, y = biomass_sum, group = YEAR)) + facet_wrap(~STRAT, scales="free_y")
 
 
-#3. Check for normality using QQ plot 
-qqnorm(psu_bio_sum$biomass_sum) 
-qqline(psu_div$simpson, lty=2)  # note that lty is the line type (2=medium dashes; try different values betweem 1-6)
+#3. Check for normality - look at distribution of data and QQ plot
+ggplot() + geom_density(aes(x=psu_bio_sum$biomass_sum))
+qqnorm(psu_bio_sum$biomass_sum)
+qqline(psu_bio_sum$biomass_sum, lty=2)  #note that lty = line type and values = 1-6
+#data points should fall along the line; S-shaped or banana-shaped data signal a non-normal distribution
+
+
+#4. Test for normality using Shapiro-Wilk normaility test
+psu_bio_sum %>% filter(YEAR!=2016) %$% shapiro.test(biomass_sum)
+#if p-value is less then 0.05, the data are NOT normally distributed. 
+
+
+#5. Test for skew using t-test (skew calculation from class notes gives same result as skewness function from the "moments" library so I combined code from both places to make this section as short as possible)
+skewness(psu_bio_sum$biomass_sum) #greater than zero is evidence for having skew
+t<- skewness(psu_bio_sum$biomass_sum) %>% divide_by(sqrt(6/length(psu_bio_sum$biomass_sum))) #calulate the t-value for a t-test
+1-pt(t,length(psu_bio_sum$biomass_sum)) #probability of the t-value by chance alone when skew is zero; pt=cummulative density function of t-dist, first number=calculated t-value; second=df
+#if p-value is less than 0.05, data are skewed
+
+
+#6. Test for equal variance using Bartlett's test
+bartlett.test(psu_bio_sum$biomass_sum~psu_bio_sum$YEAR)
+bartlett.test(psu_bio_sum$biomass_sum~psu_bio_sum$STRAT)
+
+
+#7. Transform data using Boxcox method 
+psu_bio_sum %>%
+  boxcox(biomass_sum~YEAR, data = .) %$%
+  x[which.max(y)] #x is lambda and y is values of likelihood
+#output is the lambda value that you should use to transform data
+psu_bio_sum %>%
+  boxcox(biomass_sum~STRAT, data = .) %$%
+  x[which.max(y)] #x is lambda and y is values of likelihood
+
+psu_bio_sum <- psu_bio_sum %>% mutate(biomass_sum_bc = (biomass_sum %>%
+  raise_to_power(.1) %>% subtract(1) %>% divide_by(.1))) 
+
+#10. Test transformed data for normality, skew, and equal variance
+ggplot() + geom_density(aes(x=psu_bio_sum$biomass_sum_bc))
+qqnorm(psu_bio_sum$biomass_sum_bc)
+qqline(psu_bio_sum$biomass_sum_bc, lty=2)
+
+psu_bio_sum %>% filter(YEAR!=2016) %$% shapiro.test(biomass_sum_bc)
+
+skewness(psu_bio_sum$biomass_sum_bc)
+t<- skewness(psu_bio_sum$biomass_sum_bc) %>% divide_by(sqrt(6/length(psu_bio_sum$biomass_sum_bc))) 
+1-pt(t,length(psu_bio_sum$biomass_sum_bc))
+
+bartlett.test(psu_bio_sum$biomass_sum_bc~psu_bio_sum$YEAR)
+bartlett.test(psu_bio_sum$biomass_sum_bc~psu_bio_sum$STRAT)
+
+##### If data conform to assumptions proceed with parametric test (e.g., ANOVA, t-test), if data do not conform to assumptions proceed with non-parametric test (e.g., Kruksal-Wallis, Mann-Whitney U (aka Wilcoxon Rank Sum))
+
+#11. 2-way ANOVA
+biomass_aov <- aov(biomass_sum_bc~YEAR*STRAT, data=psu_bio_sum) #since there might be an interaction between YEAR and STRAT (i.e., biomass may not change through time consistently across strata or vice versa) use "*" in your model to include an interaction term
+psu_bio_sum$fYEAR <- as.factor(psu_bio_sum$YEAR)
+psu_bio_sum$fSTRAT <- as.factor(psu_bio_sum$STRAT)
+biomass_aov <- aov(biomass_sum_bc~fYEAR*fSTRAT, data=psu_bio_sum)
+summary(biomass_aov)
+
+pairwise.t.test(psu_bio_sum$biomass_sum_bc, psu_bio_sum$YEAR)
+pairwise.t.test(psu_bio_sum$biomass_sum_bc, psu_bio_sum$STRAT)
+
+TukeyHSD(biomass_aov, which = "STRAT") #if interaction term is non-significant, can test main effects with pairwise comparisons
+
 
 ```
 
