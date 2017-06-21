@@ -1322,7 +1322,7 @@ t<- skewness(psu_bio_sum$biomass_sum_bc) %>% divide_by(sqrt(6/length(psu_bio_sum
 bartlett.test(psu_bio_sum$biomass_sum_bc~psu_bio_sum$YEAR)
 bartlett.test(psu_bio_sum$biomass_sum_bc~psu_bio_sum$STRAT)
 
-##### If data conform to assumptions proceed with parametric test (e.g., ANOVA, t-test), if data do not conform to assumptions proceed with non-parametric test (e.g., Kruksal-Wallis, Mann-Whitney U (aka Wilcoxon Rank Sum))
+##### If data conform to assumptions proceed with parametric test (e.g., ANOVA, t-test); if data do not conform to assumptions proceed with non-parametric test (e.g., Kruksal-Wallis, Mann-Whitney U (aka Wilcoxon Rank Sum))
 
 #11. 2-way ANOVA
 biomass_aov <- aov(biomass_sum_bc~YEAR*STRAT, data=psu_bio_sum) #since there might be an interaction between YEAR and STRAT (i.e., biomass may not change through time consistently across strata or vice versa) use "*" in your model to include an interaction term
@@ -1331,10 +1331,12 @@ psu_bio_sum$fSTRAT <- as.factor(psu_bio_sum$STRAT)
 biomass_aov <- aov(biomass_sum_bc~fYEAR*fSTRAT, data=psu_bio_sum)
 summary(biomass_aov)
 
+##### If interaction term is non-significant, test main effects with pairwise comparisons; if the interaction term is significant, must test 
+#12. Post-hoc pairwise comparisons
 pairwise.t.test(psu_bio_sum$biomass_sum_bc, psu_bio_sum$YEAR)
 pairwise.t.test(psu_bio_sum$biomass_sum_bc, psu_bio_sum$STRAT)
 
-TukeyHSD(biomass_aov, which = "STRAT") #if interaction term is non-significant, can test main effects with pairwise comparisons
+TukeyHSD(biomass_aov, which = "STRAT") #
 
 
 ```
