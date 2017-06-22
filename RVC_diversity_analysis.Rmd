@@ -1232,6 +1232,7 @@ library(tidyverse)
 
 ```{r stat testing with biomass data}
 
+library(tidyverse)
 library(ggplot2)
 library(magrittr) #need to call library separate from one in tidyverse in order to get functionality of github version not found in CRAN version
 library(moments) #contains skewness function
@@ -1259,7 +1260,7 @@ psu_bio_sum <- psu_bio %>%
 ##### IS IT OKAY TO SUM BIOMASS ACROSS SPECIES FOR EACH PSU AND THEN USE THESE SUMS AS VALUES IN TESTS THAT EXAMINE MEAN AND VARIANCE OF BIOMASS BY YEAR AND STRATUM?
 
 
-#2. Plot data by year and stratum
+#2. Plot data by year and stratum separately and together
 #summarize data to get mean and standard error for each year/stratum combination  
 psu_bio_forPlot = psu_bio_sum %>% 
   group_by(YEAR, STRAT) %>%
@@ -1269,15 +1270,21 @@ psu_bio_forPlot = psu_bio_sum %>%
     biomass_sd = sd(biomass_sum),
     biomass_se = biomass_sd / sqrt(biomass_n))
 #plot mean and se across strat and year using bar graphs
+#by STRAT
 ggplot(psu_bio_forPlot, aes(x=STRAT, y=biomass_mean)) + geom_bar(position=position_dodge(), stat="identity") + geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2, position=position_dodge(.9)) + theme_classic() + theme(axis.text.x = element_text(angle=90)) + facet_wrap(~YEAR, scales='free_y')
 ggsave(file="fk_MeanBiomass_ByStratumForEachYear.pdf", path="big_csv/plots")
-
+#by YEAR
 ggplot(psu_bio_forPlot, aes(x=YEAR, y=biomass_mean, group=YEAR)) + geom_bar(position=position_dodge(), stat="identity") + geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2, position=position_dodge(.9)) + theme_classic() + theme(axis.text.x = element_text(angle=90)) + facet_wrap(~STRAT, scales='free_y')
 ggsave(file="fk_MeanBiomass_ByYearForEachStratum.pdf", path="big_csv/plots")
+#by STRAT and YEAR
+ggplot(psu_bio_forPlot, aes(x=YEAR, y=biomass_mean, colour=STRAT, group=STRAT)) + geom_point() + geom_line() + geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2)
 
 #tried using boxplots but they don't look good
 #ggplot(data = psu_bio_sum) + geom_boxplot(mapping = aes(x = STRAT, y = biomass_sum)) + facet_wrap(~YEAR, scales="free_y")
 #ggplot(data = psu_bio_sum) + geom_boxplot(mapping = aes(x = YEAR, y = biomass_sum, group = YEAR)) + facet_wrap(~STRAT, scales="free_y")
+
+
+#3. Run ANOVA to get residuals so we can use them to test assumptions of normality and equal variances
 
 
 #3. Check for normality - look at distribution of data and QQ plot
@@ -1316,12 +1323,13 @@ psu_bio_sum %>%
 psu_bio_sum <- psu_bio_sum %>% mutate(biomass_sum_bc = (biomass_sum %>%
   raise_to_power(.1) %>% subtract(1) %>% divide_by(.1))) 
 
-#10. Test transformed data for normality, skew, and equal variance
+
+#8. Test transformed data for normality, skew, and equal variance
 ggplot() + geom_density(aes(x=psu_bio_sum$biomass_sum_bc))
 qqnorm(psu_bio_sum$biomass_sum_bc)
 qqline(psu_bio_sum$biomass_sum_bc, lty=2)
 
-psu_bio_sum %>% filter(YEAR!=2016) %$% shapiro.test(biomass_sum_bc)
+psu_bio_sum %>% filter(YEAR!=2016) %$% shapiro.test(biomass_sum_bc) #shapiro.test can't handle >5000 values
 
 skewness(psu_bio_sum$biomass_sum_bc)
 t<- skewness(psu_bio_sum$biomass_sum_bc) %>% divide_by(sqrt(6/length(psu_bio_sum$biomass_sum_bc))) 
@@ -1330,22 +1338,26 @@ t<- skewness(psu_bio_sum$biomass_sum_bc) %>% divide_by(sqrt(6/length(psu_bio_sum
 bartlett.test(psu_bio_sum$biomass_sum_bc~psu_bio_sum$YEAR)
 bartlett.test(psu_bio_sum$biomass_sum_bc~psu_bio_sum$STRAT)
 
+
 ##### If data conform to assumptions proceed with parametric test (e.g., ANOVA, t-test); if data do not conform to assumptions proceed with non-parametric test (e.g., Kruksal-Wallis, Mann-Whitney U (aka Wilcoxon Rank Sum))
 
-#11. 2-way ANOVA
+
+#9. 2-way ANOVA
 biomass_aov <- aov(biomass_sum_bc~YEAR*STRAT, data=psu_bio_sum) #since there might be an interaction between YEAR and STRAT (i.e., biomass may not change through time consistently across strata or vice versa) use "*" in your model to include an interaction term
 psu_bio_sum$fYEAR <- as.factor(psu_bio_sum$YEAR)
 psu_bio_sum$fSTRAT <- as.factor(psu_bio_sum$STRAT)
 biomass_aov <- aov(biomass_sum_bc~fYEAR*fSTRAT, data=psu_bio_sum)
-summary(biomass_aov)
+summary(biomass_aov) #displays Type I ANOVA table
+plot(biomass_aov) #first two plots show residuals versus fitted values and qqplot of the residuals - USE THESE for checking assumptions
+drop1(biomass_aov,~.,test="F") #displays Type III ANOVA table (default of most stats packages...use this one)
+psu_bio_sum$resids <- residuals(biomass_aov)
+psu_bio_sum$pred_val <- predict(biomass_aov)
 
-##### If interaction term is non-significant, test main effects with pairwise comparisons; if the interaction term is significant, must test 
-#12. Post-hoc pairwise comparisons
-pairwise.t.test(psu_bio_sum$biomass_sum_bc, psu_bio_sum$YEAR)
-pairwise.t.test(psu_bio_sum$biomass_sum_bc, psu_bio_sum$STRAT)
+psu_bio_sum %>% filter(YEAR!=2016) %$% shapiro.test(resids) #shapiro.test can't handle >5000 values
 
-TukeyHSD(biomass_aov, which = "STRAT") #
 
+#10. Post-hoc pairwise comparisons
+TukeyHSD(biomass_aov)
 
 ```
 
