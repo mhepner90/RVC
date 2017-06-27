@@ -236,12 +236,13 @@ cl_dissimilarity(func.dist,traits.dist,method="spectral") #Cross-dissimilarities
 
 #Scale by the max value so that all values are between 0-1
 func.dist=func.dist/max(func.dist)
+func.dist_common=func.dist/max(func.dist)
 
 #Plot the best tree - average 
-pdf("functional_dendrogram.pdf", width = 22, height = 70)
+pdf("functional_dendrogram.pdf", width = 30, height = 70)
 par(mfrow=c(1,1))         #nc-by-nr array 
 par(mar=c(2,1,0,2))       #number of lines of margins for bottom, left, top, right 
-par(pin=c(20,58))         #plot dimensions 
+par(pin=c(25,58))         #plot dimensions 
 plot(func.dist, horiz=TRUE, main = "Functional Dendrogram", cex = 1, cex.main = 2, cex.lab = 0.5)
 dev.off()
 
@@ -1258,6 +1259,7 @@ psu_bio_sum <- psu_bio %>%
   group_by(YEAR, PRIMARY_SAMPLE_UNIT, STRAT) %>%
   summarize(
     biomass_sum = sum(biomass))
+
 ##### IS IT OKAY TO SUM BIOMASS ACROSS SPECIES FOR EACH PSU AND THEN USE THESE SUMS AS VALUES IN TESTS THAT EXAMINE MEAN AND VARIANCE OF BIOMASS BY YEAR AND STRATUM?
 
 
@@ -1730,7 +1732,8 @@ Environmental variables:
 Conitinuous covariates: modeled using non-parametric smoothing 
 - thin plate regression splines with shrinkage terms (Ciannelli et al., 2008) 
 
-Categorical factos: models parametrically to determine their mean effect sizes (Zurr et al., 2009)
+Categorical factors: models parametrically to determine their mean effect sizes (Zurr et al., 2009)
+
 ```{r strata environmental characteristics}
 
 # read in strata data for each year and psu 
