@@ -1365,7 +1365,7 @@ Parametric test require the data to meet assumptions of having a normal distribu
 
 - Are diversity values and strata related? 
 
-```{r parametric test}
+```{r parametric test with psu}
 
 #1. Read in data 
 psu_diversity = read_csv("big_csv/diversity_without_spe/psu_diversity_no_spp_merged.csv")  
@@ -1662,22 +1662,6 @@ summary(ANOVA)
 
 # for post-hoc pairwise tests
 #TukeyHSD(ANOVA) # where fit comes from aov()
-```
-
-Are there correlations among continuous data (richness, shannon, simpson, functional)?
-
-```{r Correlations}
-
-#Test significance of Spearman rank correlations
-  correlation1 = cor.test(strata_diversity$simpson, strata_diversity$shannon, method = "spearman") 
-  correlation2 = cor.test(strata_diversity$simpson, strata_diversity$functional, method = "spearman") 
-  correlation3 = cor.test(strata_diversity$shannon, strata_diversity$functional, method = "spearman")  
-  
-#Examine correlations between matrices using Mantel's test
-  mantel.rtest(strata_diversity$simpson, strata_diversity$shannon) #R^2
-  mantel.rtest(simpson, functional) #R^2
-  mantel.rtest(shannon, functional) #R^2
-
 ```
 
 ## Sample Data Variables
