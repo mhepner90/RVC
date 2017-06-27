@@ -1728,6 +1728,63 @@ write_csv(bind_psu_variables, "big_csv/bind_psu_variables.csv")
 ##why is this joining funny 
 ```
 
+## GAM 
+Temporal variables:
+- Year (categorical factor)
+
+Spatial variables:
+- latitude and longitude (continuous covariate)
+
+Environmental variables: 
+- Rugosity (categorical factor)
+- bottom depth (continuous covariate)
+- vertical relief (continuous covariate)
+- % coral cover (continuous covariate)
+- % hard bottom (continuous covariate)
+
+Conitinuous covariates: modeled using non-parametric smoothing 
+- thin plate regression splines with shrinkage terms (Ciannelli et al., 2008) 
+
+Categorical factos: models parametrically to determine their mean effect sizes (Zurr et al., 2009)
+```{r strata environmental characteristics}
+
+# read in strata data for each year and psu 
+#year, psu, latitude, longitude, rugosity, bottom_depth, vertical_relief, percent_coral_cover, percent_hardbottom
+
+# bind to psu diversity dataframe 
+```
+
+Build GAM model with temporal, spatial and environmental variables 
+```{r GAM}
+
+#Build full model and null model based on (transformed) response variable
+  #s() smooth term in gam model 
+  #bs() a two letter character string indicating the smoothing basis to use (ts plate regression splines)
+
+gam = data %>% 
+  select() %>% 
+  mutate(
+    rich.model = gam(formula(richness,"~year+rugosity+s(Long,Lat,by=year,bs='ts')+s(depth,bs='ts')+s(vert_relief,bs='ts')+s(per_coral_cover,bs='ts')+s(per_hardbottom,bs='ts')"), family=poisson),
+    rich.nullmodel = gam(formula(richness,"~1"), family=poisson),
+    shan.model = gam(formula(shannon,"~year+rugosity+s(Long,Lat,by=year,bs='ts')+s(depth,bs='ts')+s(vert_relief,bs='ts')+s(per_coral_cover,bs='ts')+s(per_hardbottom,bs='ts')"), family=poisson),
+    nullmodel = gam(formula("log(",shannon,")~1"))) 
+
+#Set up empty vectors for deviances
+time.dev=c(); space.dev=c(); env.dev=c()
+
+#Sequence 1: time->space->environment
+
+#Sequence 2: time->environment->space
+
+#Sequence 3: space->time->environment
+
+#Sequence 4: space->environment->time
+
+#Sequence 5: environment->time->space
+
+#Sequence 6: environment->space->time
+
+```
 
 ```{r shapefiles}
 library(foreign)
@@ -1745,53 +1802,4 @@ library(rgdal)
 library(ggmap)
 library(tmap)
 library(marmap) #marine maps 
-```
-
-## Evironmental Variables from SERC 
-SURV = col_integer(),
-BASIN = col_character(),
-SEGMENT = col_character(),
-ZONE = col_character(),
-DATE = col_character(),
-TIME = col_time(format = ""),
-STATION = col_integer(),
-SITE = col_character(),
-CHLA-B` = col_character()
-LATDEC
-LONDEC
-DEPTH
-NOX-S, NOX-B
-NO3_S, NO3_B 
-NO2-S, NO2-B
-NH4-S, NH4-B 
-TN-S, TN-B
-DIN-S, DIN-B 
-TON-S, TON-B
-TP-S, TP-B
-SRP-S, SRP-B
-APA-S, APA-B
-CHLA-S, CHLA-B
-TOC-S, TOC-B
-SiO2-S, SiO2-B
-TURB-S, TURB-B
-SAL-S,SAL-B
-TEMP-S, TEMP-B
-DO-S, DO-B
-Kd pH 
-TN:TP  
-N:P
-DIN:TP
-Si:DIN
-SAT-S, SAT_B
-Io
-DSIGT
-TS, TS_B 
-SIGT-S, SIGT-B
-SAT-S, SAT_B
-
-```{r SERC environmental variables}
-
-serc_data = read_csv("big_csv/SERC_Water_Quality_FKNMS.csv")
-
-
 ```
