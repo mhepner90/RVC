@@ -97,6 +97,35 @@ $Shannon = - \sum_{i=1}^S p_i \log_b p_i$
 
 $Rao Q = \sum_{i=1}^S-1 \sum_{j=i+1}^S d_i p_i p_j$
 
+```{r setup, include= F}
+knitr::opts_chunk$set(echo = T)
+#rm(list = ls())
+
+#install.packages('devtools')
+#devtools::install_github('jeremiaheb/rvc')
+library(rvc) #calls RVC data from SEFSC server 
+#install.packages("tidyverse")
+library(tidyverse)
+#install.packages("vegan")
+library(vegan) # biodiveristy functions for richness, simpson, and shannon 
+#install.packages("dygraphs")
+library(dygraphs)
+#install.packages("plotly")
+library(plotly)
+#install.packages("webshot")
+library(webshot)
+#install.packages("htmlwidgets")
+library(htmlwidgets)
+#install.packages("FD")
+library(FD)
+#install.packages("iNEXT")
+library(iNEXT)
+RVCdata_FK = read_rds('big_csv/RVCdata_FK.rds')
+
+map = purrr::map # override maps::map
+select = dplyr::select #override MASS::select 
+```
+
 ## Functional distance trait based matrix (from Lefcheck et al.,)
 
 Gowdis computes the Gower (1971) similarity coefficient exactly as described by Podani (1999), then converts it to a dissimilarity coefficient by using D = 1 - S
@@ -207,13 +236,15 @@ cl_dissimilarity(func.dist,traits.dist,method="spectral") #Cross-dissimilarities
 
 #Scale by the max value so that all values are between 0-1
 func.dist=func.dist/max(func.dist)
+func.dist_common=func.dist/max(func.dist)
 
 #Plot the best tree - average 
-par(mfrow=c(1,1))
-par(mar=c(2,1,0,2))
-#par(pin=c(10,15))
-plot(func.dist,horiz=TRUE)
-#Save plot: 10" x 15"
+pdf("functional_dendrogram.pdf", width = 30, height = 70)
+par(mfrow=c(1,1))         #nc-by-nr array 
+par(mar=c(2,1,0,2))       #number of lines of margins for bottom, left, top, right 
+par(pin=c(25,58))         #plot dimensions 
+plot(func.dist, horiz=TRUE, main = "Functional Dendrogram", cex = 1, cex.main = 2, cex.lab = 0.5)
+dev.off()
 
 #Phylogenetic tree with 348 tips and 347 internal nodes. 
 func.dist.phy = as.phylo(as.hclust(func.dist))
@@ -447,35 +478,6 @@ d3tree2(
 - NM: Number of possible secondary sampling units
 - length_class: The length class or bin. Only present if length_bins is not NULL. The notation, [lower, upper), is inclusive of the lower bound, but exclusive of the upper bound
 - protected_status: The protected status. Only present if merge_protected is FALSE
-
-```{r setup, include= F}
-knitr::opts_chunk$set(echo = T)
-#rm(list = ls())
-
-#install.packages('devtools')
-#devtools::install_github('jeremiaheb/rvc')
-library(rvc) #calls RVC data from SEFSC server 
-#install.packages("tidyverse")
-library(tidyverse)
-#install.packages("vegan")
-library(vegan) # biodiveristy functions for richness, simpson, and shannon 
-#install.packages("dygraphs")
-library(dygraphs)
-#install.packages("plotly")
-library(plotly)
-#install.packages("webshot")
-library(webshot)
-#install.packages("htmlwidgets")
-library(htmlwidgets)
-#install.packages("FD")
-library(FD)
-#install.packages("iNEXT")
-library(iNEXT)
-RVCdata_FK = read_rds('big_csv/RVCdata_FK.rds')
-
-map = purrr::map # override maps::map
-select = dplyr::select #override MASS::select 
-```
 
 ### Florida Keys domain
 
@@ -1257,12 +1259,18 @@ psu_bio <- read_csv('big_csv/biomass_psu/psu_fk_biomass_no_spp_merged.csv',
 psu_bio_sum <- psu_bio %>%
   group_by(YEAR, PRIMARY_SAMPLE_UNIT, STRAT) %>%
   summarize(
+<<<<<<< HEAD
     biomass_sum = sum(biomass)) # 5241 x 4 (5241 = total # of PSUs sampled from 1999 to 2016)
   ### IS IT OKAY TO SUM BIOMASS ACROSS SPECIES FOR EACH PSU AND THEN USE THESE SUMS AS VALUES IN TESTS THAT EXAMINE MEAN AND VARIANCE OF BIOMASS BY YEAR AND STRATUM?
 
 # (optional) the psu_bio_sum_YEAR_subset dataframe also has years with low sample sizes (few PSUs)/missing strata removed (i.e., 1999, 2000, and 2004)
 psu_bio_sum_YRsubset <- psu_bio_sum %>%
   filter(YEAR!=1999,YEAR!=2000,YEAR!=2004)
+=======
+    biomass_sum = sum(biomass))
+
+##### IS IT OKAY TO SUM BIOMASS ACROSS SPECIES FOR EACH PSU AND THEN USE THESE SUMS AS VALUES IN TESTS THAT EXAMINE MEAN AND VARIANCE OF BIOMASS BY YEAR AND STRATUM?
+>>>>>>> 5640cecc9038f74985e52d1476768dd95d516023
 
 # (optional) tried removing two points with very high biomass values (at least an order of magnitude higher than all other values)....data still violated assumptions even after transformation
 #psu_bio_sum_YRsubset <- psu_bio_sum %>%
@@ -1436,7 +1444,7 @@ Parametric test require the data to meet assumptions of having a normal distribu
 
 - Are diversity values and strata related? 
 
-```{r parametric test}
+```{r parametric test with psu}
 
 #1. Read in data 
 psu_diversity = read_csv("big_csv/diversity_without_spe/psu_diversity_no_spp_merged.csv")  
@@ -1620,10 +1628,10 @@ ggplot(data = psu_div, aes(x = STRAT)) +
 ggplot(data = psu_div) +
  (mapping = aes(x = YEAR, y = simpson)) 
 
-#ggplot(data = psu_div, aes(x = YEAR, color = simpson)) + 
+ggplot(data = psu_div, aes(x = YEAR, color = simpson)) + 
    geom_density()
 ## 
-# hist(psu_div$simpson, main ="")
+hist(psu_div$simpson, main ="")
 
 ggplot(data = psu_div, aes(x = YEAR)) +
   geom_point(aes(y = simpson, color = "simpson"),color = "blue") +
@@ -1735,22 +1743,6 @@ summary(ANOVA)
 #TukeyHSD(ANOVA) # where fit comes from aov()
 ```
 
-Are there correlations among continuous data (richness, shannon, simpson, functional)?
-
-```{r Correlations}
-
-#Test significance of Spearman rank correlations
-  correlation1 = cor.test(strata_diversity$simpson, strata_diversity$shannon, method = "spearman") 
-  correlation2 = cor.test(strata_diversity$simpson, strata_diversity$functional, method = "spearman") 
-  correlation3 = cor.test(strata_diversity$shannon, strata_diversity$functional, method = "spearman")  
-  
-#Examine correlations between matrices using Mantel's test
-  mantel.rtest(strata_diversity$simpson, strata_diversity$shannon) #R^2
-  mantel.rtest(simpson, functional) #R^2
-  mantel.rtest(shannon, functional) #R^2
-
-```
-
 ## Sample Data Variables
 - PRIMARY_SAMPLE_UNIT: A code indicating the primary sample unit in which a sample was collected.
 - YEAR: A number indicating the calendar year.
@@ -1799,6 +1791,64 @@ write_csv(bind_psu_variables, "big_csv/bind_psu_variables.csv")
 ##why is this joining funny 
 ```
 
+## GAM 
+Temporal variables:
+- Year (categorical factor)
+
+Spatial variables:
+- latitude and longitude (continuous covariate)
+
+Environmental variables: 
+- Rugosity (categorical factor)
+- bottom depth (continuous covariate)
+- vertical relief (continuous covariate)
+- % coral cover (continuous covariate)
+- % hard bottom (continuous covariate)
+
+Conitinuous covariates: modeled using non-parametric smoothing 
+- thin plate regression splines with shrinkage terms (Ciannelli et al., 2008) 
+
+Categorical factors: models parametrically to determine their mean effect sizes (Zurr et al., 2009)
+
+```{r strata environmental characteristics}
+
+# read in strata data for each year and psu 
+#year, psu, latitude, longitude, rugosity, bottom_depth, vertical_relief, percent_coral_cover, percent_hardbottom
+
+# bind to psu diversity dataframe 
+```
+
+Build GAM model with temporal, spatial and environmental variables 
+```{r GAM}
+
+#Build full model and null model based on (transformed) response variable
+  #s() smooth term in gam model 
+  #bs() a two letter character string indicating the smoothing basis to use (ts plate regression splines)
+
+gam = data %>% 
+  select() %>% 
+  mutate(
+    rich.model = gam(formula(richness,"~year+rugosity+s(Long,Lat,by=year,bs='ts')+s(depth,bs='ts')+s(vert_relief,bs='ts')+s(per_coral_cover,bs='ts')+s(per_hardbottom,bs='ts')"), family=poisson),
+    rich.nullmodel = gam(formula(richness,"~1"), family=poisson),
+    shan.model = gam(formula(shannon,"~year+rugosity+s(Long,Lat,by=year,bs='ts')+s(depth,bs='ts')+s(vert_relief,bs='ts')+s(per_coral_cover,bs='ts')+s(per_hardbottom,bs='ts')"), family=poisson),
+    nullmodel = gam(formula("log(",shannon,")~1"))) 
+
+#Set up empty vectors for deviances
+time.dev=c(); space.dev=c(); env.dev=c()
+
+#Sequence 1: time->space->environment
+
+#Sequence 2: time->environment->space
+
+#Sequence 3: space->time->environment
+
+#Sequence 4: space->environment->time
+
+#Sequence 5: environment->time->space
+
+#Sequence 6: environment->space->time
+
+```
 
 ```{r shapefiles}
 library(foreign)
@@ -1816,53 +1866,4 @@ library(rgdal)
 library(ggmap)
 library(tmap)
 library(marmap) #marine maps 
-```
-
-## Evironmental Variables from SERC 
-SURV = col_integer(),
-BASIN = col_character(),
-SEGMENT = col_character(),
-ZONE = col_character(),
-DATE = col_character(),
-TIME = col_time(format = ""),
-STATION = col_integer(),
-SITE = col_character(),
-CHLA-B` = col_character()
-LATDEC
-LONDEC
-DEPTH
-NOX-S, NOX-B
-NO3_S, NO3_B 
-NO2-S, NO2-B
-NH4-S, NH4-B 
-TN-S, TN-B
-DIN-S, DIN-B 
-TON-S, TON-B
-TP-S, TP-B
-SRP-S, SRP-B
-APA-S, APA-B
-CHLA-S, CHLA-B
-TOC-S, TOC-B
-SiO2-S, SiO2-B
-TURB-S, TURB-B
-SAL-S,SAL-B
-TEMP-S, TEMP-B
-DO-S, DO-B
-Kd pH 
-TN:TP  
-N:P
-DIN:TP
-Si:DIN
-SAT-S, SAT_B
-Io
-DSIGT
-TS, TS_B 
-SIGT-S, SIGT-B
-SAT-S, SAT_B
-
-```{r SERC environmental variables}
-
-serc_data = read_csv("big_csv/SERC_Water_Quality_FKNMS.csv")
-
-
 ```
