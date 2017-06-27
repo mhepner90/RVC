@@ -1549,10 +1549,10 @@ ggplot(data = psu_div, aes(x = STRAT)) +
 ggplot(data = psu_div) +
  (mapping = aes(x = YEAR, y = simpson)) 
 
-#ggplot(data = psu_div, aes(x = YEAR, color = simpson)) + 
+ggplot(data = psu_div, aes(x = YEAR, color = simpson)) + 
    geom_density()
 ## 
-# hist(psu_div$simpson, main ="")
+hist(psu_div$simpson, main ="")
 
 ggplot(data = psu_div, aes(x = YEAR)) +
   geom_point(aes(y = simpson, color = "simpson"),color = "blue") +
