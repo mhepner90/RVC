@@ -97,6 +97,35 @@ $Shannon = - \sum_{i=1}^S p_i \log_b p_i$
 
 $Rao Q = \sum_{i=1}^S-1 \sum_{j=i+1}^S d_i p_i p_j$
 
+```{r setup, include= F}
+knitr::opts_chunk$set(echo = T)
+#rm(list = ls())
+
+#install.packages('devtools')
+#devtools::install_github('jeremiaheb/rvc')
+library(rvc) #calls RVC data from SEFSC server 
+#install.packages("tidyverse")
+library(tidyverse)
+#install.packages("vegan")
+library(vegan) # biodiveristy functions for richness, simpson, and shannon 
+#install.packages("dygraphs")
+library(dygraphs)
+#install.packages("plotly")
+library(plotly)
+#install.packages("webshot")
+library(webshot)
+#install.packages("htmlwidgets")
+library(htmlwidgets)
+#install.packages("FD")
+library(FD)
+#install.packages("iNEXT")
+library(iNEXT)
+RVCdata_FK = read_rds('big_csv/RVCdata_FK.rds')
+
+map = purrr::map # override maps::map
+select = dplyr::select #override MASS::select 
+```
+
 ## Functional distance trait based matrix (from Lefcheck et al.,)
 
 Gowdis computes the Gower (1971) similarity coefficient exactly as described by Podani (1999), then converts it to a dissimilarity coefficient by using D = 1 - S
@@ -209,11 +238,12 @@ cl_dissimilarity(func.dist,traits.dist,method="spectral") #Cross-dissimilarities
 func.dist=func.dist/max(func.dist)
 
 #Plot the best tree - average 
-par(mfrow=c(1,1))
-par(mar=c(2,1,0,2))
-#par(pin=c(10,15))
-plot(func.dist,horiz=TRUE)
-#Save plot: 10" x 15"
+pdf("functional_dendrogram.pdf", width = 22, height = 70)
+par(mfrow=c(1,1))         #nc-by-nr array 
+par(mar=c(2,1,0,2))       #number of lines of margins for bottom, left, top, right 
+par(pin=c(20,58))         #plot dimensions 
+plot(func.dist, horiz=TRUE, main = "Functional Dendrogram", cex = 1, cex.main = 2, cex.lab = 0.5)
+dev.off()
 
 #Phylogenetic tree with 348 tips and 347 internal nodes. 
 func.dist.phy = as.phylo(as.hclust(func.dist))
@@ -447,35 +477,6 @@ d3tree2(
 - NM: Number of possible secondary sampling units
 - length_class: The length class or bin. Only present if length_bins is not NULL. The notation, [lower, upper), is inclusive of the lower bound, but exclusive of the upper bound
 - protected_status: The protected status. Only present if merge_protected is FALSE
-
-```{r setup, include= F}
-knitr::opts_chunk$set(echo = T)
-#rm(list = ls())
-
-#install.packages('devtools')
-#devtools::install_github('jeremiaheb/rvc')
-library(rvc) #calls RVC data from SEFSC server 
-#install.packages("tidyverse")
-library(tidyverse)
-#install.packages("vegan")
-library(vegan) # biodiveristy functions for richness, simpson, and shannon 
-#install.packages("dygraphs")
-library(dygraphs)
-#install.packages("plotly")
-library(plotly)
-#install.packages("webshot")
-library(webshot)
-#install.packages("htmlwidgets")
-library(htmlwidgets)
-#install.packages("FD")
-library(FD)
-#install.packages("iNEXT")
-library(iNEXT)
-RVCdata_FK = read_rds('big_csv/RVCdata_FK.rds')
-
-map = purrr::map # override maps::map
-select = dplyr::select #override MASS::select 
-```
 
 ### Florida Keys domain
 
