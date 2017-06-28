@@ -86,7 +86,7 @@ write_csv(abunfk2010, 'abunfk2010.csv') #2010
 
 fk2011<- getRvcData(2011, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 abunfk2011 <- getDomainAbundance(fk2011, spp_list, merge_protected = F) 
-write_csv(abunfk2011, 'abunfk2011.csv') #2010
+write_csv(abunfk2011, 'abunfk2011.csv') #2011
 
 fk2012<- getRvcData(2012, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') abunfk2012 <- getDomainAbundance(fk2012, spp_list, merge_protected = F)
 write_csv(abunfk2012, 'abunfk2012.csv') #2012
