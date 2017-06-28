@@ -111,7 +111,7 @@ library(vegan) # biodiveristy functions for richness, simpson, and shannon
 #install.packages("dygraphs")
 library(dygraphs)
 #install.packages("plotly")
-library(plotly)
+#library(plotly)
 #install.packages("webshot")
 library(webshot)
 #install.packages("htmlwidgets")
@@ -125,6 +125,7 @@ RVCdata_FK = read_rds('big_csv/RVCdata_FK.rds')
 map = purrr::map # override maps::map
 select = dplyr::select #override MASS::select 
 group_by =  dplyr::group_by #override plotly::group_by
+summarise = dplyr::summarise #override plotly::summarise
 ```
 
 ## Functional distance trait based matrix (from Lefcheck et al.,)
