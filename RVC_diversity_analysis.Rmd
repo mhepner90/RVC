@@ -1058,7 +1058,7 @@ psu_fk_abun_no_spp = psu_fk_abun %>%
 psu_fk_abun_no_spp_merged = psu_fk_abun_no_spp %>%
   filter(stringr::str_detect(protected_status, 'all')) #1,553,704 x 10 (this is half the number of rows as the original as it should be)
 
-write_csv(psu_fk_abun_no_spp_merged, "big_csv/biomass_psu/psu_fk_abundance_no_spp_merged.csv")
+write_csv(psu_fk_abun_no_spp_merged, "big_csv/abundance_psu/psu_fk_abundance_no_spp_merged.csv")
 
 ```
 
@@ -1266,7 +1266,7 @@ psu_bio_sum <- psu_bio %>%
   group_by(YEAR, PRIMARY_SAMPLE_UNIT, STRAT) %>%
   summarize(biomass_sum = sum(biomass)) # 5241 x 4 (5241 = total # of PSUs sampled from 1999 to 2016)
   
-# (optional) the psu_bio_sum_YEAR_subset dataframe produced with the code below has years with low sample sizes (few PSUs)/missing strata removed (i.e., 1999, 2000, and 2004)
+# (optional) the psu_bio_sum_YRsubset dataframe produced with the code below has years with low sample sizes (few PSUs)/missing strata removed (i.e., 1999, 2000, and 2004)
 psu_bio_sum_YRsubset <- psu_bio_sum %>%
   filter(YEAR!=1999,YEAR!=2000,YEAR!=2004) # 4725 x 4
 
@@ -1368,7 +1368,9 @@ psu_bio_sum_YRsubset %>%
 psu_bio_sum_YRsubset <- psu_bio_sum_YRsubset %>% mutate(biomass_sum_bc = (biomass_sum %>%
   raise_to_power(.1) %>% subtract(1) %>% divide_by(.1))) # use x/lambda in raise_to_power() and divide_by()
 
-# 4a. Try sqrt transform
+# 4a. Try sqrt transformation
+psu_bio_sum_YRsubset$biomass_sum_sqrt = sqrt(psu_bio_sum_YRsubset$biomass_sum)
+  ### this transformation did even worse than the boxcox
 
 
 # 5. Retest assumptions using transformed data
@@ -1427,9 +1429,8 @@ library(magrittr) # need to call library separate from one in tidyverse in order
 library(moments) # contains skewness function
 library(MASS) # contains boxcox function
 
-
 # 1. Read in data and remove years (optional)
-psu_abun <- read_csv('big_csv/abundance_psu/psu_fk_abun_no_spp_merged.csv', 
+psu_abun <- read_csv('big_csv/abundance_psu/psu_fk_abundance_no_spp_merged.csv', 
                        col_types = cols(
                           YEAR = col_integer(),
                           REGION = col_character(),
@@ -1440,16 +1441,16 @@ psu_abun <- read_csv('big_csv/abundance_psu/psu_fk_abun_no_spp_merged.csv',
                           m = col_integer(),
                           var = col_double(),
                           abundance = col_double(),
-                          protected_status = col_character())) # 1,609,672  x 10
+                          protected_status = col_character())) # 1,553,704  x 10
 
 # the psu_abun dataframe has an abundance for each species for each psu so sum abundance across species for each psu...skip this step for diversity indices
 psu_abun_sum <- psu_abun %>%
   group_by(YEAR, PRIMARY_SAMPLE_UNIT, STRAT) %>%
-  summarize(abundance_sum = sum(abundance)) # 5241 x 4 (5241 = total # of PSUs sampled from 1999 to 2016)
+  summarize(abundance_sum = sum(abundance)) # 4839 x 4 (5241 = total # of PSUs sampled from 1999 to 2016)
   
-# (optional) the psu_bio_sum_YEAR_subset dataframe produced with the code below has years with low sample sizes (few PSUs)/missing strata removed (i.e., 1999, 2000, and 2004)
+# (optional) the psu_bio_sum_YRsubset dataframe produced with the code below has years with low sample sizes (few PSUs)/missing strata removed (i.e., 1999, 2000, and 2004)
 psu_abun_sum_YRsubset <- psu_abun_sum %>%
-  filter(YEAR!=1999,YEAR!=2000,YEAR!=2004) # 4725 x 4
+  filter(YEAR!=1999,YEAR!=2000,YEAR!=2004) # 4323 x 4
 
 
 # 2. Plot data by year and stratum separately and together
@@ -1496,9 +1497,9 @@ ggsave(file="fk_MeanAbundance_ByYearForEachStratum_YRsubset.pdf", path="big_csv/
 ggplot(psu_abun_forPlot_YRsubset, aes(x=YEAR, y=abundance_mean, colour=STRAT, group=STRAT)) + geom_point() + geom_line() + geom_errorbar(aes(ymin=abundance_mean-abundance_se, ymax=abundance_mean+abundance_se), width=.2)
 ggsave(file="fk_MeanAbundance_ByYearANDStratum_YRsubset.pdf", path="big_csv/plots")
 
-### tried these for abundance (didn't look good for biomass)
-ggplot(data = psu_abun_sum) + geom_boxplot(mapping = aes(x = STRAT, y = abundance_sum)) + facet_wrap(~YEAR, scales="free_y")
-ggplot(data = psu_abun_sum) + geom_boxplot(mapping = aes(x = YEAR, y = abundance_sum, group = YEAR)) + facet_wrap(~STRAT, scales="free_y")
+### tried these for abundance but didn't look good (too many very low values mixed with a small number of very high values)
+#ggplot(data = psu_abun_sum) + geom_boxplot(mapping = aes(x = STRAT, y = abundance_sum)) + facet_wrap(~YEAR, scales="free_y")
+#ggplot(data = psu_abun_sum) + geom_boxplot(mapping = aes(x = YEAR, y = abundance_sum, group = YEAR)) + facet_wrap(~STRAT, scales="free_y")
 
 
 # 3. Run ANOVA to get residuals so we can use them to test assumptions of normality and equal variances
@@ -1545,7 +1546,224 @@ psu_abun_sum_YRsubset <- psu_abun_sum_YRsubset %>% mutate(abundance_sum_bc = (ab
   raise_to_power(.1) %>% subtract(1) %>% divide_by(.1))) # use x/lambda in raise_to_power() and divide_by()
 
 # 4a. Try sqrt transform
+psu_abun_sum_YRsubset$abundance_sum_sqrt = sqrt(psu_abun_sum_YRsubset$abundance_sum)
+  ### this transformation did even worse than the boxcox
 
+# 5. Retest assumptions using transformed data
+abundance_aov <- aov(abundance_sum_bc~fYEAR*fSTRAT, data=psu_abun_sum_YRsubset) # since there might be an interaction between YEAR and STRAT (i.e., biomass may not change through time consistently across strata or vice versa) use "*" in your model to include an interaction term
+psu_abun_sum_YRsubset$resids_bc <- residuals(abundance_aov) # get residuals
+psu_abun_sum_YRsubset$pred_va_bcl <- predict(abundance_aov) # get predicted values
+
+# 5a. Examine plots of residuals to qualitatively check for normality and equal variances
+ggplot() + geom_density(aes(x=psu_abun_sum_YRsubset$resids_bc)) # look at distribution of residuals
+  ### 
+plot(abundance_aov) 
+  # plot 1: Residuals vs Fitted values - data points should be distibuted evenly above and below the line and across the plot...if they are not, this indicates a violation of assumptions
+  # plot 2: Q-Q plot - data points should fall more or less along dashed line...if they do not, this indicates a violation of assumptions
+  ### 
+
+# 5b. Shapiro-Wilk test - p-value < 0.05 means the data are NOT normally distributed
+psu_abun_sum_YRsubset %$% shapiro.test(resids_bc) 
+  ### 
+
+# 5c. Test for skew - greater than zero is evidence for having skew; test with t-test - p-value < 0.05 means data are skewed
+skewness(psu_abun_sum_YRsubset$resids_bc)
+t<- skewness(psu_abun_sum_YRsubset$resids_bc) %>% divide_by(sqrt(6/length(psu_abun_sum_YRsubset$resids_bc))) # t-value
+1-pt(t,length(psu_abun_sum_YRsubset$resids_bc)) # probability of the t-value by chance alone when skew is zero; pt=cummulative density function of t-dist, first number=calculated t-value; second=df
+  ### 
+
+# 5d. Bartlett test - p-value < 0.05 means data do not have equal variances across groups
+bartlett.test(psu_abun_sum_YRsubset$resids_bc~psu_abun_sum_YRsubset$fYEAR) 
+bartlett.test(psu_abun_sum_YRsubset$resids_bc~psu_abun_sum_YRsubset$fSTRAT) 
+  ### 
+
+
+### If data conform to assumptions proceed with parametric test (e.g., ANOVA, t-test); if data do not conform to assumptions proceed with non-parametric test (e.g., Kruksal-Wallis, Mann-Whitney U (aka Wilcoxon Rank Sum))
+
+
+# 6. 2-way ANOVA
+psu_abun_sum_YRsubset$fYEAR <- as.factor(psu_abun_sum_YRsubset$YEAR)
+psu_abun_sum_YRsubset$fSTRAT <- as.factor(psu_abun_sum_YRsubset$STRAT)
+abundance_aov <- aov(abundance_sum_bc~fYEAR*fSTRAT, data=psu_abun_sum_YRsubset) #since there might be an interaction between YEAR and STRAT (i.e., biomass may not change through time consistently across strata or vice versa) use "*" in your model to include an interaction term
+summary(abundance_aov) #displays Type I ANOVA table
+drop1(abundance_aov,~.,test="F") #displays Type III ANOVA table (default of most stats packages...use this one)
+
+# 6a. If 2-way ANOVA is significant, do a posteriori post-hoc pairwise comparisons
+Tuk_fYEAR <- TukeyHSD(abundance_aov, "fYEAR", ordered=T)
+Tuk_fSTRAT <- TukeyHSD(abundance_aov, "fSTRAT", ordered=T)
+Tuk_fYEARfSTRAT <- TukeyHSD(abundance_aov, "fYEAR:fSTRAT", ordered=T)
+Tuk <- as.data.frame(rbind(Tuk_fYEAR$fYEAR,Tuk_fSTRAT$fSTRAT,Tuk_fYEARfSTRAT$`fYEAR:fSTRAT`))
+write.csv(Tuk, "big_csv/plots/abundance_2wayANOVA_TukeyHSDvalues.csv") 
+
+```
+
+```{r stat testing with diversity data}
+
+library(tidyverse)
+library(ggplot2)
+library(magrittr) # need to call library separate from one in tidyverse in order to get functionality of github version not found in CRAN version
+library(moments) # contains skewness function
+library(MASS) # contains boxcox function
+
+# 1. Read in data and remove years (optional)
+psu_diversity = read_csv("big_csv/diversity_without_spe/psu_diversity_no_spp_merged.csv",
+                      col_types = cols(
+                          YEAR = col_integer(),
+                          PRIMARY_SAMPLE_UNIT = col_character(),
+                          richness = col_integer(),
+                          simpson = col_double(),
+                          shannon = col_double(),
+                          STRAT = col_character(),
+                          SPECIES_CD = col_character(),
+                          abun_merged = col_double())) # 1,553,704 x 8
+
+# the psu_diversity dataframe has a value for each diversity metric that is repeated for each YEAR/PSU for each species record....need to remove duplicate rows and can also select columns of interest for the analysis of diversity metrics
+psu_div = psu_diversity %>% 
+  select(YEAR, PRIMARY_SAMPLE_UNIT, STRAT, richness, simpson, shannon) %>%
+  group_by(YEAR, PRIMARY_SAMPLE_UNIT, STRAT) %>%
+  summarize(
+    richness = first(richness),
+    simpson = first(simpson),
+    shannon = first(shannon)) # 4839 x 4
+  
+# (optional) the psu_div_YRsubset dataframe produced with the code below has years with low sample sizes (few PSUs)/missing strata removed (i.e., 1999, 2000, and 2004)
+psu_div_YRsubset <- psu_div %>%
+  filter(YEAR!=1999,YEAR!=2000,YEAR!=2004) # 4323 x 4
+
+
+# 2. Plot data by year and stratum separately and together
+# summarize data to get mean and standard error for each year/stratum combination  
+psu_div_forPlot = psu_div %>% 
+  group_by(YEAR, STRAT) %>%
+  summarize(
+    richness_mean = mean(richness),
+    richness_n = length(richness),
+    richness_sd = sd(richness),
+    richness_se = richness_sd / sqrt(richness_n),
+    richness_min = min(richness),
+    richness_max = max(richness),
+    simpson_mean = mean(simpson),
+    simpson_n = length(simpson),
+    simpson_sd = sd(simpson),
+    simpson_se = simpson_sd / sqrt(simpson_n),
+    simpson_min = min(simpson),
+    simpson_max = max(simpson),
+    shannon_mean = mean(shannon),
+    shannon_n = length(shannon),
+    shannon_sd = sd(shannon),
+    shannon_se = shannon_sd / sqrt(shannon_n),
+    shannon_min = min(shannon),
+    shannon_max = max(shannon))
+# boxplots look better for diversity metrics than barplots (the opposite is true for biomass and abundance)...skip barplots
+# by STRAT
+#richness
+#ggplot(psu_div_forPlot, aes(x=STRAT, y=richness_mean)) + geom_bar(position=position_dodge(), stat="identity") + geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2, position=position_dodge(.9)) + theme_classic() + theme(axis.text.x = element_text(angle=90)) + facet_wrap(~YEAR, scales='free_y')
+#ggsave(file="fk_MeanRichness_ByStratumForEachYear.pdf", path="big_csv/plots")
+# by YEAR
+#ggplot(psu_div_forPlot, aes(x=YEAR, y=richness_mean, group=YEAR)) + geom_bar(position=position_dodge(), stat="identity") + geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2, position=position_dodge(.9)) + theme_classic() + theme(axis.text.x = element_text(angle=90)) + facet_wrap(~STRAT, scales='free_y')
+#ggsave(file="fk_MeanRichness_ByYearForEachStratum.pdf", path="big_csv/plots")
+# by STRAT and YEAR
+ggplot(psu_div_forPlot, aes(x=YEAR, y=richness_mean, colour=STRAT, group=STRAT)) + geom_point() + geom_line() + geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2)
+ggsave(file="fk_MeanRichness_ByYearANDStratum.pdf", path="big_csv/plots")
+
+# do this for dataframe with subset of years as well
+# summarize data to get mean and standard error for each year/stratum combination  
+psu_div_forPlot_YRsubset = psu_div_YRsubset %>% 
+  group_by(YEAR, STRAT) %>%
+  summarize(
+    richness_mean = mean(richness),
+    richness_n = length(richness),
+    richness_sd = sd(richness),
+    richness_se = richness_sd / sqrt(richness_n),
+    richness_min = min(richness),
+    richness_max = max(richness),
+    simpson_mean = mean(simpson),
+    simpson_n = length(simpson),
+    simpson_sd = sd(simpson),
+    simpson_se = simpson_sd / sqrt(simpson_n),
+    simpson_min = min(simpson),
+    simpson_max = max(simpson),
+    shannon_mean = mean(shannon),
+    shannon_n = length(shannon),
+    shannon_sd = sd(shannon),
+    shannon_se = shannon_sd / sqrt(shannon_n),
+    shannon_min = min(shannon),
+    shannon_max = max(shannon))
+# boxplots look better for diversity metrics than barplots (the opposite is true for biomass and abundance)...skip barplots
+# by STRAT
+#ggplot(psu_div_forPlot_YRsubset, aes(x=STRAT, y=richness_mean)) + geom_bar(position=position_dodge(), stat="identity") + geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2, position=position_dodge(.9)) + theme_classic() + theme(axis.text.x = element_text(angle=90)) + facet_wrap(~YEAR, scales='free_y')
+#ggsave(file="fk_MeanRichness_ByStratumForEachYear_YRsubset.pdf", path="big_csv/plots")
+# by YEAR
+#ggplot(psu_div_forPlot_YRsubset, aes(x=YEAR, y=richness_mean, group=YEAR)) + geom_bar(position=position_dodge(), stat="identity") + geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2, position=position_dodge(.9)) + theme_classic() + theme(axis.text.x = element_text(angle=90)) + facet_wrap(~STRAT, scales='free_y')
+#ggsave(file="fk_MeanRichness_ByYearForEachStratum_YRsubset.pdf", path="big_csv/plots")
+# by STRAT and YEAR
+ggplot(psu_div_forPlot_YRsubset, aes(x=YEAR, y=richness_mean, colour=STRAT, group=STRAT)) + geom_point() + geom_line() + geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2)
+ggsave(file="fk_MeanRichness_ByYearANDStratum_YRsubset.pdf", path="big_csv/plots")
+
+# although boxplots don't work well for biomass and abundance, they look great for diversity metrics
+ggplot(data = psu_div) + geom_boxplot(mapping = aes(x = STRAT, y = richness)) + facet_wrap(~YEAR, scales="free_y")
+ggsave(file="fk_boxplot_Richness_ByStratumForEachYear.pdf", path="big_csv/plots")
+
+ggplot(data = psu_div) + geom_boxplot(mapping = aes(x = YEAR, y = richness, group = YEAR)) + facet_wrap(~STRAT, scales="free_y")
+ggsave(file="fk_boxplot_Richness_ByYearForEachStratum.pdf", path="big_csv/plots")
+
+ggplot(data = psu_div) + geom_boxplot(mapping = aes(x = STRAT, y = simpson)) + facet_wrap(~YEAR, scales="free_y")
+ggsave(file="fk_boxplot_Simpson_ByStratumForEachYear.pdf", path="big_csv/plots")
+ggplot(data = psu_div) + geom_boxplot(mapping = aes(x = YEAR, y = simpson, group = YEAR)) + facet_wrap(~STRAT, scales="free_y")
+ggsave(file="fk_boxplot_Simpson_ByYearForEachStratum.pdf", path="big_csv/plots")
+
+ggplot(data = psu_div) + geom_boxplot(mapping = aes(x = STRAT, y = shannon)) + facet_wrap(~YEAR, scales="free_y")
+ggsave(file="fk_boxplot_Shannon_ByStratumForEachYear.pdf", path="big_csv/plots")
+ggplot(data = psu_div) + geom_boxplot(mapping = aes(x = YEAR, y = shannon, group = YEAR)) + facet_wrap(~STRAT, scales="free_y")
+ggsave(file="fk_boxplot_Shannon_ByYearForEachStratum.pdf", path="big_csv/plots")
+
+
+# 3. Run ANOVA to get residuals so we can use them to test assumptions of normality and equal variances
+psu_abun_sum_YRsubset$fYEAR <- as.factor(psu_abun_sum_YRsubset$YEAR) # categorical variables are factors
+psu_abun_sum_YRsubset$fSTRAT <- as.factor(psu_abun_sum_YRsubset$STRAT) # categorical variables are factors
+abundance_aov <- aov(abundance_sum~fYEAR*fSTRAT, data=psu_abun_sum_YRsubset) # since there might be an interaction between YEAR and STRAT (i.e., biomass may not change through time consistently across strata or vice versa) use "*" in your model to include an interaction term
+psu_abun_sum_YRsubset$resids <- residuals(abundance_aov) # get residuals
+psu_abun_sum_YRsubset$pred_val <- predict(abundance_aov) # get predicted values
+
+# 3a. Examine plots of residuals to qualitatively check for normality and equal variances
+ggplot() + geom_density(aes(x=psu_abun_sum_YRsubset$resids)) # look at distribution of residuals
+  ### 
+plot(abundance_aov) 
+  # plot 1: Residuals vs Fitted values - data points should be distibuted evenly above and below the line and across the plot...if they are not, this indicates a violation of assumptions
+  # plot 2: Q-Q plot - data points\ should fall more or less along dashed line...if they do not, this indicates a violation of assumptions
+  ### 
+
+# 3b. Shapiro-Wilk test - p-value < 0.05 means the data are NOT normally distributed
+psu_abun_sum_YRsubset %$% shapiro.test(resids) 
+  ### 
+
+# 3c. Test for skew - greater than zero is evidence for having skew; test with t-test - p-value < 0.05 means data are skewed
+skewness(psu_abun_sum_YRsubset$resids)
+t<- skewness(psu_abun_sum_YRsubset$resids) %>% divide_by(sqrt(6/length(psu_abun_sum_YRsubset$resids))) # t-value
+1-pt(t,length(psu_abun_sum_YRsubset$resids)) # probability of the t-value by chance alone when skew is zero; pt=cummulative density function of t-dist, first number=calculated t-value; second=df
+  ### 
+
+# 3d. Bartlett test - p-value < 0.05 means data do not have equal variances across groups
+bartlett.test(psu_abun_sum_YRsubset$resids~psu_abun_sum_YRsubset$fYEAR) 
+bartlett.test(psu_abun_sum_YRsubset$resids~psu_abun_sum_YRsubset$fSTRAT) 
+  ### 
+
+
+#4. Transform data using Boxcox method 
+psu_abun_sum_YRsubset %>%
+  boxcox(abundance_sum~fYEAR, data = .) %$%
+  x[which.max(y)] #x is lambda and y is values of likelihood
+#output is the lambda value that you should use to transform data
+psu_abun_sum_YRsubset %>%
+  boxcox(abundance_sum~fSTRAT, data = .) %$%
+  x[which.max(y)] #x is lambda and y is values of likelihood
+
+psu_abun_sum_YRsubset <- psu_abun_sum_YRsubset %>% mutate(abundance_sum_bc = (abundance_sum %>%
+  raise_to_power(.1) %>% subtract(1) %>% divide_by(.1))) # use x/lambda in raise_to_power() and divide_by()
+
+# 4a. Try sqrt transform
+psu_abun_sum_YRsubset$abundance_sum_sqrt = sqrt(psu_abun_sum_YRsubset$abundance_sum)
+  ### this transformation did even worse than the boxcox
 
 # 5. Retest assumptions using transformed data
 abundance_aov <- aov(abundance_sum_bc~fYEAR*fSTRAT, data=psu_abun_sum_YRsubset) # since there might be an interaction between YEAR and STRAT (i.e., biomass may not change through time consistently across strata or vice versa) use "*" in your model to include an interaction term
