@@ -124,6 +124,7 @@ RVCdata_FK = read_rds('big_csv/RVCdata_FK.rds')
 
 map = purrr::map # override maps::map
 select = dplyr::select #override MASS::select 
+group_by =  dplyr::group_by #override plotly::group_by
 ```
 
 ## Functional distance trait based matrix (from Lefcheck et al.,)
@@ -1050,19 +1051,20 @@ psu_fk_abun <- read_csv("big_csv/abundance_psu/psu_fk_abun.csv",
                           m = col_integer(),
                           var = col_double(),
                           abundance = col_double(),
-                          protected_status = col_character())) #3,349,846 x 10
-###shouldn't this dataframe have same number of rows as one for biomass? Ask Megan about this today
+                          protected_status = col_character())) #3,643,306 x 10
 
 psu_fk_abun_no_spp = psu_fk_abun %>%
-  filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species and 3,107,408 x 10
-psu_fk_abun_no_spp_merged = psu_fk_abun_no_spp %>%
-  filter(stringr::str_detect(protected_status, 'all')) #1,553,704 x 10 (this is half the number of rows as the original as it should be)
+  filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species and 3,379,964 x 10
 
-write_csv(psu_fk_abun_no_spp_merged, "big_csv/biomass_psu/psu_fk_abundance_no_spp_merged.csv")
+psu_fk_abun_no_spp_merged = psu_fk_abun_no_spp %>%
+  filter(stringr::str_detect(protected_status, 'all')) # 1,689,982 x 10 (this is half the number of rows as the original as it should be)
+
+write_csv(psu_fk_abun_no_spp_merged, "big_csv/abundance_psu/psu_fk_abundance_no_spp_merged.csv")
 
 ```
 
 ```{r psu biomass}
+
 psu_fk_bio <- read_csv('big_csv/biomass_psu/psu_fk_biomass.csv', 
                        col_types = cols(
                           YEAR = col_integer(),
@@ -1075,6 +1077,7 @@ psu_fk_bio <- read_csv('big_csv/biomass_psu/psu_fk_biomass.csv',
                           var = col_double(),
                           biomass = col_double(),
                           protected_status = col_character())) #3,429,476 x 10
+
 psu_fk_bio_no_spp = psu_fk_bio %>%
   filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species and 3,219,344 x 10
 psu_fk_bio_no_spp_merged = psu_fk_bio_no_spp %>%
@@ -1085,7 +1088,7 @@ write_csv(psu_fk_bio_no_spp_merged, "big_csv/biomass_psu/psu_fk_biomass_no_spp_m
 ```
 
 ```{r psu biodiversity}
-
+#read in psu abundance data 
 psu_fk_abun <- read_csv("big_csv/abundance_psu/psu_fk_abun.csv",
                         col_types = cols(
                           YEAR = col_integer(),
@@ -1099,115 +1102,62 @@ psu_fk_abun <- read_csv("big_csv/abundance_psu/psu_fk_abun.csv",
                           abundance = col_double(),
                           protected_status = col_character()))
 
+#remove species nit identified to species 
 psu_fk_abun_no_spp = psu_fk_abun %>%
   filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species 
 
-# psu_fk_abun_no_spp = psu_fk_abun_no_spp %>%
-#   arrange(desc(abundance)) %>% #49500.0 of HYP HARR in 2001?!
-#   group_by(YEAR, PRIMARY_SAMPLE_UNIT) %>%
-#   summarise(abundance = sum(abundance)) %>%
-#   arrange(abundance)
-
+#read in trait matrix 
 trait_matrix = read_csv('functional_diversity/species_trait_matrix_348_spp.csv')
 
+#trait matrix needs to be alphabetically for FD code 
 trait_matrix = trait_matrix %>%
   as.tibble() %>%
   mutate(
     SPECIES_CD = toupper(as.character(SPECIES_CD))) %>% 
   arrange(SPECIES_CD)
 
-fk_psu_abun_diversity_no_spp_merged = psu_fk_abun_no_spp %>% #3,107,408 x 10
-  select(YEAR, PRIMARY_SAMPLE_UNIT, STRAT, protected_status, SPECIES_CD, abundance) %>% #3,107,408*5
-  filter(protected_status == 'all') %>% #1,553,704*10
-  group_by(YEAR, STRAT, PRIMARY_SAMPLE_UNIT, SPECIES_CD) %>% #1,553,704 groups  
-  summarise(
-    abun_merged = sum(abundance)) 
-  
-psu_diversity_no_spp_merged = fk_psu_abun_diversity_no_spp_merged %>% #1,553,704 x 5
+# fk_psu_abun_diversity_no_spp_merged = psu_fk_abun_no_spp %>% #3,107,408 x 10
+#  filter(protected_status != 'all') %>% #1,689,982 x 6
+#  group_by(YEAR,  PRIMARY_SAMPLE_UNIT, SPECIES_CD) %>% #1,689,982 groups  
+#  mutate(abun_merged = sum(abundance)) 
+
+#compute diversity indices by PSU  
+psu_diversity_no_spp_merged = psu_fk_abun_no_spp %>% #tibble: 3,379,964 x 10 %>%
+  filter(protected_status != "all") %>% #tibble: 1,689,982 x 10
+  select(YEAR, PRIMARY_SAMPLE_UNIT,STRAT,PROT,SPECIES_CD,abundance) %>% #tibble: 1,689,982 x 6
   group_by(YEAR, PRIMARY_SAMPLE_UNIT) %>% #4,839 groups
   nest(-YEAR) %>%
   mutate(
     data_wide = map(data, function(x) 
       full_join(x, trait_matrix %>% select(SPECIES_CD), by='SPECIES_CD') %>%
-        mutate(abun_merged = ifelse(is.na(abun_merged), 0, abun_merged)) %>%
-        spread(SPECIES_CD, abun_merged, fill =0)),
-    data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abun_merged, fill =0)), 
+        mutate(abundance = ifelse(is.na(abundance), 0, abundance)) %>%
+        spread(SPECIES_CD, abundance, fill =0)),
+    data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abundance, fill =0)), 
     richness = map( #species richness
       data_wide, 
-      function(x) specnumber(x %>% select(-STRAT))),
+      function(x) specnumber(x %>% select(-STRAT, -PROT))),
     simpson = map( #simpson diversity as effective number of species 
       data_wide,
-      function(x) 1/(1 - diversity(x %>% select(-STRAT), index = 'simpson'))),
+      function(x) 1/(1 - diversity(x %>% select(-STRAT, -PROT), index = 'simpson'))),
     shannon = map( #shannon diversity as effective number of species 
       data_wide, 
-      function(x) exp(diversity(x %>% select(-STRAT), index = 'shannon')))) %>% 
+      function(x) exp(diversity(x %>% select(-STRAT, -PROT), index = 'shannon')))) %>% 
   unnest(richness,simpson, shannon)
 
-psu_diversity_no_spp_merged_rel_abun = psu_diversity_no_spp_merged %>%
-  unnest(data) 
-
-write_csv(psu_diversity_no_spp_merged, "big_csv/diversity_without_spe/psu_diversity_no_spp_merged.csv") 
-
-#----------------------------------------------------------------------------------------------------------------------
-#RELATIVE ABUNDANCE VALUES RETURN SAME DIVERSITY VALUES WITH REG ABUNDANCE. 
-#diversity with species relative abundance at PSU 
-fk_psu_abun_ntot = psu_fk_abun_no_spp %>% #3,107,408 x 10
-  filter(protected_status == 'all') %>% #1,553,704*10
-  group_by(YEAR, PRIMARY_SAMPLE_UNIT) %>% #4,839 groups 
-  mutate(
-    ntot = sum(abundance)) %>%
-  group_by(YEAR, PRIMARY_SAMPLE_UNIT, SPECIES_CD) %>%
-  mutate(
-    rel_abun = (abundance/ntot)) 
+#get strata and prot information and remove duplicates
+psu_diversity_no_spp_merged_strat = psu_diversity_no_spp_merged %>%
+  unnest(data) #tibble: 1,689,982 x 9 
   
-#summarise(ntot = sum(abundance))
+#save dataframe as csv
+write_csv(psu_diversity_no_spp_merged_strat, "big_csv/diversity_without_spe/psu_diversity_no_spp_merged.csv") 
 
-psu_diversity_rel_abun = fk_psu_abun_ntot %>% #1,553,704 x 5
-  select(YEAR, PRIMARY_SAMPLE_UNIT, STRAT, SPECIES_CD, rel_abun) %>% 
-  group_by(YEAR, PRIMARY_SAMPLE_UNIT) %>% #4,839 groups
-  nest(-YEAR) %>%
-  mutate(
-    data_wide = map(data, function(x) 
-      full_join(x, trait_matrix %>% select(SPECIES_CD), by='SPECIES_CD') %>%
-        mutate(rel_abun = ifelse(is.na(rel_abun), 0, rel_abun)) %>%
-        spread(SPECIES_CD, rel_abun, fill =0)),
-    data_wide = map(data, ~ spread(data=.x, SPECIES_CD, rel_abun, fill =0)), 
-    richness = map( #species richness
-      data_wide, 
-      function(x) specnumber(x %>% select(-STRAT))),
-    simpson = map( #simpson diversity as effective number of species 
-      data_wide,
-      function(x) 1/(1 - diversity(x %>% select(-STRAT), index = 'simpson'))),
-    shannon = map( #shannon diversity as effective number of species 
-      data_wide, 
-      function(x) exp(diversity(x %>% select(-STRAT), index = 'shannon')))) 
-
-psu_diversity_rel_abun_unnest = psu_diversity_rel_abun %>%
-  unnest(richness,simpson,shannon) %>%
-  unnest(data)
-
-psu_div_rel = psu_diversity_rel_abun_unnest %>% 
-  select(YEAR, PRIMARY_SAMPLE_UNIT, STRAT, richness, simpson, shannon) %>%
-  group_by(YEAR, PRIMARY_SAMPLE_UNIT, STRAT) %>%
-  summarize(
+psu_div = psu_diversity_no_spp_merged_strat %>% 
+  dplyr::group_by(YEAR, PRIMARY_SAMPLE_UNIT) %>% #A tibble: 1,689,982 x 7; groups 5,241
+  dplyr::summarize(
     richness = first(richness),
     simpson = first(simpson),
     shannon = first(shannon))
-
-# A tibble: 4,839 x 6
-#     YEAR PRIMARY_SAMPLE_UNIT STRAT richness   simpson  shannon
-#    <int>               <chr> <chr>    <int>     <dbl>    <dbl>
-#  1  1999                001U  FMLR       49 10.784669 19.02063
-#  2  1999                002U  FMLR       42  4.322159 10.35351
-#  3  1999                003U  FMLR       46  6.607255 14.41026
-#  4  1999                004U  FSLR       67  9.911565 16.41751
-#  5  1999                005U  HRRF       63  8.981397 15.61857
-#  6  1999                006U  FMLR       65 12.358859 19.01685
-#  7  1999                007U  HRRF       54  9.387404 17.15362
-#  8  1999                008U  FMLR       47  8.938282 16.81934
-#  9  1999                009U  FMLR       47  8.426184 15.56927
-# 10  1999                010U  FMLR       44  9.264376 16.35954
-# ... with 4,829 more rows
+# 5241 total PSU's over 15 years 
 
 ```
 
@@ -1611,15 +1561,14 @@ psu_diversity = read_csv("big_csv/diversity_without_spe/psu_diversity_no_spp_mer
 #   simpson = col_double(),
 #   shannon = col_double(),
 #   STRAT = col_character(),
+#   PROT = col_integer(),
 #   SPECIES_CD = col_character(),
-#   abun_merged = col_double()
+#   abundance = col_double()
 # )
-#wide format 
-
-psu_div = psu_diversity %>% 
-  select(YEAR, PRIMARY_SAMPLE_UNIT, STRAT, richness, simpson, shannon) %>%
-  group_by(YEAR, PRIMARY_SAMPLE_UNIT, STRAT) %>%
-  summarize(
+ 
+psu_div = psu_diversity %>% #A tibble: 5,241 x 7
+  dplyr::group_by(YEAR, PRIMARY_SAMPLE_UNIT, STRAT, PROT) %>%
+  dplyr::summarize(
     richness = first(richness),
     simpson = first(simpson),
     shannon = first(shannon))
