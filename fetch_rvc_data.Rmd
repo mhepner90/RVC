@@ -137,7 +137,7 @@ write_csv(abundt2016, 'abundt2016.csv')#2016
 ## FK abundance by domain
 cat("bind all csv's\n") #concatenate and print - character string naming the file to print to
 d_fk = data_frame()
-for (f in list.files('/Users/debbiehepner/Dropbox/github/RVC/abundance_domain/FK', pattern="\\.csv", full.names=T)){
+for (f in list.files('big_csv/abundance_domain/FK', pattern="\\.csv", full.names=T)){
       cat(' ', f,'\n')
       d_f = read_csv(
         f, #path to a file 
@@ -284,7 +284,7 @@ write_csv(d, 'strata_abun_all.csv')
 # FK species abundance values by strata 
 cat("bind all csv's\n") #concatenate and print - character string naming the file to print to
   d_strat = data_frame()
-    for (f in list.files('/Users/debbiehepner/Dropbox/github/RVC/big_csv/abundance_strata/FK', pattern="*.csv", full.names=T)){
+    for (f in list.files('big_csv/abundance_strata/FK', pattern="*.csv", full.names=T)){
       cat(' ', f,'\n')
       d_f = read_csv(
         f, #path to a file 
