@@ -148,7 +148,7 @@ for (f in list.files('big_csv/abundance_domain/FK', pattern="\\.csv", full.names
       d_fk = bind_rows(d_fk, d_f)
 } 
 
-write_csv(d_fk, 'abundance_domain/domain_fk_abun.csv')
+write_csv(d_fk, 'big_csv/abundance_domain/domain_fk_abun.csv')
 
 
 ## DT abundance by domain 
@@ -295,7 +295,7 @@ cat("bind all csv's\n") #concatenate and print - character string naming the fil
       d_strat = bind_rows(d_strat, d_f)
     } 
 
-write_csv(d_strat, 'abundance_strata/strata_fk_abun.csv')  
+write_csv(d_strat, 'big_csv/abundance_strata/strata_fk_abun.csv')  
 
 # DT species abundance values by strata 
 cat("bind all csv's\n") #concatenate and print - character string naming the file to print to
