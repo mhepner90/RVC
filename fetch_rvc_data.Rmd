@@ -22,9 +22,7 @@ library(plyr)
 
 #dt1999_to_2016 <- getRvcData(1999:2016, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') #no data for 2001, 2002, 2003, 2005, 2007, 2009, 2011, 2013, 2015 
 
-spp_list<- fk1999_to_2016$taxonomic_data$COMNAME #species list #399/400
-
-spp_list<- fk1999$taxonomic_data$COMNAME
+spp_list<- fk2011$taxonomic_data$COMNAME #399 species 
 
 write_csv(spp_list, 'spp_list.csv') #is.data.frame(x) is not true 
 
@@ -86,6 +84,10 @@ fk2010<- getRvcData(2010, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_a
 abunfk2010 <- getDomainAbundance(fk2010, spp_list, merge_protected = F) 
 write_csv(abunfk2010, 'abunfk2010.csv') #2010
 
+fk2011<- getRvcData(2011, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+abunfk2011 <- getDomainAbundance(fk2011, spp_list, merge_protected = F) 
+write_csv(abunfk2011, 'big_csv/abundance_domain/FK/abunfk2011.csv') #2011
+
 fk2012<- getRvcData(2012, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') abunfk2012 <- getDomainAbundance(fk2012, spp_list, merge_protected = F)
 write_csv(abunfk2012, 'abunfk2012.csv') #2012
 
@@ -135,7 +137,7 @@ write_csv(abundt2016, 'abundt2016.csv')#2016
 ## FK abundance by domain
 cat("bind all csv's\n") #concatenate and print - character string naming the file to print to
 d_fk = data_frame()
-for (f in list.files('/Users/debbiehepner/Dropbox/github/RVC/abundance_domain/FK', pattern="\\.csv", full.names=T)){
+for (f in list.files('big_csv/abundance_domain/FK', pattern="\\.csv", full.names=T)){
       cat(' ', f,'\n')
       d_f = read_csv(
         f, #path to a file 
@@ -146,7 +148,7 @@ for (f in list.files('/Users/debbiehepner/Dropbox/github/RVC/abundance_domain/FK
       d_fk = bind_rows(d_fk, d_f)
 } 
 
-write_csv(d_fk, 'abundance_domain/domain_fk_abun.csv')
+write_csv(d_fk, 'big_csv/abundance_domain/domain_fk_abun.csv')
 
 
 ## DT abundance by domain 
@@ -220,6 +222,10 @@ fk2010<- getRvcData(2010, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_a
 strata_abunfk2010 <- getStratumAbundance(fk2010, spp_list, merge_protected = F) 
 write_csv(strata_abunfk2010, 'strata_abunfk2010.csv') #2010
 
+fk2011<- getRvcData(2011, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+strata_abunfk2011 <- getStratumAbundance(fk2011, spp_list, merge_protected = F) 
+write_csv(strata_abunfk2011, 'big_csv/abundance_strata/FK/strata_abunfk2011.csv') #2010
+
 fk2012<- getRvcData(2012, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/') 
 strata_abunfk2012 <- getStratumAbundance(fk2012, spp_list, merge_protected = F)
 write_csv(strata_abunfk2012, 'strata_abunfk2012.csv') #2012
@@ -278,7 +284,7 @@ write_csv(d, 'strata_abun_all.csv')
 # FK species abundance values by strata 
 cat("bind all csv's\n") #concatenate and print - character string naming the file to print to
   d_strat = data_frame()
-    for (f in list.files('/Users/debbiehepner/Dropbox/github/RVC/big_csv/abundance_strata/FK', pattern="*.csv", full.names=T)){
+    for (f in list.files('big_csv/abundance_strata/FK', pattern="*.csv", full.names=T)){
       cat(' ', f,'\n')
       d_f = read_csv(
         f, #path to a file 
@@ -289,7 +295,7 @@ cat("bind all csv's\n") #concatenate and print - character string naming the fil
       d_strat = bind_rows(d_strat, d_f)
     } 
 
-write_csv(d_strat, 'abundance_strata/strata_fk_abun.csv')  
+write_csv(d_strat, 'big_csv/abundance_strata/strata_fk_abun.csv')  
 
 # DT species abundance values by strata 
 cat("bind all csv's\n") #concatenate and print - character string naming the file to print to
@@ -358,6 +364,10 @@ fk2010<- getRvcData(2010, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_a
 psu_abunfk2010 <- getPSUAbundance(fk2010, spp_list, merge_protected = F) 
 write_csv(psu_abunfk2010, 'abundance_psu/FK/psu_abunfk2010.csv') #2010
 
+fk2011<- getRvcData(2011, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+psu_abunfk2011 <- getPSUAbundance(fk2011, spp_list, merge_protected = F) 
+write_csv(psu_abunfk2011, 'big_csv/abundance_psu/FK/psu_abunfk2011.csv') #2011
+
 fk2012<- getRvcData(2012, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
 psu_abunfk2012 <- getPSUAbundance(fk2012, spp_list, merge_protected = F)
 write_csv(psu_abunfk2012, 'abundance_psu/FK/psu_abunfk2012.csv') #2012
@@ -414,7 +424,7 @@ write_csv(psu_abundt2016, 'big_csv/abundance_psu/DT/psu_abundt2016.csv')#2016
 ##FK abundance psu 
 cat("bind all csv's\n") #concatenate and print - character string naming the file to print to
   d = data_frame()
-    for (f in list.files('/Users/debbiehepner/Dropbox/github/RVC/abundance_psu/FK', pattern="*.csv", full.names=T)){
+    for (f in list.files('big_csv/abundance_psu/FK', pattern="*.csv", full.names=T)){
       cat(' ', f,'\n')
       d_f = read_csv(
         f, #path to a file 
@@ -424,7 +434,7 @@ cat("bind all csv's\n") #concatenate and print - character string naming the fil
           protected_status = col_character()))  #column specification - must contain one column specification for each column
       d = bind_rows(d, d_f)
     } 
-write_csv(d, 'abundance_psu/psu_fk_abun.csv')
+write_csv(d, 'big_csv/abundance_psu/psu_fk_abun.csv')
 
 ## DT abundance psu 
 cat("bind all csv's\n") #concatenate and print - character string naming the file to print to
