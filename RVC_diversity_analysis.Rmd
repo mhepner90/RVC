@@ -235,6 +235,7 @@ cl_dissimilarity(func.dist,traits.dist,method="spectral") #Cross-dissimilarities
 
 #Scale by the max value so that all values are between 0-1
 func.dist=func.dist/max(func.dist)
+
 func.dist_common=func.dist/max(func.dist)
 
 #Plot the best tree - average 
@@ -432,22 +433,31 @@ fk_domain_abun_diversity_no_spp = domain_fk_abun_no_spp %>% #15,651 x 10
     #                  function(x) 1/(1 - dbFD(as.matrix(func.dist), x))))
     spp_idx = map(data_wide, function(x) apply(x, 2, sum) > 0),
     #fk_domain_abun_diversity_no_spp$spp_idx[[1]]
-    dbFD_abundance = map2(data_wide, spp_idx, function(x,y) x[,y]),
+    dbFD_abundance = map2(data_wide, spp_idx, function(x,y) x[,y]), 
     dbFD_traits    = map(spp_idx, function(y) as.matrix(func.dist)[y,y]),
     #test = 1/(1 - dbFD(dbFD_traits, dbFD_abundance))
     functional = map2(dbFD_traits, dbFD_abundance, 
-                     function(x, a) 1/(1 - dbFD(x, a, stand.FRic=F))))
-    # Error in mutate_impl(.data, dots) : 
-    #   Evaluation error: $ operator is invalid for atomic vectors.
-    # problem with use of geometry::convhulln(tr.FRic, options='FA') not returning $vol, see line 650 in dbFD_debug.R
- 
-#6/12/90 - Error in mutate_impl(.data, dots) : At least one species does not occur in any community (zero total abundance across all communities).
-if(any(fd_attempt$abun.sum2 == 0)) 
-  stop("At least one species does not occur in any community (zero total abundance across all communities).") 
+                      function(x, a) 1/(1 - dbFD(x, a, stand.FRic=F)))) #x = distance matrix, a
+                      #function(x, a) 1/(1 - divc(x, a))))
 
-# check if one species has total abundance of zero (never occurs)
-abun.sum2 <- apply(a, 2, sum)
-if (any(abun.sum2 == 0) ) stop("At least one species does not occur in any community (zero total abundance across all communities).","\n")
+#FRic: No dimensionality reduction was required. All 176 PCoA axes were kept as 'traits'.  Called from: dbFD(x, a, stand.FRic = F)
+
+fk_domain_abun_diversity_no_spp = domain_fk_abun_no_spp %>% #15,651 x 10
+  filter(protected_status != "all") %>% 
+  select(YEAR, protected_status, SPECIES_CD, abundance) %>% #10,434 * 4
+  group_by(YEAR, protected_status) %>% ##32 groups (fk 16*2)
+  nest(-YEAR) %>%  
+  mutate(
+    data_wide = map(data, function(x) 
+      full_join(x, trait_matrix %>% select(SPECIES_CD), by='SPECIES_CD') %>%
+        mutate(abundance = ifelse(is.na(abundance), 0, abundance)) %>%
+        spread(SPECIES_CD, abundance, fill =0)), 
+    trial = map(data_wide, 
+                function(x) 1/(1 - divc(x, as.dist(func.dist))))) 
+  #Error in mutate_impl(.data, dots) : Object of class 'dist' expected for distance
+  #Error in mutate_impl(.data, dots) : Non convenient df
+
+dis = as.matrix(func.dist)
 
 ```
 ## Fetch the RVC data from 
