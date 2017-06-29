@@ -146,8 +146,6 @@ library(phytools)
 library(FD)
 #biocLite("BiocUpgrade") ## you may need this
 #biocLite("ggtree", type = "source")
-devtools::install_github("GuangchuangYu/ggtree") #requires R>= 3.3.2
-library(ggtree)
 library(tidyverse)
 
 trait_matrix = read_csv('functional_diversity/species_trait_matrix_348_spp.csv')
@@ -175,9 +173,8 @@ trait_matrix = trait_matrix %>%
   select(SPECIES_CD, Maxlength, Trophic_level, Trophic_group, Water_column, Diel_activity, Substrate_type, Complexity, Gregariousness) %>% #348*9
   group_by(
     SPECIES_CD, Maxlength, Trophic_level, Trophic_group, Water_column, Diel_activity, Substrate_type, Complexity, Gregariousness) %>%
-  summarize(
-    n = n()) %>%
-  select(-n) %>%
+  #summarize(n = n()) %>%
+  #select(-n) %>%
   ungroup() %>%
   mutate(
     # ordinal traits
@@ -341,6 +338,8 @@ library(treemap)
 devtools::install_github("gluc/data.tree")
 devtools::install_github("timelyportfolio/d3treeR")
 library(d3treeR)
+devtools::install_github("GuangchuangYu/ggtree") #requires R>= 3.3.2
+library(ggtree)
 
 trait_matrix = read_csv('functional_diversity/species_trait_matrix_348_spp.csv')
 
@@ -386,6 +385,61 @@ d3tree2(
 
 ```
 
+```{r practice FD code}
+
+trait_matrix = read_csv('functional_diversity/species_trait_matrix_348_spp.csv')
+trait_matrix = trait_matrix %>%
+  as.tibble() %>%
+  mutate(
+    SPECIES_CD = toupper(as.character(SPECIES_CD))) %>% 
+  arrange(SPECIES_CD)
+
+domain_fk_abun <- read_csv('big_csv/abundance_domain/domain_fk_abun.csv', 
+                           col_types = cols(
+                             YEAR = col_integer(),
+                             REGION = col_character(),
+                             SPECIES_CD = col_character(),
+                             abundance = col_double(),
+                             var = col_double(),
+                             n = col_integer(),
+                             nm = col_integer(),
+                             N = col_double(),
+                             NM = col_double(),
+                             protected_status = col_character()
+                           ))
+
+domain_fk_abun_no_spp = domain_fk_abun %>%
+  filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species 
+
+## FK's domain abundance only identified to species level (without spp.) 
+fk_domain_abun_diversity_no_spp = domain_fk_abun_no_spp %>% #15,651 x 10
+  filter(protected_status != "all") %>% 
+  select(YEAR, protected_status, SPECIES_CD, abundance) %>% #10,434 * 4
+  group_by(YEAR, protected_status) %>% ##32 groups (fk 16*2)
+  nest(-YEAR) %>%  
+  mutate(
+    data_wide = map(data, function(x) 
+      full_join(x, trait_matrix %>% select(SPECIES_CD), by='SPECIES_CD') %>%
+        mutate(abundance = ifelse(is.na(abundance), 0, abundance)) %>%
+        spread(SPECIES_CD, abundance, fill =0)), 
+    functional = map(data_wide, 
+                     function(x) 1/(1 - dbFD(as.matrix(func.dist), x))))
+   
+ abun.sum2=map(data_wide, 
+                   function(x) apply(x, 2, sum))) %>%
+    
+
+if(any(fd_attempt$abun.sum2 == 0)) 
+  stop("At least one species does not occur in any community (zero total abundance across all communities).") #,
+ #%>% 
+  
+#6/12/90 - Error in mutate_impl(.data, dots) : At least one species does not occur in any community (zero total abundance across all communities).
+
+# check if one species has total abundance of zero (never occurs)
+abun.sum2 <- apply(a, 2, sum)
+if (any(abun.sum2 == 0) ) stop("At least one species does not occur in any community (zero total abundance across all communities).","\n")
+
+```
 ## Fetch the RVC data from 
 [NOAA's Southeast Fisheries Science Center server](https://grunt.sefsc.noaa.gov/rvc_analysis20/) using the [RVC package](https://github.com/jeremiaheb/rvc)
 - Fetched weighted abundance and biomass data by domain, strata, and primary sampling units 
