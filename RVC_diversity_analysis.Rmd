@@ -442,6 +442,7 @@ fk_domain_abun_diversity_no_spp = domain_fk_abun_no_spp %>% #15,651 x 10
 
 #FRic: No dimensionality reduction was required. All 176 PCoA axes were kept as 'traits'.  Called from: dbFD(x, a, stand.FRic = F)
 
+### PACKAGE ade4 Rao's Q with divc()
 fk_domain_abun_diversity_no_spp = domain_fk_abun_no_spp %>% #15,651 x 10
   filter(protected_status != "all") %>% 
   select(YEAR, protected_status, SPECIES_CD, abundance) %>% #10,434 * 4
@@ -452,12 +453,13 @@ fk_domain_abun_diversity_no_spp = domain_fk_abun_no_spp %>% #15,651 x 10
       full_join(x, trait_matrix %>% select(SPECIES_CD), by='SPECIES_CD') %>%
         mutate(abundance = ifelse(is.na(abundance), 0, abundance)) %>%
         spread(SPECIES_CD, abundance, fill =0)), 
-    trial = map(data_wide, 
+    raoQ = map(data_wide, 
                 function(x) 1/(1 - divc(x, as.dist(func.dist))))) 
-  #Error in mutate_impl(.data, dots) : Object of class 'dist' expected for distance
   #Error in mutate_impl(.data, dots) : Non convenient df
 
-dis = as.matrix(func.dist)
+#divc(df, dis, scale) 
+#df: a data frame with elements as rows, samples as columns, and abundance, presence-absence or frequencies as entries
+#dis: an object of class dist containing distances or dissimilarities among elements. If dis is NULL, Gini-Simpson index is performed
 
 ```
 ## Fetch the RVC data from 
@@ -643,28 +645,7 @@ fk_domain_abun_diversity_no_spp = domain_fk_abun_no_spp %>% #14,634 * 10
   
 #fk_domain_abun_diversity_no_spp = fk_domain_abun_diversity_no_spp %>%
   #select(YEAR, protected_status,richness,shannon,simpson)
-    
-
-fd_attempt = fk_domain_abun_diversity_no_spp %>%
-  mutate(
-    #functional diversity as effective number of species 
-    abun.sum2=map(data_wide, 
-                   function(x) apply(x, 2, sum))) %>%
-  unnest(abun.sum2)
-
-if(any(fd_attempt$abun.sum2 == 0)) 
-  stop("At least one species does not occur in any community (zero total abundance across all communities).") #,
-    #functional = map(data_wide, 
-                   #function(x) 1/(1 - dbFD(as.matrix(func.dist), x)))) #%>% 
   
-#6/12/90 - Error in mutate_impl(.data, dots) : At least one species does not occur in any community (zero total abundance across all communities).
-
-# check if one species has total abundance of zero (never occurs)
-abun.sum2 <- apply(a, 2, sum)
-if (any(abun.sum2 == 0) ) stop("At least one species does not occur in any community (zero total abundance across all communities).","\n")
-  
-
-
 #write_csv(fk_domain_abun_diversity_no_spp, 'big_csv/diversity_without_spe/domain_fk_abun_diversity_no_spp.csv')
 
 ```
