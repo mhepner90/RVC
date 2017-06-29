@@ -424,16 +424,13 @@ fk_domain_abun_diversity_no_spp = domain_fk_abun_no_spp %>% #15,651 x 10
         spread(SPECIES_CD, abundance, fill =0)), 
     functional = map(data_wide, 
                      function(x) 1/(1 - dbFD(as.matrix(func.dist), x))))
-   
+ 
  abun.sum2=map(data_wide, 
                    function(x) apply(x, 2, sum))) %>%
     
-
-if(any(fd_attempt$abun.sum2 == 0)) 
-  stop("At least one species does not occur in any community (zero total abundance across all communities).") #,
- #%>% 
-  
 #6/12/90 - Error in mutate_impl(.data, dots) : At least one species does not occur in any community (zero total abundance across all communities).
+if(any(fd_attempt$abun.sum2 == 0)) 
+  stop("At least one species does not occur in any community (zero total abundance across all communities).") 
 
 # check if one species has total abundance of zero (never occurs)
 abun.sum2 <- apply(a, 2, sum)
