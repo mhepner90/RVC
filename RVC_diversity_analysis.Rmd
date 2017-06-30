@@ -1562,14 +1562,18 @@ psu_abun <- read_csv('big_csv/abundance_psu/psu_fk_abundance_no_spp_merged.csv',
                           abundance = col_double(),
                           protected_status = col_character())) # 1,553,704  x 10
 
+#remove species not identified to species 
+psu_abun = psu_abun %>%
+  filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species 
+
 # the psu_abun dataframe has an abundance for each species for each psu so sum abundance across species for each psu...skip this step for diversity indices
 psu_abun_sum <- psu_abun %>%
   group_by(YEAR, PRIMARY_SAMPLE_UNIT, STRAT) %>%
-  summarize(abundance_sum = sum(abundance)) # 4839 x 4 (5241 = total # of PSUs sampled from 1999 to 2016)
+  summarize(abundance_sum = sum(abundance)) # 5,241 x 4 
   
 # (optional) the psu_bio_sum_YRsubset dataframe produced with the code below has years with low sample sizes (few PSUs)/missing strata removed (i.e., 1999, 2000, and 2004)
 psu_abun_sum_YRsubset <- psu_abun_sum %>%
-  filter(YEAR!=1999,YEAR!=2000,YEAR!=2004) # 4323 x 4
+  filter(YEAR!=1999,YEAR!=2000,YEAR!=2004) # 4,725 x 4
 
 
 # 2. Run ANOVA to get residuals so we can use them to test assumptions of normality and equal variances
@@ -1592,12 +1596,12 @@ psu_abun_sum_YRsubset %$% shapiro.test(resids)
   ### W = 0.17422, p-value < 2.2e-16; non-normal distribution
 
 # 2c. Test for skew - greater than zero is evidence for having skew; test with t-test - p-value < 0.05 means data are skewed
-skewness(psu_abun_sum_YRsubset$resids)
-t<- skewness(psu_abun_sum_YRsubset$resids) %>% divide_by(sqrt(6/length(psu_abun_sum_YRsubset$resids))) # t-value
+skewness(psu_abun_sum_YRsubset$resids) #44.67215
+t<- skewness(psu_abun_sum_YRsubset$resids) %>% divide_by(sqrt(6/length(psu_abun_sum_YRsubset$resids))) # t-value 1253.609
 1-pt(t,length(psu_abun_sum_YRsubset$resids)) # probability of the t-value by chance alone when skew is zero; pt=cummulative density function of t-dist, first number=calculated t-value; second=df
   ### skew = 44.67215 and p = 0; significantly skewed
 
-# 2d. Bartlett test - p-value < 0.05 means data do not have equal variances across groups
+# 2d. Bartlett test - p-value < 0.05 means data do not have equal variances across groups (Barlet test for homogeneity)
 bartlett.test(psu_abun_sum_YRsubset$resids~psu_abun_sum_YRsubset$fYEAR) # Bartlett's K-squared = 7315.7, df = 12, p-value < 2.2e-16
 bartlett.test(psu_abun_sum_YRsubset$resids~psu_abun_sum_YRsubset$fSTRAT) # Bartlett's K-squared = 5467, df = 6, p-value < 2.2e-16
   ### significant different variances across both YEAR groups and STRAT groups
@@ -1689,6 +1693,10 @@ psu_bio <- read_csv('big_csv/biomass_psu/psu_fk_biomass_no_spp_merged.csv',
                           var = col_double(),
                           biomass = col_double(),
                           protected_status = col_character())) # 1,609,672  x 10
+
+#remove species not identified to species 
+psu_bio = psu_bio %>%
+  filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species 
 
 # the psu_bio dataframe has a biomass for each species for each psu so sum biomass across species for each psu...skip this step for diversity indices
 psu_bio_sum <- psu_bio %>%
@@ -1816,16 +1824,19 @@ write.csv(Tuk, "big_csv/plots/biomass_2wayANOVA_TukeyHSDvalues.csv")
 ```{r stat testing with diversity data}
 
 # 1. Read in data and remove years (optional)
-psu_diversity = read_csv("big_csv/diversity_without_spe/psu_diversity_no_spp_merged.csv",
-                      col_types = cols(
-                          YEAR = col_integer(),
-                          PRIMARY_SAMPLE_UNIT = col_character(),
-                          richness = col_integer(),
-                          simpson = col_double(),
-                          shannon = col_double(),
-                          STRAT = col_character(),
-                          SPECIES_CD = col_character(),
-                          abun_merged = col_double())) # 1,689,982 x 9
+psu_diversity = read_csv("big_csv/diversity_without_spe/psu_diversity_no_spp_merged.csv") #A tibble: 1,689,982 x 9
+# Parsed with column specification:
+# cols(
+#   YEAR = col_integer(),
+#   PRIMARY_SAMPLE_UNIT = col_character(),
+#   richness = col_integer(),
+#   simpson = col_double(),
+#   shannon = col_double(),
+#   STRAT = col_character(),
+#   PROT = col_integer(),
+#   SPECIES_CD = col_character(),
+#   abundance = col_double()
+# )
 
 # the psu_diversity dataframe has a value for each diversity metric that is repeated for each YEAR/PSU for each species record....need to remove duplicate rows and can also select columns of interest for the analysis of diversity metrics
 psu_div = psu_diversity %>% 
