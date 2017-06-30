@@ -204,40 +204,44 @@ trees.ultra= lapply(trees,function(i) cl_ultrametric(as.hclust(i)))
 par(mfrow=c(3,2))
 for (i in 1:length(trees.ultra)) {plot(trees.ultra[[i]])} #plots the 5 different kinds of trees 
 
-#Build the consensus tree (Mouchet et al 2008 Oikos)  
-ensemble.trees=cl_ensemble(list=trees) #list of clusterings 
-class(ensemble.trees)
-consensus.tree=cl_consensus(ensemble.trees) #synthesizes the information in the elements of a cluster ensemble into a single clustering 
-par(mar=c(1,1,1,1))
-plot(consensus.tree, horiz=T)
 
-#Calculate dissimilarity values for each tree using 2-norm (Merigot et al 2010 Ecology) to determine which tree best preserves orignial distances 
-#spectral norm (2-norm) of the differences of the ultrametrics
-all.trees=c(trees.ultra,consensus.tree[1])
-names(all.trees)=c(tree_methods,"consensus")
-(trees.dissim=lapply(all.trees,function(i) cl_dissimilarity(i,traits.dist,method="spectral"))) 
-#Cross-dissimilarities using spectral ultrametric distance:
-#Single = 63.17399
-#complete = 116.8516
-#average = 14.99288
-#mcquitty = 36.06599
-#ward.D = 3161.581
-#consensus =  1065.058 (1067.782) (1091.628)
-
-#Identify best tree and isolate
-trees.dissim2=do.call(rbind,trees.dissim)
-min.tree=which.min(trees.dissim2) #average 
-names(all.trees)[min.tree]
-func.dist=all.trees[names(all.trees)==names(all.trees)[min.tree]][[1]]
-
-#Confirm lowest 2-norm value,  spectral norm (2-norm) of the differences if the ultrametrics 
-cl_dissimilarity(func.dist,traits.dist,method="spectral") #Cross-dissimilarities using spectral ultrametric distance:  14.99288
-
-#Scale by the max value so that all values are between 0-1
-func.dist=func.dist/max(func.dist)
 func_dist_rds <- "functional_diversity/func.dist.rds"
-saveRDS(func.dist, func_dist_rds)
-if (!file.exist(func_dist_rds)){
+if (!file.exists(func_dist_rds)){
+
+  #Build the consensus tree (Mouchet et al 2008 Oikos)  
+  ensemble.trees=cl_ensemble(list=trees) #list of clusterings 
+  class(ensemble.trees)
+  consensus.tree=cl_consensus(ensemble.trees) #synthesizes the information in the elements of a cluster ensemble into a single clustering 
+  par(mar=c(1,1,1,1))
+  plot(consensus.tree, horiz=T)
+  
+  #Calculate dissimilarity values for each tree using 2-norm (Merigot et al 2010 Ecology) to determine which tree best preserves orignial distances 
+  #spectral norm (2-norm) of the differences of the ultrametrics
+  all.trees=c(trees.ultra,consensus.tree[1])
+  names(all.trees)=c(tree_methods,"consensus")
+  (trees.dissim=lapply(all.trees,function(i) cl_dissimilarity(i,traits.dist,method="spectral"))) 
+  #Cross-dissimilarities using spectral ultrametric distance:
+  #Single = 63.17399
+  #complete = 116.8516
+  #average = 14.99288
+  #mcquitty = 36.06599
+  #ward.D = 3161.581
+  #consensus =  1065.058 (1067.782) (1091.628)
+  
+  #Identify best tree and isolate
+  trees.dissim2=do.call(rbind,trees.dissim)
+  min.tree=which.min(trees.dissim2) #average 
+  names(all.trees)[min.tree]
+  func.dist=all.trees[names(all.trees)==names(all.trees)[min.tree]][[1]]
+  
+  #Confirm lowest 2-norm value,  spectral norm (2-norm) of the differences if the ultrametrics 
+  cl_dissimilarity(func.dist,traits.dist,method="spectral") #Cross-dissimilarities using spectral ultrametric distance:  14.99288
+  
+  #Scale by the max value so that all values are between 0-1
+  func.dist=func.dist/max(func.dist)
+  
+  saveRDS(func.dist, func_dist_rds)
+
 } else { 
   func.dist <- readRDS(func_dist_rds)
 } 
@@ -394,12 +398,6 @@ d3tree2(
 ```
 
 ```{r practice FD code}
-
-if (!file.exist(func_dist_rds)){
-} else { 
-  func.dist <- readRDS(func_dist_rds)
-}
-
 trait_matrix = read_csv('functional_diversity/species_trait_matrix_348_spp.csv')
 trait_matrix = trait_matrix %>%
   as.tibble() %>%
@@ -466,6 +464,11 @@ fk_domain_abun_diversity_no_spp = domain_fk_abun_no_spp %>% #15,651 x 10
         spread(SPECIES_CD, abundance, fill =0)), 
     raoQ = map(data_wide, 
                 function(x) 1/(1 - divc(x, as.dist(func.dist))))) 
+
+  source('divc_debug.R')
+  x = fk_domain_abun_diversity_no_spp$data_wide[[1]] # View(x)
+  #divc(x, as.dist(func.dist))
+  divc(x, func.dist)
   #Error in mutate_impl(.data, dots) : Non convenient df
 
 #divc(df, dis, scale) 
