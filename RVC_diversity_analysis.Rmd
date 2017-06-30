@@ -2485,6 +2485,13 @@ Conitinuous covariates: modeled using non-parametric smoothing
 
 Categorical factors: models parametrically to determine their mean effect sizes (Zurr et al., 2009)
 
+```{r libraries for GAM}
+
+library(mgcv)
+library(tidyverse)
+
+```
+
 ```{r strata environmental characteristics}
 
 # read in strata data for each year and psu 
@@ -2494,6 +2501,16 @@ Categorical factors: models parametrically to determine their mean effect sizes 
 ```
 
 Build GAM model with temporal, spatial and environmental variables 
+
+$y_i = \alpha + f_1(X_1i) + f_2(X_2i) + g_1(X_3i) + g_2(X_4i) + \epsilon_i$
+$y_i = \alpha + f_1 (YEAR)+ f_2(PROT) + g_1(LONG, LAT)* YEAR + g_2(STRAT) + \epsilon_i$
+
+$y_i$ is the calculated diversity for station i (response variable)
+$\alpha$ is the intercept that scales the model prediction to the appropriate level of the response
+$f_1 (X_1i)$ is a smoother
+$g_1 (X_1i)$ is nonparametric smoother for covariates strata
+$\epsilon_i$ the residual error
+
 ```{r GAM}
 
 #Build full model and null model based on (transformed) response variable
@@ -2503,25 +2520,18 @@ Build GAM model with temporal, spatial and environmental variables
 gam = data %>% 
   select() %>% 
   mutate(
-    rich.model = gam(formula(richness,"~year+rugosity+s(Long,Lat,by=year,bs='ts')+s(depth,bs='ts')+s(vert_relief,bs='ts')+s(per_coral_cover,bs='ts')+s(per_hardbottom,bs='ts')"), family=poisson),
-    rich.nullmodel = gam(formula(richness,"~1"), family=poisson),
-    shan.model = gam(formula(shannon,"~year+rugosity+s(Long,Lat,by=year,bs='ts')+s(depth,bs='ts')+s(vert_relief,bs='ts')+s(per_coral_cover,bs='ts')+s(per_hardbottom,bs='ts')"), family=poisson),
-    nullmodel = gam(formula("log(",shannon,")~1"))) 
+    rich_model = gam(formula(richness,"~year+rugosity+s(Long,Lat,by=year,bs='ts')+s(depth,bs='ts')+s(vert_relief,bs='ts')+s(per_coral_cover,bs='ts')+s(per_hardbottom,bs='ts')"), family=poisson),
+    rich_nullmodel = gam(formula(richness,"~1"), family=poisson),
+    shan_model = gam(formula(shannon,"~year+rugosity+s(Long,Lat,by=year,bs='ts')+s(depth,bs='ts')+s(vert_relief,bs='ts')+s(per_coral_cover,bs='ts')+s(per_hardbottom,bs='ts')"), family=poisson),
+    shannon_nullmodel = gam(formula("log(",shannon,")~1"))) 
 
-#Set up empty vectors for deviances
-time.dev=c(); space.dev=c(); env.dev=c()
+mgcv::summary(gam$rich_model) #explained deviance (R2), variance of residuals, etc. 
+mgcv::anova(gam$rich_model)#p-value and F-test
+mgcv::plot(gam$rich_model) #produces fitted smoother
+gam.check(gam$rich_model) #produces graphical diagnosis for the model. Use to 1) assess normality with QQ plot and the histogram 2) homogeneity (residuals vs fitted values) 3) model fit (fitted values versus observed values). Ideally the response against fitted values should show a straight line. 
 
-#Sequence 1: time->space->environment
-
-#Sequence 2: time->environment->space
-
-#Sequence 3: space->time->environment
-
-#Sequence 4: space->environment->time
-
-#Sequence 5: environment->time->space
-
-#Sequence 6: environment->space->time
+#Check how well the model fits using graphical evidence or if it isn't clear with AIC, which measures goodness of fit and model complexity. The lower the AIC, the better the model fits the data. Can also look at GCV value in summary output. 
+AIC(gam$rich_model)
 
 ```
 
