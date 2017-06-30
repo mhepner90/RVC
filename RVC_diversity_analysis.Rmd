@@ -235,6 +235,12 @@ cl_dissimilarity(func.dist,traits.dist,method="spectral") #Cross-dissimilarities
 
 #Scale by the max value so that all values are between 0-1
 func.dist=func.dist/max(func.dist)
+func_dist_rds <- "functional_diversity/func.dist.rds"
+saveRDS(func.dist, func_dist_rds)
+if (!file.exist(func_dist_rds)){
+} else { 
+  func.dist <- readRDS(func_dist_rds)
+} 
 
 func.dist_common=func.dist/max(func.dist)
 
@@ -388,6 +394,11 @@ d3tree2(
 ```
 
 ```{r practice FD code}
+
+if (!file.exist(func_dist_rds)){
+} else { 
+  func.dist <- readRDS(func_dist_rds)
+}
 
 trait_matrix = read_csv('functional_diversity/species_trait_matrix_348_spp.csv')
 trait_matrix = trait_matrix %>%
