@@ -1544,6 +1544,10 @@ ggsave(file="fk_Shannon_boxplot_ByYearForEachStratum_YRsubset.pdf", path="big_cs
 
 For continuous response variable (diversity - richness, shannon, simpson, functional) and categorical predictor variable (strata)
 
+Parametric test require the data to meet assumptions of having a normal distribution and homoscedasticity
+
+- Are diversity values and strata related? 
+
 ```{r libraries}
 
 library(MASS) # contains boxcox function
@@ -1557,7 +1561,6 @@ library(nortest) #checks for normality
 library(psych) #pairs.panels 
 library(tidyverse)
 library(magrittr) # needed to call this library separately from one in tidyverse in order to get functionality of github version not found in CRAN version
-
 ```
 
 ```{r stat testing with abundance data}
@@ -2130,157 +2133,6 @@ write.csv(Tuk, "big_csv/plots/richness_2wayANOVA_TukeyHSDvalues.csv")
 
 ```
 
-Parametric test require the data to meet assumptions of having a normal distribution and homoscedasticity
-
-- Are diversity values and strata related? 
-
-```{r parametric test with psu - do we still need this chunk?}
-##########################GET FILE TO READ IN AND THEN MAKE SURE CODE WORKS
-#1. Read in data 
-psu_diversity = read_csv("big_csv/diversity_without_spe/psu_diversity_no_spp_merged.csv")  
-# Parsed with column specification:
-# cols(
-#   YEAR = col_integer(),
-#   PRIMARY_SAMPLE_UNIT = col_character(),
-#   richness = col_integer(),
-#   simpson = col_double(),
-#   shannon = col_double(),
-#   STRAT = col_character(),
-#   PROT = col_integer(),
-#   SPECIES_CD = col_character(),
-#   abundance = col_double()
-# )
- 
-psu_div = psu_diversity %>% #A tibble: 5,241 x 7
-  dplyr::group_by(YEAR, PRIMARY_SAMPLE_UNIT, STRAT, PROT) %>%
-  dplyr::summarize(
-    richness = first(richness),
-    simpson = first(simpson),
-    shannon = first(shannon))
-  
-#2. Plot data - look at your distribution 
-ggplot(data = psu_div, aes(x = STRAT)) +
-  geom_point(aes(y = simpson, color = "simpson"), color = "blue") +
-  geom_line(aes(y = simpson, color = "simpson"), color = "blue")
-
-ggplot(data = psu_div) +
- (mapping = aes(x = YEAR, y = simpson)) 
-# ggplot(data = psu_div, aes(x = YEAR, color = simpson)) + 
-#   geom_density()
-# 
-# hist(psu_div$simpson, main ="")
-
-ggplot(data = psu_div, aes(x = YEAR)) +
-  geom_point(aes(y = simpson, color = "simpson"),color = "blue") +
-  geom_line(aes(y = simpson, color = "simpson"), color = "blue") +
-  facet_grid(STRAT ~ .) 
-
-summary(psu_div$richness)
-#   Min.    1st Qu.  Median    Mean    3rd Qu.    Max. 
-#   1.00    32.00    39.00     38.64   46.00      73.00
-summary(psu_div$shannon)
-#   Min.    1st Qu.  Median    Mean    3rd Qu.    Max.
-#   1.00    10.27    13.48     13.45   16.55      30.15
-summary(psu_div$simpson)
-#   Min.    1st Qu.  Median    Mean    3rd Qu.    Max. 
-#   1.000   5.804    8.103     8.247   10.465     22.017 
-
-#3. Check for normality using quantile-quantile plot 
-qqnorm(psu_div$simpson) 
-qqline(psu_div$simpson, lty=2)  # note that lty is the line type (2=medium dashes; try different values betweem 1-6)
-
-#4. Test whether data is NOT normal using Shapiro-Wilk Normaility Test
-shapiro.test(psu_div$simpson)
-#W = 0.99184, p-value = 4.496e-16      
-#p-value is less then 0.5 so the data is NOT normally distributed. 
-
-#5. Check skewness 
-skew<-function(x){ 
-  m3<-sum((x-mean(x))^3)/length(x) # note that the length expression automatically determines the sample size of your data
-  s3<-sqrt(var(x))^3
-  m3/s3} 
-skew(psu_div$simpson) #0.3071657
-
-#6. Check whether the calculated skew value is significantly different than zero (i.e., not normal) using a t-test. To calulate the t-value, divide the skew by its standard error:
-skew(psu_div$simpson)/sqrt(6/length(psu_div$simpson)) 
-#8.723182
-# note that a rough measure of the standard error of the skewness is "sqrt{6/n}" where n is the sample size
-
-length(psu_div$simpson) #4839
-
-#7. check the probability of this t-value by chance alone when the skew is zero using the following:
-1-pt(8.723182, 4838) #pt=cummulative density function of t-dist, first number=calculated t-value; second=df
-#0.981466
-
-#8. Check for homoscedasticity: can use var.test, fligner.test, or bartlett.test
-bartlett.test(psu_div$simpson~psu_div$YEAR) #between simpson and year 
-#Bartlett's K-squared = 38.613, df = 14, p-value = 0.0004185
-
-bartlett.test(psu_div$simpson~psu_div$STRAT) #between simpson and strata
-#Bartlett's K-squared = 71.143, df = 6, p-value = 2.382e-13
-
-#9. Transform data using Boxcox method 
-#need non-zero data for boxcox method to add a small amount to every value
-psu_div$simpson_t = psu_div$simpson+0.01
-b = boxcox(psu_div$simpson_t~psu_div$YEAR) 
-lamda = b$x #lambda values  
-lik = b$y  #y is values of liklihood %>%
-bc = cbind(lamda,lik) 
-bc[order(-lik),] #use the lamda with the highest likelihood to transform your data #lambda of 0.70707071 is best transformation
-psu_div$simpson_boxcox = psu_div$simpson^0.70707071 #simpson_boxcox is now transformed using the boxcox method 
-psu_div$simpson_boxcox = psu_div$simpson-1
-psu_div$simpson_boxcox = psu_div$simpson/0.70707071
-
-#10. Check for normality of transformed data 
-ggplot() + geom_density(aes(x=psu_div$simpson_boxcox))
-
-qqnorm(psu_div$simpson_boxcox) 
-qqline(psu_div$simpson_boxcox, lty=2)
-shapiro.test(psu_div$simpson_boxcox)
-#W = 0.99184, p-value = 4.496e-16
-skew(psu_div$simpson_boxcox)
-#0.3071657
-skew(psu_div$simpson_boxcox)/sqrt(6/length(psu_div$simpson_boxcox)) 
-#8.723182
-1-pt(8.723182, 4838)
-# 0
-
-# if data is normal after transformation, proceed with parametric test 
-
-#10. Mann-Whitney or t-test parametric test 
-
-#11. ANOVA Parametric test 
-  ANOVA = aov(psu_div$simpson_boxcox~psu_div$YEAR) 
-  #plot(ANOVA)
-  summary(ANOVA)
-#               Df Sum Sq Mean Sq F value Pr(>F)
-#psu_div$YEAR    1     26   25.82   1.155  0.283
-#Residuals    4837 108147   22.36    
-#??WHY IS DF 1 AND NOT 14?
-  
-drop1(ANOVA,~.,test="F") # type III SS and F Tests 
-#                      Df Sum of Sq    RSS    AIC F value Pr(>F)
-#<none>                    108147 15038               
-#psu_div$YEAR  1    25.816 108172 15037  1.1546 0.2826
-
-ANOVA = aov(psu_div$simpson_boxcox~psu_div$STRAT) 
-  #plot(ANOVA)
-  summary(ANOVA)
-  
-ANOVA = aov(simpson~YEAR, data = psu_div) 
-  #plot(ANOVA)
-  summary(ANOVA)
-  
-ANOVA = aov(simpson~STRAT, data = psu_div) 
-  #plot(ANOVA)
-summary(ANOVA)
-
-
-# for post-hoc pairwise tests
-#TukeyHSD(ANOVA) # where fit comes from aov()
-
-
-```
 
 ```{r psu removed 2004}
 
@@ -2488,6 +2340,7 @@ Spatial variables:
 - latitude and longitude (continuous covariate)
 
 Environmental variables: 
+- strata (categorical factor)
 - Rugosity (categorical factor)
 - bottom depth (continuous covariate)
 - vertical relief (continuous covariate)
@@ -2503,7 +2356,6 @@ Categorical factors: models parametrically to determine their mean effect sizes 
 
 library(mgcv)
 library(tidyverse)
-
 ```
 
 ```{r strata environmental characteristics}
@@ -2531,12 +2383,35 @@ $\epsilon_i$ the residual error
   #s() smooth term in gam model 
   #bs() a two letter character string indicating the smoothing basis to use (ts plate regression splines)
 
-gam = data %>% 
-  select() %>% 
-  mutate(
+# 1. Read in data and remove years (optional)
+psu_diversity = read_csv("big_csv/diversity_without_spe/psu_diversity_no_spp_merged.csv") #A tibble: 1,689,982 x 9
+
+# the psu_diversity dataframe has a value for each diversity metric that is repeated for each YEAR/PSU for each species record....need to remove duplicate rows and can also select columns of interest for the analysis of diversity metrics
+psu_div = psu_diversity %>% 
+  select(YEAR, PRIMARY_SAMPLE_UNIT, STRAT, PROT, richness, simpson, shannon) %>%
+  group_by(YEAR, PRIMARY_SAMPLE_UNIT, STRAT, PROT) %>%
+  summarize(
+    richness = first(richness),
+    simpson = first(simpson),
+    shannon = first(shannon)) # 5241 x 6
+
+#Build full model and null model based on (transformed) response variable
+
+  richness_fullmodel = gam(formula(richness~YEAR+STRAT+PROT), family=poisson, data=psu_div)
+  
+  richness_nullmodel = gam(formula(richness~1), family=poisson, data=psu_div) 
+  
+  shannon_fullmodel = gam(formula(shannon~YEAR+STRAT+PROT), data=psu_div)
+  shannon_nullmodel=gam(formula(shannon~1), data=psu_div)
+  
+  summary(shannon_fullmodel) #explained deviance (R2), variance of residuals, etc
+  anova(shannon_fullmodel)#p-value and F-test
+  gam.check(shannon_fullmodel) #produces graphical diagnosis for the model. Use to 1) assess normality with QQ plot and the histogram 2) homogeneity (residuals vs fitted values) 3) model fit (fitted values versus observed values). Ideally the response against fitted values should show a straight line. 
+
     rich_model = gam(formula(richness,"~year+rugosity+s(Long,Lat,by=year,bs='ts')+s(depth,bs='ts')+s(vert_relief,bs='ts')+s(per_coral_cover,bs='ts')+s(per_hardbottom,bs='ts')"), family=poisson),
     rich_nullmodel = gam(formula(richness,"~1"), family=poisson),
-    shan_model = gam(formula(shannon,"~year+rugosity+s(Long,Lat,by=year,bs='ts')+s(depth,bs='ts')+s(vert_relief,bs='ts')+s(per_coral_cover,bs='ts')+s(per_hardbottom,bs='ts')"), family=poisson),
+    
+    shan_model = gam(formula(shannon,"~year+rugosity+s(Long,Lat,by=year,bs='ts')+s(depth,bs='ts')+s(vert_relief,bs='ts')+s(per_coral_cover,bs='ts')+s(per_hardbottom,bs='ts')")),
     shannon_nullmodel = gam(formula("log(",shannon,")~1"))) 
 
 mgcv::summary(gam$rich_model) #explained deviance (R2), variance of residuals, etc. 
