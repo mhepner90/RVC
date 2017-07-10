@@ -312,6 +312,7 @@ alphadiv.list=lapply(list(catch_abund,catch_biomass,catch_pres.abs),
 names(alphadiv.list)=c("abund","biomass","pres.abs")
 
 #Generate figure legend based on CB map
+
 #Read in shapefile and fortify
 cb.shp=readOGR("./Chesapeake Bay Shapefiles/ChesMMAP buffer",layer="CMapbuffer25k")
 cb.shp.fortify=fortify(cb.shp)
@@ -408,12 +409,15 @@ lapply(alphasp.list,class)
 #Project latlong coordinates onto an ellipse
 for(i in seq_along(alphasp.list)) { 
   proj4string(alphasp.list[[i]])="+proj=longlat +ellps=GRS80 +datum=NAD83 +no_defs" }
+
 #Transform the projection into cartesian coordinates
 alphasp.list=lapply(seq_along(alphasp.list),function(i) {
   spTransform(alphasp.list[[i]],CRS("+proj=utm +zone=18 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")) } )
+
 #Create a spatial grid onto which interpolated values can be plotted
 #Read in 2.5 km buffered polygon based on position of ChesMMAP stations from ESRI shapefile
 cb.shp=readOGR("./Chesapeake Bay Shapefiles/ChesMMAP buffer",layer="CMapbuffer25k")
+
 #Generate interpolation grid
 cb.shp=spTransform(cb.shp,CRS("+proj=utm +zone=18 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0 ")) 
 grd=spsample(cb.shp,type="regular",n=2500,nsig=2) 
@@ -423,7 +427,9 @@ grd=spsample(cb.shp,type="regular",n=2500,nsig=2)
 clusterExport(cl,varlist=c("grd"))
 
 #Interpolate across all months and years by passing each matrix to a different core  
+
 #Perform kriging interpolation for each matrix (abundance-,biomass-, and presence/absence-weighted)
+
 krigeall.list=parLapply(cl,alphasp.list,function(i) {
 lapply(names(i@data)[66:71],function(j) {
 as.data.frame(autoKrige(formula(paste("log10(",j,")~1")),i,grd)$krige_output) } ) } )
