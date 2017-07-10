@@ -420,7 +420,7 @@ domain_fk_abun <- read_csv('big_csv/abundance_domain/domain_fk_abun.csv',
 domain_fk_abun_no_spp = domain_fk_abun %>%
   filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species 
 
-fk_domain_abun_diversity_no_spp = domain_fk_abun_no_spp %>% #15,651 x 10
+fd_trial = domain_fk_abun_no_spp %>% #15,651 x 10
   filter(protected_status != "all") %>% 
   select(YEAR, protected_status, SPECIES_CD, abundance) %>% #10,434 * 4
   group_by(YEAR, protected_status) %>% ##32 groups (fk 16*2)
@@ -428,14 +428,43 @@ fk_domain_abun_diversity_no_spp = domain_fk_abun_no_spp %>% #15,651 x 10
   mutate(
     data_wide = map(data, function(x) 
       full_join(x, trait_matrix %>% select(SPECIES_CD), by='SPECIES_CD') %>%
-        mutate(abundance = ifelse(is.na(abundance), 0, abundance)) %>%
-        spread(SPECIES_CD, abundance, fill =0)), 
-    func.3 = map(data_wide, function(x) 1/1-(as.matrix(func.dist) %*% x))) 
-    
+        mutate(abundance = ifelse(is.na(abundance), 0, abundance)))) %>%
+  unnest(data_wide) %>% 
+  spread(SPECIES_CD, abundance, fill =0) %>% 
+  select(-YEAR, -protected_status) %>% 
+  as.matrix()
+
+raoQ.2 = 1/(1-apply(fd_trial, 1, function(x) t(x) %*% as.matrix(func.dist) %*% x))
+
+dim(fd_trial) # 32 348
+dim(as.matrix(func.dist)) #348 348
+
+#abundance.matrix 348 species (columns) * 32 communities (rows)
+#func.dist matrix 348 species (columns) * 348 species (rows)
+#can't multiple matrices 
+
 ######PREVIOUS TRIALS TO GET FD CODE TO WORK 
 
-func.2 = map(data_wide, function(x) 1/1-(x %*% as.matrix(func.dist) %*% x)))
-func.1 = map(data_wide, function(x) 1/1-apply(x,1, function(x) t(x) %*% as.matrix(func.dist)))) #worked but not how i wanted it to 
+# fk_domain_abun_diversity_no_spp = domain_fk_abun_no_spp %>% #15,651 x 10
+#   filter(protected_status != "all") %>% 
+#   select(YEAR, protected_status, SPECIES_CD, abundance) %>% #10,434 * 4
+#   group_by(YEAR, protected_status) %>% ##32 groups (fk 16*2)
+#   nest(-YEAR) %>%  
+#   mutate(
+#     data_wide = map(data, function(x) 
+#       full_join(x, trait_matrix %>% select(SPECIES_CD), by='SPECIES_CD') %>%
+#         mutate(abundance = ifelse(is.na(abundance), 0, abundance)) %>%
+#         spread(SPECIES_CD, abundance, fill =0)))
+#    
+# idk.2 = map(fk_domain_abun_diversity_no_spp$data_wide, function(x) as.matrix(x)) 
+# raoQ = 1/(1-apply(idk.2, 1, function(x) as.matrix(func.dist) %*% x)) 
+
+#abundance.matrix = as.matrix(fk_domain_abun_diversity_no_spp$data_wide)
+#raoQ = 1/(1-apply(abundance.matrix, 1, function(x) as.matrix(func.dist) %*% x))
+
+#func.3 = map(data_wide, function(x) 1/1-(as.matrix(func.dist) %*% x))) 
+#func.2 = map(data_wide, function(x) 1/1-(x %*% as.matrix(func.dist) %*% x)))
+#func.1 = map(data_wide, function(x) 1/1-apply(x,1, function(x) t(x) %*% as.matrix(func.dist)))) #worked but not how i wanted it to 
 
 # DEBUG with own dbFD function for use of browser() to inspect variables before stop() or other errors
 source('dbFD_debug.R')
@@ -443,47 +472,46 @@ i_dbg <<- 0
 # rm(dbFD) # remove function when ready to try FD:dbFD
 
 ## FK's domain abundance only identified to species level (without spp.) 
-fk_domain_abun_diversity_no_spp = domain_fk_abun_no_spp %>% #15,651 x 10
-  filter(protected_status != "all") %>% 
-  select(YEAR, protected_status, SPECIES_CD, abundance) %>% #10,434 * 4
-  group_by(YEAR, protected_status) %>% ##32 groups (fk 16*2)
-  nest(-YEAR) %>%  
-  mutate(
-    data_wide = map(data, function(x) 
-      full_join(x, trait_matrix %>% select(SPECIES_CD), by='SPECIES_CD') %>%
-        mutate(abundance = ifelse(is.na(abundance), 0, abundance)) %>%
-        spread(SPECIES_CD, abundance, fill =0)), 
+# fk_domain_abun_diversity_no_spp = domain_fk_abun_no_spp %>% #15,651 x 10
+#   filter(protected_status != "all") %>% 
+#   select(YEAR, protected_status, SPECIES_CD, abundance) %>% #10,434 * 4
+#   group_by(YEAR, protected_status) %>% ##32 groups (fk 16*2)
+#   nest(-YEAR) %>%  
+#   mutate(
+#     data_wide = map(data, function(x) 
+#       full_join(x, trait_matrix %>% select(SPECIES_CD), by='SPECIES_CD') %>%
+#         mutate(abundance = ifelse(is.na(abundance), 0, abundance)) %>%
+#         spread(SPECIES_CD, abundance, fill =0)), 
     # functional = map(data_wide,
     #                  function(x) 1/(1 - dbFD(as.matrix(func.dist), x))))
-    spp_idx = map(data_wide, function(x) apply(x, 2, sum) > 0),
+   # spp_idx = map(data_wide, function(x) apply(x, 2, sum) > 0),
     #fk_domain_abun_diversity_no_spp$spp_idx[[1]]
-    dbFD_abundance = map2(data_wide, spp_idx, function(x,y) x[,y]), 
-    dbFD_traits    = map(spp_idx, function(y) as.matrix(func.dist)[y,y]),
+   # dbFD_abundance = map2(data_wide, spp_idx, function(x,y) x[,y]), 
+    #dbFD_traits    = map(spp_idx, function(y) as.matrix(func.dist)[y,y]),
     #test = 1/(1 - dbFD(dbFD_traits, dbFD_abundance))
-    functional = map2(dbFD_traits, dbFD_abundance, 
-                      function(x, a) 1/(1 - dbFD(x, a, stand.FRic=F)))) #x = distance matrix, a
+    #functional = map2(dbFD_traits, dbFD_abundance, function(x, a) 1/(1 - dbFD(x, a, stand.FRic=F)))) #x = distance matrix, a
                       #function(x, a) 1/(1 - divc(x, a))))
 
 #FRic: No dimensionality reduction was required. All 176 PCoA axes were kept as 'traits'.  Called from: dbFD(x, a, stand.FRic = F)
 
 ### PACKAGE ade4 Rao's Q with divc()
-fk_domain_abun_diversity_no_spp = domain_fk_abun_no_spp %>% #15,651 x 10
-  filter(protected_status != "all") %>% 
-  select(YEAR, protected_status, SPECIES_CD, abundance) %>% #10,434 * 4
-  group_by(YEAR, protected_status) %>% ##32 groups (fk 16*2)
-  nest(-YEAR) %>%  
-  mutate(
-    data_wide = map(data, function(x) 
-      full_join(x, trait_matrix %>% select(SPECIES_CD), by='SPECIES_CD') %>%
-        mutate(abundance = ifelse(is.na(abundance), 0, abundance)) %>%
-        spread(SPECIES_CD, abundance, fill =0)), 
-    raoQ = map(data_wide, 
-                function(x) 1/(1 - divc(x, as.dist(func.dist))))) 
-
-  source('divc_debug.R')
-  x = fk_domain_abun_diversity_no_spp$data_wide[[1]] # View(x)
-  #divc(x, as.dist(func.dist))
-  divc(x, func.dist)
+# fk_domain_abun_diversity_no_spp = domain_fk_abun_no_spp %>% #15,651 x 10
+#   filter(protected_status != "all") %>% 
+#   select(YEAR, protected_status, SPECIES_CD, abundance) %>% #10,434 * 4
+#   group_by(YEAR, protected_status) %>% ##32 groups (fk 16*2)
+#   nest(-YEAR) %>%  
+#   mutate(
+#     data_wide = map(data, function(x) 
+#       full_join(x, trait_matrix %>% select(SPECIES_CD), by='SPECIES_CD') %>%
+#         mutate(abundance = ifelse(is.na(abundance), 0, abundance)) %>%
+#         spread(SPECIES_CD, abundance, fill =0)), 
+#     raoQ = map(data_wide, 
+#                 function(x) 1/(1 - divc(x, as.dist(func.dist))))) 
+# 
+#   source('divc_debug.R')
+#   x = fk_domain_abun_diversity_no_spp$data_wide[[1]] # View(x)
+#   #divc(x, as.dist(func.dist))
+#   divc(x, func.dist)
   #Error in mutate_impl(.data, dots) : Non convenient df
 
 #divc(df, dis, scale) 
