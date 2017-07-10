@@ -128,7 +128,7 @@ group_by =  dplyr::group_by #override plotly::group_by
 summarise = dplyr::summarise #override plotly::summarise
 ```
 
-## Functional distance trait based matrix (from Lefcheck et al.,)
+## Functional distance trait based matrix (from Lefcheck et al., 2014 ChessMap.Rmd)
 
 Gowdis computes the Gower (1971) similarity coefficient exactly as described by Podani (1999), then converts it to a dissimilarity coefficient by using D = 1 - S
 
@@ -149,65 +149,64 @@ library(FD)
 #biocLite("ggtree", type = "source")
 library(tidyverse)
 
-trait_matrix = read_csv('functional_diversity/species_trait_matrix_348_spp.csv')
-
-# Parsed with column specification:
-# cols(
-#   Species_code = col_integer(),
-#   SPECIES_CD = col_character(),
-#   Latin_name = col_character(),
-#   Common_name = col_character(),
-#   Maxlength = col_double(),
-#   Trophic_level = col_double(),
-#   Trophic_group = col_character(),
-#   Water_column = col_character(),
-#   Diel_activity = col_character(),
-#   Substrate_type = col_character(),
-#   Complexity = col_character(),
-#   Gregariousness = col_integer()
-
-trait_matrix = trait_matrix %>%
-  as.tibble() %>%
-  mutate(
-    SPECIES_CD = toupper(as.character(SPECIES_CD))) %>% 
-  arrange(SPECIES_CD)%>% 
-  select(SPECIES_CD, Maxlength, Trophic_level, Trophic_group, Water_column, Diel_activity, Substrate_type, Complexity, Gregariousness) %>% #348*9
-  group_by(
-    SPECIES_CD, Maxlength, Trophic_level, Trophic_group, Water_column, Diel_activity, Substrate_type, Complexity, Gregariousness) %>%
-  #summarize(n = n()) %>%
-  #select(-n) %>%
-  ungroup() %>%
-  mutate(
-    # ordinal traits
-    Complexity = ordered(Complexity, levels=c("Low","Medium","High")),
-    Gregariousness = ordered(Gregariousness, levels=c("1","2","3"))) %>%
-  as.data.frame()
-
-#Set species names as row.names and remove extra columns
-rownames(trait_matrix)=trait_matrix$SPECIES_CD 
-
-#Calculate Gower distances. Variables have equal weight. 
-traits.dist = gowdis(trait_matrix, ord="podani")
-
-#Use clustering method to produce ultrametric dendrogram because values of Rao's Q can be maximized when fewer than the max number of functional types are present unless distances are ultramtetric 
-
-#to account for sensitivity in clustering use multiple algorithms  (Mouchet et al., 2008) 
-tree_methods = c("single","complete","average","mcquitty","ward.D") #average is best clustering method 
-trees=lapply(tree_methods,  function(i) hclust(traits.dist, method=i))
-par(mfrow=c(3,2))
-for(i in 1:length(trees)) {plot(trees[[i]])} #plots the 5 different kinds of trees 
-
-#convert trees to ultrametric
-trees.ultra= lapply(trees,function(i) cl_ultrametric(as.hclust(i)))
-
-#Plot each tree
-par(mfrow=c(3,2))
-for (i in 1:length(trees.ultra)) {plot(trees.ultra[[i]])} #plots the 5 different kinds of trees 
-
-
 func_dist_rds <- "functional_diversity/func.dist.rds"
 if (!file.exists(func_dist_rds)){
-
+  
+  trait_matrix = read_csv('functional_diversity/species_trait_matrix_348_spp.csv')
+  
+  # Parsed with column specification:
+  # cols(
+  #   Species_code = col_integer(),
+  #   SPECIES_CD = col_character(),
+  #   Latin_name = col_character(),
+  #   Common_name = col_character(),
+  #   Maxlength = col_double(),
+  #   Trophic_level = col_double(),
+  #   Trophic_group = col_character(),
+  #   Water_column = col_character(),
+  #   Diel_activity = col_character(),
+  #   Substrate_type = col_character(),
+  #   Complexity = col_character(),
+  #   Gregariousness = col_integer()
+  
+  trait_matrix = trait_matrix %>%
+    as.tibble() %>%
+    mutate(
+      SPECIES_CD = toupper(as.character(SPECIES_CD))) %>% 
+    arrange(SPECIES_CD)%>% 
+    select(SPECIES_CD, Maxlength, Trophic_level, Trophic_group, Water_column, Diel_activity, Substrate_type, Complexity, Gregariousness) %>% #348*9
+    group_by(
+      SPECIES_CD, Maxlength, Trophic_level, Trophic_group, Water_column, Diel_activity, Substrate_type, Complexity, Gregariousness) %>%
+    #summarize(n = n()) %>%
+    #select(-n) %>%
+    ungroup() %>%
+    mutate(
+      # ordinal traits
+      Complexity = ordered(Complexity, levels=c("Low","Medium","High")),
+      Gregariousness = ordered(Gregariousness, levels=c("1","2","3"))) %>%
+    as.data.frame()
+  
+  #Set species names as row.names and remove extra columns
+  rownames(trait_matrix)=trait_matrix$SPECIES_CD 
+  
+  #Calculate Gower distances. Variables have equal weight. 
+  traits.dist = gowdis(trait_matrix, ord="podani")
+  
+  #Use clustering method to produce ultrametric dendrogram because values of Rao's Q can be maximized when fewer than the max number of functional types are present unless distances are ultramtetric 
+  
+  #to account for sensitivity in clustering use multiple algorithms  (Mouchet et al., 2008) 
+  tree_methods = c("single","complete","average","mcquitty","ward.D") #average is best clustering method 
+  trees=lapply(tree_methods,  function(i) hclust(traits.dist, method=i))
+  par(mfrow=c(3,2))
+  for(i in 1:length(trees)) {plot(trees[[i]])} #plots the 5 different kinds of trees 
+  
+  #convert trees to ultrametric
+  trees.ultra= lapply(trees,function(i) cl_ultrametric(as.hclust(i)))
+  
+  #Plot each tree
+  par(mfrow=c(3,2))
+  for (i in 1:length(trees.ultra)) {plot(trees.ultra[[i]])} #plots the 5 different kinds of trees 
+  
   #Build the consensus tree (Mouchet et al 2008 Oikos)  
   ensemble.trees=cl_ensemble(list=trees) #list of clusterings 
   class(ensemble.trees)
@@ -241,12 +240,10 @@ if (!file.exists(func_dist_rds)){
   func.dist=func.dist/max(func.dist)
   
   saveRDS(func.dist, func_dist_rds)
-
+  
 } else { 
   func.dist <- readRDS(func_dist_rds)
 } 
-
-func.dist_common=func.dist/max(func.dist)
 
 #Plot the best tree - average 
 pdf("functional_dendrogram.pdf", width = 30, height = 70)
@@ -398,6 +395,7 @@ d3tree2(
 ```
 
 ```{r practice FD code}
+
 trait_matrix = read_csv('functional_diversity/species_trait_matrix_348_spp.csv')
 trait_matrix = trait_matrix %>%
   as.tibble() %>%
@@ -421,6 +419,23 @@ domain_fk_abun <- read_csv('big_csv/abundance_domain/domain_fk_abun.csv',
 
 domain_fk_abun_no_spp = domain_fk_abun %>%
   filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species 
+
+fk_domain_abun_diversity_no_spp = domain_fk_abun_no_spp %>% #15,651 x 10
+  filter(protected_status != "all") %>% 
+  select(YEAR, protected_status, SPECIES_CD, abundance) %>% #10,434 * 4
+  group_by(YEAR, protected_status) %>% ##32 groups (fk 16*2)
+  nest(-YEAR) %>%  
+  mutate(
+    data_wide = map(data, function(x) 
+      full_join(x, trait_matrix %>% select(SPECIES_CD), by='SPECIES_CD') %>%
+        mutate(abundance = ifelse(is.na(abundance), 0, abundance)) %>%
+        spread(SPECIES_CD, abundance, fill =0)), 
+    func.3 = map(data_wide, function(x) 1/1-(as.matrix(func.dist) %*% x))) 
+    
+######PREVIOUS TRIALS TO GET FD CODE TO WORK 
+
+func.2 = map(data_wide, function(x) 1/1-(x %*% as.matrix(func.dist) %*% x)))
+func.1 = map(data_wide, function(x) 1/1-apply(x,1, function(x) t(x) %*% as.matrix(func.dist)))) #worked but not how i wanted it to 
 
 # DEBUG with own dbFD function for use of browser() to inspect variables before stop() or other errors
 source('dbFD_debug.R')
@@ -473,7 +488,10 @@ fk_domain_abun_diversity_no_spp = domain_fk_abun_no_spp %>% #15,651 x 10
 
 #divc(df, dis, scale) 
 #df: a data frame with elements as rows, samples as columns, and abundance, presence-absence or frequencies as entries
-#dis: an object of class dist containing distances or dissimilarities among elements. If dis is NULL, Gini-Simpson index is performed
+#dis: an object of class dist containing distances or dissimilarities among elements. If dis is NULL, Gini-Simpson index is performed  
+  #raoQ = map(data_wide, function(x) 1/(1 - divc(x, as.dist(func.dist))))) 
+ #Compute functional diversity 
+   func.div=1/(1-apply(fk_domain_abun_diversity_no_spp$data_wide,1,function(x) t(x) %*% as.matrix(func.dist) %*% x))
 
 ```
 ## Fetch the RVC data from 
@@ -943,7 +961,7 @@ strata_fk_abun <- read_csv("big_csv/abundance_strata/strata_fk_abun.csv",
 strata_fk_abun_no_spp = strata_fk_abun %>%
   filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species 
 
-fk_strata_abun_diversity_no_spp = strata_fk_abun_no_spp %>% #124,116 * 12
+fk_strata_abun_diversity_no_spp = strata_fk_abun_no_spp %>% #132,930 * 12
   filter(protected_status == 'all') %>% #66,058 * 12
   select(YEAR, STRAT, protected_status, SPECIES_CD, abundance) %>% #62,058 * 5
   group_by(YEAR, STRAT, SPECIES_CD) %>% #33,468 gruops    
@@ -1378,11 +1396,6 @@ ggsave(file="fk_MeanBiomass_ByYearANDStratum_YRsubset.pdf", path="big_csv/plots"
 ```
 
 ```{r psu biodiversity plots and maps}
-
-psu_fk_abun_diversity = read_csv("big_csv/diversity_without_spe/psu_fk_abun_diversity_no_spp.csv",
-                                 col_types = cols(
-                                   protected_status = col_character())) # this was already here in the chunk so i didn't want to delete it, but not using it in code below - KS
-
 
 psu_diversity = read_csv("big_csv/diversity_without_spe/psu_diversity_no_spp_merged.csv",
                       col_types = cols(
@@ -2424,6 +2437,29 @@ AIC(gam$rich_model)
 
 ```
 
+```{r Mapping diversity}
+
+library(rgdal) #readOGR, spTransform 
+library(parallel) #clusterExport 
+
+#Create a spatial grid onto which interpolated values can be plotted
+
+#read in shapefile 
+fk.shp = readOGR( dsn = "FKNMS_sample_grid", layer = "FlaKeys_Grid") 
+#Generate interpolation grid
+fknms.shp=spTransform(fk.shp,CRS("+proj=utm +zone=18 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0 ")) 
+grd=spsample(fknms.shp,type="regular",n=2500,nsig=2) #n is sample size
+par(mfrow=c(1,1))
+plot(grd)
+
+#Send interpolation grid to each core
+parallel::clusterExport(cl=NULL, varlist=c("grd"))
+#Error in defaultCluster(cl) : no cluster 'cl' supplied and none is registered
+
+#Perform kriging interpolation for each matrix
+
+```
+
 ```{r shapefiles}
 library(foreign)
 dbf = read.dbf('FL_files/FLGrid_100m_work8.dbf')
@@ -2436,7 +2472,7 @@ library(spatstat)
 library(lattice)
 library(maps)
 library(rgeos)
-library(rgdal)
+library(rgdal) #readOGR 
 library(ggmap)
 library(tmap)
 library(marmap) #marine maps 
