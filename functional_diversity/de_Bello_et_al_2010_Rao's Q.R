@@ -37,7 +37,7 @@
 
 
 
-Rao<-function(sample, dfunc, dphyl, weight=F, Jost=F, structure=NULL)   {
+Rao <-function(sample, dfunc, dphyl, weight=F, Jost=F, structure=NULL)   {
   library(ade4)
 
 ####function Qdecomp by by VillÈger & Mouillot (J Ecol, 2008) modify by Wilfried Thuiller #####
