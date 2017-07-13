@@ -11,7 +11,7 @@ output: html_document
 1. psu biomass dataframe
 
 ### Outputs 
-1.  Functional dendogram
+1.  Functional dendogram (Fig: The final ultrametric functional dendrogram for 348 reef fish in the Florida Keys obtained using hierarchial agglometric clustering.)
 + Trait-matrix visualization 
 
 1.  By *strata* for each sampling year (using PSU data)  
@@ -30,10 +30,11 @@ output: html_document
 + Shannon diversity as effective number of species and plot
 + Functional diversity as effective number of species and plot
 
-1. Map of FKNMS with strata 
+1. Figure of the FKNMS coral reef tract with strata, subregions, and NTMR 
 
 1. Statistics 
 - Interpolate diversity for each year and strata using kriging 
++ Figure. Spatial distribution of each matrices over time. 
 - Extract and interpolate the residuals of each index fitted against each other using GAM
 + temporal variable: YEAR
 + spatial variable: Latitude, longitude
