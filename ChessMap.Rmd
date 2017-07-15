@@ -25,7 +25,7 @@ Characterizing bivariate relationships (SPLOMs, Mantel tests)
 Mapping local diversity                                                                 
 Fitting GAMs and examining spatial signal in residuals                                  
 Fitting GAMs and partitioning deviance                                                  
-                                                                                                    
+                                                                         
 ```{r library}
 library(ade4) #Calls: mantel.rtest, dudi.mix
 library(ape) #Calls: read.tree, read.nexus, chronopl, as.phylo
