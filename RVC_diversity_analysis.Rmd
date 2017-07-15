@@ -637,310 +637,417 @@ if(!file.exists("psu_div_rds")){
 
 ```
 
-```{r psu abundance plots and maps}
+```{r bind psu matrices and sample data}
 
-psu_abun <- read_csv('big_csv/abundance_psu/psu_fk_abundance_no_spp_merged.csv', 
-                       col_types = cols(
-                          YEAR = col_integer(),
-                          REGION = col_character(),
-                          STRAT = col_character(),
-                          PROT = col_integer(),
-                          PRIMARY_SAMPLE_UNIT = col_character(),
-                          SPECIES_CD = col_character(),
-                          m = col_integer(),
-                          var = col_double(),
-                          abundance = col_double(),
-                          protected_status = col_character())) # 1,689,982  x 10
-
-# the psu_abun dataframe has an abundance for each species for each psu so sum abundance across species for each psu...skip this step for diversity indices
-psu_abun_sum <- psu_abun %>%
-  group_by(YEAR, PRIMARY_SAMPLE_UNIT, STRAT) %>%
-  summarize(abundance_sum = sum(abundance)) # 5241 x 4 (5241 = total # of PSUs sampled from 1999 to 2016)
+if(!file.exists("psu_matrices_data_rds")){
+  psu_abun = read_rds("psu_abun_sum_rds") #5,241*4
+  psu_bio = read_rds("psu_bio_sum_rds") #5,241*5
+  psu_div = read_rds("psu_div_rds") # #5,241*7
+  sample_data = as.tibble(read_csv("big_csv/sample_data/FK/sample_data_all_years.csv")) 
+  #PRIMARY_SAMPLE_UNIT, YEAR, MONTH, DAY, STATION_N,R LAT_DEGREES, LON_DEGREES, DEPTH, UNDERWATER_VISIBILITY, MAPGRID_NR, HABITAT_CD, ZONE_NR, SUBREGION_NR, MPA_NR, PROT, STRAT
   
-# (optional) the psu_bio_sum_YRsubset dataframe produced with the code below has years with low sample sizes (few PSUs)/missing strata removed (i.e., 1999, 2000, and 2004)
-psu_abun_sum_YRsubset <- psu_abun_sum %>%
-  filter(YEAR!=1999,YEAR!=2000,YEAR!=2004) # 4725 x 4
+  all_matrices = inner_join(psu_abun, psu_bio)
+  all_matrices = inner_join(all_matrices, psu_div)
+  all_matrices_data = inner_join(all_matrices, sample_data)
 
-# 2. Plot data by year and stratum separately and together
-# summarize data to get mean and standard error for each year/stratum combination  
-psu_abun_forPlot = psu_abun_sum %>% 
-  group_by(YEAR, STRAT) %>%
-  summarize(
-    abundance_mean = mean(abundance_sum),
-    abundance_n = length(abundance_sum),
-    abundance_sd = sd(abundance_sum),
-    abundance_se = abundance_sd / sqrt(abundance_n),
-    abundance_min = min(abundance_sum),
-    abundance_max = max(abundance_sum))
-# plot mean and se across strat and year using bar graphs
-# by STRAT
-ggplot(psu_abun_forPlot, aes(x=STRAT, y=abundance_mean)) + geom_bar(position=position_dodge(), stat="identity") + geom_errorbar(aes(ymin=abundance_mean-abundance_se, ymax=abundance_mean+abundance_se), width=.2, position=position_dodge(.9)) + theme_classic() + theme(axis.text.x = element_text(angle=90)) + facet_wrap(~YEAR, scales='free_y')
-ggsave(file="fk_MeanAbundance_ByStratumForEachYear.pdf", path="big_csv/plots")
-# by YEAR
-ggplot(psu_abun_forPlot, aes(x=YEAR, y=abundance_mean, group=YEAR)) + geom_bar(position=position_dodge(), stat="identity") + geom_errorbar(aes(ymin=abundance_mean-abundance_se, ymax=abundance_mean+abundance_se), width=.2, position=position_dodge(.9)) + theme_classic() + theme(axis.text.x = element_text(angle=90)) + facet_wrap(~STRAT, scales='free_y')
-ggsave(file="fk_MeanAbundance_ByYearForEachStratum.pdf", path="big_csv/plots")
-# by STRAT and YEAR
-ggplot(psu_abun_forPlot, aes(x=YEAR, y=abundance_mean, colour=STRAT, group=STRAT)) + geom_point() + geom_line() + geom_errorbar(aes(ymin=abundance_mean-abundance_se, ymax=abundance_mean+abundance_se), width=.2)
-ggsave(file="fk_MeanAbundance_ByYearANDStratum.pdf", path="big_csv/plots")
-
-# do this for dataframe with subset of years as well
-# summarize data to get mean and standard error for each year/stratum combination  
-psu_abun_forPlot_YRsubset = psu_abun_sum_YRsubset %>% 
-  group_by(YEAR, STRAT) %>%
-  summarize(
-    abundance_mean = mean(abundance_sum),
-    abundance_n = length(abundance_sum),
-    abundance_sd = sd(abundance_sum),
-    abundance_se = abundance_sd / sqrt(abundance_n),
-    abundance_min = min(abundance_sum),
-    abundance_max = max(abundance_sum))
-# plot mean and se across strat and year using bar graphs
-# by STRAT
-ggplot(psu_abun_forPlot_YRsubset, aes(x=STRAT, y=abundance_mean)) + geom_bar(position=position_dodge(), stat="identity") + geom_errorbar(aes(ymin=abundance_mean-abundance_se, ymax=abundance_mean+abundance_se), width=.2, position=position_dodge(.9)) + theme_classic() + theme(axis.text.x = element_text(angle=90)) + facet_wrap(~YEAR, scales='free_y')
-ggsave(file="fk_MeanAbundance_ByStratumForEachYear_YRsubset.pdf", path="big_csv/plots")
-# by YEAR
-ggplot(psu_abun_forPlot_YRsubset, aes(x=YEAR, y=abundance_mean, group=YEAR)) + geom_bar(position=position_dodge(), stat="identity") + geom_errorbar(aes(ymin=abundance_mean-abundance_se, ymax=abundance_mean+abundance_se), width=.2, position=position_dodge(.9)) + theme_classic() + theme(axis.text.x = element_text(angle=90)) + facet_wrap(~STRAT, scales='free_y')
-ggsave(file="fk_MeanAbundance_ByYearForEachStratum_YRsubset.pdf", path="big_csv/plots")
-# by STRAT and YEAR
-ggplot(psu_abun_forPlot_YRsubset, aes(x=YEAR, y=abundance_mean, colour=STRAT, group=STRAT)) + geom_point() + geom_line() + geom_errorbar(aes(ymin=abundance_mean-abundance_se, ymax=abundance_mean+abundance_se), width=.2)
-ggsave(file="fk_MeanAbundance_ByYearANDStratum_YRsubset.pdf", path="big_csv/plots")
-
-### tried these for abundance but didn't look good (too many very low values mixed with a small number of very high values)
-#ggplot(data = psu_abun_sum) + geom_boxplot(mapping = aes(x = STRAT, y = abundance_sum)) + facet_wrap(~YEAR, scales="free_y")
-#ggplot(data = psu_abun_sum) + geom_boxplot(mapping = aes(x = YEAR, y = abundance_sum, group = YEAR)) + facet_wrap(~STRAT, scales="free_y")
-```
-
-```{r psu biomass plots and maps}
-
-psu_bio <- read_csv('big_csv/biomass_psu/psu_fk_biomass_no_spp_merged.csv', 
-                       col_types = cols(
-                          YEAR = col_integer(),
-                          REGION = col_character(),
-                          STRAT = col_character(),
-                          PROT = col_integer(),
-                          PRIMARY_SAMPLE_UNIT = col_character(),
-                          SPECIES_CD = col_character(),
-                          m = col_integer(),
-                          var = col_double(),
-                          biomass = col_double(),
-                          protected_status = col_character())) # 1,609,672  x 10
-
-# the psu_bio dataframe has a biomass for each species for each psu so sum biomass across species for each psu...skip this step for diversity indices
-psu_bio_sum <- psu_bio %>%
-  group_by(YEAR, PRIMARY_SAMPLE_UNIT, STRAT) %>%
-  summarize(biomass_sum = sum(biomass)) # 5241 x 4 (5241 = total # of PSUs sampled from 1999 to 2016)
-  
-# (optional) the psu_bio_sum_YRsubset dataframe produced with the code below has years with low sample sizes (few PSUs)/missing strata removed (i.e., 1999, 2000, and 2004)
-psu_bio_sum_YRsubset <- psu_bio_sum %>%
-  filter(YEAR!=1999,YEAR!=2000,YEAR!=2004) # 4725 x 4
-
-# plot data by year and stratum separately and together
-# summarize data to get mean and standard error for each year/stratum combination  
-psu_bio_forPlot = psu_bio_sum %>% 
-  group_by(YEAR, STRAT) %>%
-  summarize(
-    biomass_mean = mean(biomass_sum),
-    biomass_n = length(biomass_sum),
-    biomass_sd = sd(biomass_sum),
-    biomass_se = biomass_sd / sqrt(biomass_n),
-    biomass_min = min(biomass_sum),
-    biomass_max = max(biomass_sum))
-# plot mean and se across strat and year using bar graphs
-# by STRAT
-ggplot(psu_bio_forPlot, aes(x=STRAT, y=biomass_mean)) + geom_bar(position=position_dodge(), stat="identity") + geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2, position=position_dodge(.9)) + theme_classic() + theme(axis.text.x = element_text(angle=90)) + facet_wrap(~YEAR, scales='free_y')
-ggsave(file="fk_MeanBiomass_ByStratumForEachYear.pdf", path="big_csv/plots")
-# by YEAR
-ggplot(psu_bio_forPlot, aes(x=YEAR, y=biomass_mean, group=YEAR)) + geom_bar(position=position_dodge(), stat="identity") + geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2, position=position_dodge(.9)) + theme_classic() + theme(axis.text.x = element_text(angle=90)) + facet_wrap(~STRAT, scales='free_y')
-ggsave(file="fk_MeanBiomass_ByYearForEachStratum.pdf", path="big_csv/plots")
-# by STRAT and YEAR
-ggplot(psu_bio_forPlot, aes(x=YEAR, y=biomass_mean, colour=STRAT, group=STRAT)) + geom_point() + geom_line() + geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2)
-ggsave(file="fk_MeanBiomass_ByYearANDStratum.pdf", path="big_csv/plots")
-
-# do this for dataframe with subset of years as well
-# summarize data to get mean and standard error for each year/stratum combination  
-psu_bio_forPlot_YRsubset = psu_bio_sum_YRsubset %>% 
-  group_by(YEAR, STRAT) %>%
-  summarize(
-    biomass_mean = mean(biomass_sum),
-    biomass_n = length(biomass_sum),
-    biomass_sd = sd(biomass_sum),
-    biomass_se = biomass_sd / sqrt(biomass_n),
-    biomass_min = min(biomass_sum),
-    biomass_max = max(biomass_sum))
-# plot mean and se across strat and year using bar graphs
-# by STRAT
-ggplot(psu_bio_forPlot_YRsubset, aes(x=STRAT, y=biomass_mean)) + geom_bar(position=position_dodge(), stat="identity") + geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2, position=position_dodge(.9)) + theme_classic() + theme(axis.text.x = element_text(angle=90)) + facet_wrap(~YEAR, scales='free_y')
-ggsave(file="fk_MeanBiomass_ByStratumForEachYear_YRsubset.pdf", path="big_csv/plots")
-# by YEAR
-ggplot(psu_bio_forPlot_YRsubset, aes(x=YEAR, y=biomass_mean, group=YEAR)) + geom_bar(position=position_dodge(), stat="identity") + geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2, position=position_dodge(.9)) + theme_classic() + theme(axis.text.x = element_text(angle=90)) + facet_wrap(~STRAT, scales='free_y')
-ggsave(file="fk_MeanBiomass_ByYearForEachStratum_YRsubset.pdf", path="big_csv/plots")
-# by STRAT and YEAR
-ggplot(psu_bio_forPlot_YRsubset, aes(x=YEAR, y=biomass_mean, colour=STRAT, group=STRAT)) + geom_point() + geom_line() + geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2)
-ggsave(file="fk_MeanBiomass_ByYearANDStratum_YRsubset.pdf", path="big_csv/plots")
-
-### tried using boxplots but they don't look good
-#ggplot(data = psu_bio_sum) + geom_boxplot(mapping = aes(x = STRAT, y = biomass_sum)) + facet_wrap(~YEAR, scales="free_y")
-#ggplot(data = psu_bio_sum) + geom_boxplot(mapping = aes(x = YEAR, y = biomass_sum, group = YEAR)) + facet_wrap(~STRAT, scales="free_y")
+  saveRDS(all_matrices_data, "psu_matrices_data_rds")
+}
+else{
+  all_matrices_data = read_rds("psu_matrices_data_rds")
+}
 
 ```
 
-```{r psu biodiversity plots and maps}
+## Plots
 
-psu_diversity = read_csv("big_csv/diversity_without_spe/psu_diversity_no_spp_merged.csv",
-                      col_types = cols(
-                          YEAR = col_integer(),
-                          PRIMARY_SAMPLE_UNIT = col_character(),
-                          richness = col_integer(),
-                          simpson = col_double(),
-                          shannon = col_double(),
-                          STRAT = col_character(),
-                          SPECIES_CD = col_character(),
-                          abun_merged = col_double())) # 1,689,982 x 9
+```{r Plot by year and strata}
 
-# the psu_diversity dataframe has a value for each diversity metric that is repeated for each YEAR/PSU for each species record....need to remove duplicate rows and can also select columns of interest for the analysis of diversity metrics
-psu_div = psu_diversity %>% 
-  select(YEAR, PRIMARY_SAMPLE_UNIT, STRAT, richness, simpson, shannon) %>%
-  group_by(YEAR, PRIMARY_SAMPLE_UNIT, STRAT) %>%
-  summarize(
-    richness = first(richness),
-    simpson = first(simpson),
-    shannon = first(shannon)) # 5241 x 6
+all_matrices_data = read_rds("psu_matrices_data_rds")
+
+if(!file.exists("stats_all_matrices_data_rds")){
   
-# (optional) the psu_div_YRsubset dataframe produced with the code below has years with low sample sizes (few PSUs)/missing strata removed (i.e., 1999, 2000, and 2004)
-psu_div_YRsubset <- psu_div %>%
-  filter(YEAR!=1999,YEAR!=2000,YEAR!=2004) # 4725 x 6
+  stats_all_matrices_data = all_matrices_data %>%
+    group_by(YEAR, STRAT) %>% 
+    summarize(
+      abundance_mean = mean(abundance_sum),
+      abundance_n = length(abundance_sum),
+      abundance_sd = sd(abundance_sum),
+      abundance_se = abundance_sd / sqrt(abundance_n),
+      abundance_min = min(abundance_sum),
+      abundance_max = max(abundance_sum),
+      biomass_mean = mean(biomass_sum),
+      biomass_n = length(biomass_sum),
+      biomass_sd = sd(biomass_sum),
+      biomass_se = biomass_sd / sqrt(biomass_n),
+      biomass_min = min(biomass_sum),
+      biomass_max = max(biomass_sum),
+      richness_mean = mean(richness),
+      richness_n = length(richness),
+      richness_sd = sd(richness),
+      richness_se = richness_sd / sqrt(richness_n),
+      richness_min = min(richness),
+      richness_max = max(richness),
+      simpson_mean = mean(simpson),
+      simpson_n = length(simpson),
+      simpson_sd = sd(simpson),
+      simpson_se = simpson_sd / sqrt(simpson_n),
+      simpson_min = min(simpson),
+      simpson_max = max(simpson),
+      shannon_mean = mean(shannon),
+      shannon_n = length(shannon),
+      shannon_sd = sd(shannon),
+      shannon_se = shannon_sd / sqrt(shannon_n),
+      shannon_min = min(shannon),
+      shannon_max = max(shannon))
+  
+  saveRDS(stats_all_matrices_data, "stats_all_matrices_data_rds")
+  
+  } else{ 
+  stats_all_matrices_data = read_rds("stats_all_matrices_data_rds")
+  }
+
+# plot mean and se across strat and year using bar graphs
+
+ggplot(stats_all_matrices_data,aes(x=YEAR,y=shannon_mean, col=STRAT, shape=STRAT))+
+    #annotation_custom(grob=inset.map,xmin=19,xmax=22.5,ymin=0,ymax=1.5)+
+  geom_line(aes(group=STRAT),lwd=1) +
+  geom_point(size=5) +
+  scale_color_manual(values=c("grey15","grey25","grey35","grey45","grey55","grey65","grey75"),name="Strata")+
+  scale_shape_manual(values=c(15:20,6),name="Strata") +
+  geom_errorbar(aes(ymax=shannon_mean+shannon_se,ymin=shannon_mean-shannon_se),width=0.1)+
+  #facet_wrap(~variable,scales="free")+
+  labs(x=Year ,y="Diversity")+
+  theme_bw(base_size=16)+
+  theme(
+      plot.margin=unit(c(0,1,0,0),"cm"),
+      legend.position="none",
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      panel.spacing=unit(0.8,"lines"),
+      strip.background=element_blank(),
+      strip.text.x=element_text(size=18,hjust=0))
+  #Add legend map
+  #grid.arrange(p,inset.map,nrow=1,widths=c(1,0.2))
 
 
-# plot data by year and stratum separately and together
-# summarize data to get mean and standard error for each year/stratum combination  
-psu_div_forPlot = psu_div %>% 
-  group_by(YEAR, STRAT) %>%
-  summarize(
-    richness_mean = mean(richness),
-    richness_n = length(richness),
-    richness_sd = sd(richness),
-    richness_se = richness_sd / sqrt(richness_n),
-    richness_min = min(richness),
-    richness_max = max(richness),
-    simpson_mean = mean(simpson),
-    simpson_n = length(simpson),
-    simpson_sd = sd(simpson),
-    simpson_se = simpson_sd / sqrt(simpson_n),
-    simpson_min = min(simpson),
-    simpson_max = max(simpson),
-    shannon_mean = mean(shannon),
-    shannon_n = length(shannon),
-    shannon_sd = sd(shannon),
-    shannon_se = shannon_sd / sqrt(shannon_n),
-    shannon_min = min(shannon),
-    shannon_max = max(shannon))
+# BY STRAT and YEAR
+#abundance 
+ggplot(stats_all_matrices_data, aes(x=YEAR, y=abundance_mean, colour=STRAT, group=STRAT)) + geom_point() + 
+  geom_line() + 
+  geom_errorbar(aes(ymin=abundance_mean-abundance_se, ymax=abundance_mean+abundance_se), width=.2) +
+  labs(x = "Year", y = "Mean abundance") +
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016)) 
+#ggsave(file=".pdf", path="big_csv/plots")
 
-write_csv(psu_div_forPlot, "psu_div_forPlot.csv")
-# boxplots look better for diversity metrics than barplots (the opposite is true for biomass and abundance)...skip barplots
-# by STRAT
+#biomass
+ggplot(stats_all_matrices_data, aes(x=YEAR, y=biomass_mean, colour=STRAT, group=STRAT)) + 
+  geom_point() + 
+  geom_line() + 
+  geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2) +
+#ggsave(file=".pdf", path="big_csv/plots") 
+  labs(x = "Year", y = "Mean biomass") +
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016))
+
 #richness
-#ggplot(psu_div_forPlot, aes(x=STRAT, y=richness_mean)) + geom_bar(position=position_dodge(), stat="identity") + geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2, position=position_dodge(.9)) + theme_classic() + theme(axis.text.x = element_text(angle=90)) + facet_wrap(~YEAR, scales='free_y')
+ggplot(stats_all_matrices_data, aes(x=YEAR, y=richness_mean, colour=STRAT, group=STRAT)) + 
+  geom_point() +
+  geom_line() + 
+  geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2)+
+  labs(x = "Year", y = "Effective number of species") +
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016))
+#ggsave(file=".pdf", path="big_csv/plots")
+
+#simpson
+ggplot(stats_all_matrices_data, aes(x=YEAR, y=simpson_mean, colour=STRAT, group=STRAT)) +
+  geom_point() +
+  geom_line() +
+  geom_errorbar(aes(ymin=simpson_mean-simpson_se, ymax=simpson_mean+simpson_se), width=.2)
+#ggsave(file=".pdf", path="big_csv/plots")
+
+# shannon
+ggplot(stats_all_matrices_data, aes(x=YEAR, y=shannon_mean, colour=STRAT, group=STRAT)) + 
+  geom_point() + 
+  geom_line() + 
+  geom_errorbar(aes(ymin=shannon_mean-shannon_se, ymax=shannon_mean+shannon_se), width=.2)+
+    theme(
+      plot.margin=unit(c(0,1,0,0),"cm"),
+      legend.position="none",
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      panel.margin=unit(0.8,"lines"),
+      strip.background=element_blank(),
+      strip.text.x=element_text(size=18,hjust=0))
+#ggsave(file=".pdf", path="big_csv/plots")
+
+# by STRAT
+#abundance 
+ggplot(stats_all_matrices_data, aes(x=STRAT, y=abundance_mean)) +
+  geom_bar(position=position_dodge(), stat="identity") +
+  geom_errorbar(aes(ymin=abundance_mean-abundance_se, ymax=abundance_mean+abundance_se), width=.2, position=position_dodge(.9)) + 
+  theme_classic() + 
+  theme(axis.text.x = element_text(angle=90)) + 
+  facet_wrap(~YEAR, scales='free_y')
+#ggsave(file=".pdf", path="big_csv/plots")
+
+#biomass
+ggplot(stats_all_matrices_data, aes(x=STRAT, y=biomass_mean)) + 
+  geom_bar(position=position_dodge(), stat="identity") + 
+  geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2, position=position_dodge(.9)) + 
+  theme_classic() + 
+  theme(axis.text.x = element_text(angle=90)) + 
+  facet_wrap(~YEAR, scales='free_y')
+#ggsave(file=".pdf", path="big_csv/plots")
+
+#richness 
+ggplot(stats_all_matrices_data, aes(x=STRAT, y=richness_mean)) +
+  geom_bar(position=position_dodge(), stat="identity") +
+  geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2, position=position_dodge(.9)) + 
+  theme_classic() +
+  theme(axis.text.x = element_text(angle=90)) + 
+  facet_wrap(~YEAR, scales='free_y')
+#ggsave(file=".pdf", path="big_csv/plots")
+
+#simpson 
+ggplot(stats_all_matrices_data, aes(x=STRAT, y=simpson_mean)) +
+  geom_bar(position=position_dodge(), stat="identity") +
+  geom_errorbar(aes(ymin=simpson_mean-simpson_se, ymax=simpson_mean+simpson_se), width=.2, position=position_dodge(.9)) + 
+  theme_classic() +
+  theme(axis.text.x = element_text(angle=90)) + 
+  facet_wrap(~YEAR, scales='free_y')
+#ggsave(file=".pdf", path="big_csv/plots")
+
+#shannon 
+ggplot(stats_all_matrices_data, aes(x=STRAT, y=shannon_mean)) +
+  geom_bar(position=position_dodge(), stat="identity") +
+  geom_errorbar(aes(ymin=shannon_mean-shannon_se, ymax=shannon_mean+shannon_se), width=.2, position=position_dodge(.9)) + 
+  theme_classic() +
+  theme(axis.text.x = element_text(angle=90)) + 
+  facet_wrap(~YEAR, scales='free_y')
+#ggsave(file=".pdf", path="big_csv/plots")
+
+# by YEAR
+#abundance 
+ggplot(stats_all_matrices_data, aes(x=YEAR, y=abundance_mean, group=YEAR)) + 
+  geom_bar(position=position_dodge(), stat="identity") + 
+  geom_errorbar(aes(ymin=abundance_mean-abundance_se, ymax=abundance_mean+abundance_se), width=.2, position=position_dodge(.9)) + 
+  theme_classic() + 
+  theme(axis.text.x = element_text(angle=90)) + 
+  facet_wrap(~STRAT, scales='free_y')
+#ggsave(file=".pdf", path="big_csv/plots")
+
+#biomass 
+ggplot(stats_all_matrices_data, aes(x=YEAR, y=biomass_mean, group=YEAR)) + 
+  geom_bar(position=position_dodge(), stat="identity") + 
+  geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2, position=position_dodge(.9)) +
+  theme_classic() + 
+  theme(axis.text.x = element_text(angle=90)) +
+  facet_wrap(~STRAT, scales='free_y')
+#ggsave(file=".pdf", path="big_csv/plots")
+
+#richness 
+ggplot(stats_all_matrices_data, aes(x=YEAR, y=richness_mean, group=YEAR)) +  
+  geom_bar(position=position_dodge(), stat="identity") + 
+  geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2, position=position_dodge(.9)) + 
+  theme_classic() + 
+  theme(axis.text.x = element_text(angle=90)) + 
+  facet_wrap(~STRAT, scales='free_y')
+#ggsave(file=".pdf", path="big_csv/plots")
+
+#simpson 
+ggplot(stats_all_matrices_data, aes(x=YEAR, y=simpson_mean, group=YEAR)) +  
+  geom_bar(position=position_dodge(), stat="identity") + 
+  geom_errorbar(aes(ymin=simpson_mean-simpson_se, ymax=simpson_mean+simpson_se), width=.2, position=position_dodge(.9)) + 
+  theme_classic() + 
+  theme(axis.text.x = element_text(angle=90)) + 
+  facet_wrap(~STRAT, scales='free_y')
+#ggsave(file=".pdf", path="big_csv/plots")
+
+#shannon
+ggplot(stats_all_matrices_data, aes(x=YEAR, y=shannon_mean, group=YEAR)) +  
+  geom_bar(position=position_dodge(), stat="identity") + 
+  geom_errorbar(aes(ymin=shannon_mean-shannon_se, ymax=shannon_mean+shannon_se), width=.2, position=position_dodge(.9)) + 
+  theme_classic() + 
+  theme(axis.text.x = element_text(angle=90)) + 
+  facet_wrap(~STRAT, scales='free_y')
+#ggsave(file=".pdf", path="big_csv/plots")
+
+```
+
+Plot each metric by grouped strata and subregion through time 
+
+Group strata by: patch reef, forereef, and high relief 
+
+```{r Plot by year strata and subregion} 
+
+all_matrices_data = read_rds("psu_matrices_data_rds")
+
+if(!file.exists("matrices_strat_grouped_rds"){
+  
+  matrices_strat_grouped = all_matrices_data %>% 
+    mutate(
+      STRAT_GROUPED = 
+      ifelse(grepl("FMLR|FSLR|FDLR", STRAT), 'LINEAR_REEF', 
+             ifelse(grepl("OFPR|MCPR|INPR", STRAT), 'PATCH_REEF',
+                    ifelse(grepl('HRRF', STRAT), 'HIGH_RELIEF', "IDK")))) %>%
+    group_by(YEAR, STRAT_GROUPED) %>% #add subregion later 
+    summarize(
+      abundance_mean = mean(abundance_sum),
+      abundance_n = length(abundance_sum),
+      abundance_sd = sd(abundance_sum),
+      abundance_se = abundance_sd / sqrt(abundance_n),
+      abundance_min = min(abundance_sum),
+      abundance_max = max(abundance_sum),
+      biomass_mean = mean(biomass_sum),
+      biomass_n = length(biomass_sum),
+      biomass_sd = sd(biomass_sum),
+      biomass_se = biomass_sd / sqrt(biomass_n),
+      biomass_min = min(biomass_sum),
+      biomass_max = max(biomass_sum),
+      richness_mean = mean(richness),
+      richness_n = length(richness),
+      richness_sd = sd(richness),
+      richness_se = richness_sd / sqrt(richness_n),
+      richness_min = min(richness),
+      richness_max = max(richness),
+      simpson_mean = mean(simpson),
+      simpson_n = length(simpson),
+      simpson_sd = sd(simpson),
+      simpson_se = simpson_sd / sqrt(simpson_n),
+      simpson_min = min(simpson),
+      simpson_max = max(simpson),
+      shannon_mean = mean(shannon),
+      shannon_n = length(shannon),
+      shannon_sd = sd(shannon),
+      shannon_se = shannon_sd / sqrt(shannon_n),
+      shannon_min = min(shannon),
+      shannon_max = max(shannon))
+}
+
+else{
+  matrices_strat_grouped = write_rds("matrices_strat_grouped_rds")
+}
+
+# by STRAT_GROUPED and YEAR
+#mean abundance
+ggplot(matrices_strat_grouped, aes(x=YEAR, y=abundance_mean, colour=STRAT_GROUPED, group=STRAT_GROUPED)) + 
+  geom_point() + 
+  geom_line() + 
+  geom_errorbar(aes(ymin=abundance_mean-abundance_se, ymax=abundance_mean+abundance_se), width=.2)
+#ggsave(file="", path="big_csv/plots")
+
+#mean biomass
+ggplot(matrices_strat_grouped, aes(x=YEAR, y=biomass_mean, colour=STRAT_GROUPED, group=STRAT_GROUPED)) + 
+  geom_point() + 
+  geom_line() + 
+  geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2)
+#ggsave(file="", path="big_csv/plots")
+
+#mean richness
+ggplot(matrices_strat_grouped, aes(x=YEAR, y=richness_mean, colour=STRAT_GROUPED, group=STRAT_GROUPED)) + 
+  geom_point() + 
+  geom_line() + 
+  geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2)
+#ggsave(file=".pdf", path="big_csv/plots")
+
+#mean simpson
+ggplot(matrices_strat_grouped, aes(x=YEAR, y=simpson_mean, colour=STRAT_GROUPED, group=STRAT_GROUPED)) + 
+  geom_point() + 
+  geom_line() + 
+  geom_errorbar(aes(ymin=simpson_mean-simpson_se, ymax=simpson_mean+simpson_se), width=.2)
+#ggsave(file=".pdf", path="big_csv/plots")
+
+#mean shannon
+ggplot(matrices_strat_grouped, aes(x=YEAR, y=shannon_mean, colour=STRAT_GROUPED, group=STRAT_GROUPED)) + 
+  geom_point() + 
+  geom_line() + 
+  geom_errorbar(aes(ymin=shannon_mean-shannon_se, ymax=shannon_mean+shannon_se), width=.2)
+#ggsave(file=".pdf", path="big_csv/plots")
+
+# by STRAT
+#abundance 
+ggplot(matrices_strat_grouped, aes(x=STRAT_GROUPED, y=abundance_mean)) +
+  geom_bar(position=position_dodge(), stat="identity") +
+  geom_errorbar(aes(ymin=abundance_mean-abundance_se, ymax=abundance_mean+abundance_se), width=.2, position=position_dodge(.9)) + 
+  theme_classic() + 
+  theme(axis.text.x = element_text(angle=90)) + 
+  facet_wrap(~YEAR, scales='free_y')
+#ggsave(file=".pdf", path="big_csv/plots")
+
+#biomass
+ggplot(matrices_strat_grouped, aes(x=STRAT_GROUPED, y=biomass_mean)) + 
+  geom_bar(position=position_dodge(), stat="identity") + 
+  geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2, position=position_dodge(.9)) + 
+  theme_classic() + 
+  theme(axis.text.x = element_text(angle=90)) + 
+  facet_wrap(~YEAR, scales='free_y')
+#ggsave(file=".pdf", path="big_csv/plots")
+
+#mean richness 
+ggplot(matrices_strat_grouped, aes(x=STRAT_GROUPED, y=richness_mean)) + 
+  geom_bar(position=position_dodge(), stat="identity") + 
+  geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2, position=position_dodge(.9)) + 
+  theme_classic() + 
+  theme(axis.text.x = element_text(angle=90)) + 
+  facet_wrap(~YEAR, scales='free_y')
 #ggsave(file="fk_MeanRichness_ByStratumForEachYear.pdf", path="big_csv/plots")
-# by YEAR
-#ggplot(psu_div_forPlot, aes(x=YEAR, y=richness_mean, group=YEAR)) + geom_bar(position=position_dodge(), stat="identity") + geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2, position=position_dodge(.9)) + theme_classic() + theme(axis.text.x = element_text(angle=90)) + facet_wrap(~STRAT, scales='free_y')
-#ggsave(file="fk_MeanRichness_ByYearForEachStratum.pdf", path="big_csv/plots")
-# by STRAT and YEAR
-# richness
-ggplot(psu_div_forPlot, aes(x=YEAR, y=richness_mean, colour=STRAT, group=STRAT)) + geom_point() + geom_line() + geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2)
-ggsave(file="fk_MeanRichness_ByYearANDStratum.pdf", path="big_csv/plots")
-# simpson
-ggplot(psu_div_forPlot, aes(x=YEAR, y=simpson_mean, colour=STRAT, group=STRAT)) + geom_point() + geom_line() + geom_errorbar(aes(ymin=simpson_mean-simpson_se, ymax=simpson_mean+simpson_se), width=.2)
-ggsave(file="fk_MeanSimpson_ByYearANDStratum.pdf", path="big_csv/plots")
-# shannon
-ggplot(psu_div_forPlot, aes(x=YEAR, y=shannon_mean, colour=STRAT, group=STRAT)) + geom_point() + geom_line() + geom_errorbar(aes(ymin=shannon_mean-shannon_se, ymax=shannon_mean+shannon_se), width=.2)
-ggsave(file="fk_MeanShannon_ByYearANDStratum.pdf", path="big_csv/plots")
 
-# do this for dataframe with subset of years as well
-# summarize data to get mean and standard error for each year/stratum combination  
-psu_div_forPlot_YRsubset = psu_div_YRsubset %>% 
-  group_by(YEAR, STRAT) %>%
-  summarize(
-    richness_mean = mean(richness),
-    richness_n = length(richness),
-    richness_sd = sd(richness),
-    richness_se = richness_sd / sqrt(richness_n),
-    richness_min = min(richness),
-    richness_max = max(richness),
-    simpson_mean = mean(simpson),
-    simpson_n = length(simpson),
-    simpson_sd = sd(simpson),
-    simpson_se = simpson_sd / sqrt(simpson_n),
-    simpson_min = min(simpson),
-    simpson_max = max(simpson),
-    shannon_mean = mean(shannon),
-    shannon_n = length(shannon),
-    shannon_sd = sd(shannon),
-    shannon_se = shannon_sd / sqrt(shannon_n),
-    shannon_min = min(shannon),
-    shannon_max = max(shannon))
-# boxplots look better for diversity metrics than barplots (the opposite is true for biomass and abundance)...skip barplots
-# by STRAT
-#ggplot(psu_div_forPlot_YRsubset, aes(x=STRAT, y=richness_mean)) + geom_bar(position=position_dodge(), stat="identity") + geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2, position=position_dodge(.9)) + theme_classic() + theme(axis.text.x = element_text(angle=90)) + facet_wrap(~YEAR, scales='free_y')
-#ggsave(file="fk_MeanRichness_ByStratumForEachYear_YRsubset.pdf", path="big_csv/plots")
-# by YEAR
-#ggplot(psu_div_forPlot_YRsubset, aes(x=YEAR, y=richness_mean, group=YEAR)) + geom_bar(position=position_dodge(), stat="identity") + geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2, position=position_dodge(.9)) + theme_classic() + theme(axis.text.x = element_text(angle=90)) + facet_wrap(~STRAT, scales='free_y')
-#ggsave(file="fk_MeanRichness_ByYearForEachStratum_YRsubset.pdf", path="big_csv/plots")
-# by STRAT and YEAR
-## richness
-ggplot(psu_div_forPlot_YRsubset, aes(x=YEAR, y=richness_mean, colour=STRAT, group=STRAT)) + geom_point() + geom_line() + geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2)
-ggsave(file="fk_MeanRichness_ByYearANDStratum_YRsubset.pdf", path="big_csv/plots")
-## simpson
-ggplot(psu_div_forPlot_YRsubset, aes(x=YEAR, y=richness_mean, colour=STRAT, group=STRAT)) + geom_point() + geom_line() + geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2)
-ggsave(file="fk_MeanSimpson_ByYearANDStratum_YRsubset.pdf", path="big_csv/plots")
-## shannon
-ggplot(psu_div_forPlot_YRsubset, aes(x=YEAR, y=richness_mean, colour=STRAT, group=STRAT)) + geom_point() + geom_line() + geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2)
-ggsave(file="fk_MeanShannon_ByYearANDStratum_YRsubset.pdf", path="big_csv/plots")
+#mean simpson 
+ggplot(matrices_strat_grouped, aes(x=STRAT_GROUPED, y=simpson_mean)) +
+  geom_bar(position=position_dodge(), stat="identity") +
+  geom_errorbar(aes(ymin=simpson_mean-simpson_se, ymax=simpson_mean+simpson_se), width=.2, position=position_dodge(.9)) + 
+  theme_classic() +
+  theme(axis.text.x = element_text(angle=90)) + 
+  facet_wrap(~YEAR, scales='free_y')
+#ggsave(file=".pdf", path="big_csv/plots")
 
-### although boxplots don't work well for biomass and abundance, they look great for diversity metrics
-# richness
-# by STRAT
-ggplot(data = psu_div) + geom_boxplot(mapping = aes(x = STRAT, y = richness)) + facet_wrap(~YEAR, scales="free_y")
-ggsave(file="fk_Richness_boxplot_ByStratumForEachYear.pdf", path="big_csv/plots")
-# by YEAR
-ggplot(data = psu_div) + geom_boxplot(mapping = aes(x = YEAR, y = richness, group = YEAR)) + facet_wrap(~STRAT, scales="free_y")
-ggsave(file="fk_Richness_boxplot_ByYearForEachStratum.pdf", path="big_csv/plots")
-# simpson
-# by STRAT
-ggplot(data = psu_div) + geom_boxplot(mapping = aes(x = STRAT, y = simpson)) + facet_wrap(~YEAR, scales="free_y")
-ggsave(file="fk_Simpson_boxplot_ByStratumForEachYear.pdf", path="big_csv/plots")
-# by YEAR
-ggplot(data = psu_div) + geom_boxplot(mapping = aes(x = YEAR, y = simpson, group = YEAR)) + facet_wrap(~STRAT, scales="free_y")
-ggsave(file="fk_Simpson_boxplot_ByYearForEachStratum.pdf", path="big_csv/plots")
-# shannon
-# by STRAT
-ggplot(data = psu_div) + geom_boxplot(mapping = aes(x = STRAT, y = shannon)) + facet_wrap(~YEAR, scales="free_y")
-ggsave(file="fk_Shannon_boxplot_ByStratumForEachYear.pdf", path="big_csv/plots")
-# by YEAR
-ggplot(data = psu_div) + geom_boxplot(mapping = aes(x = YEAR, y = shannon, group = YEAR)) + facet_wrap(~STRAT, scales="free_y")
-ggsave(file="fk_Shannon_boxplot_ByYearForEachStratum.pdf", path="big_csv/plots")
+#mean shannon 
+ggplot(matrices_strat_grouped, aes(x=STRAT_GROUPED, y=shannon_mean)) +
+  geom_bar(position=position_dodge(), stat="identity") +
+  geom_errorbar(aes(ymin=shannon_mean-shannon_se, ymax=shannon_mean+shannon_se), width=.2, position=position_dodge(.9)) + 
+  theme_classic() +
+  theme(axis.text.x = element_text(angle=90)) + 
+  facet_wrap(~YEAR, scales='free_y')
+#ggsave(file=".pdf", path="big_csv/plots")
 
-# do this for dataframe with subset of years as well
-# richness
-# by STRAT
-ggplot(data = psu_div_YRsubset) + geom_boxplot(mapping = aes(x = STRAT, y = richness)) + facet_wrap(~YEAR, scales="free_y")
-ggsave(file="fk_Richness_boxplot_ByStratumForEachYear_YRsubset.pdf", path="big_csv/plots")
 # by YEAR
-ggplot(data = psu_div_YRsubset) + geom_boxplot(mapping = aes(x = YEAR, y = richness, group = YEAR)) + facet_wrap(~STRAT, scales="free_y")
-ggsave(file="fk_Richness_boxplot_ByYearForEachStratum_YRsubset.pdf", path="big_csv/plots")
-# simpson
-# by STRAT
-ggplot(data = psu_div_YRsubset) + geom_boxplot(mapping = aes(x = STRAT, y = simpson)) + facet_wrap(~YEAR, scales="free_y")
-ggsave(file="fk_Simpson_boxplot_ByStratumForEachYear_YRsubset.pdf", path="big_csv/plots")
-# by YEAR
-ggplot(data = psu_div_YRsubset) + geom_boxplot(mapping = aes(x = YEAR, y = simpson, group = YEAR)) + facet_wrap(~STRAT, scales="free_y")
-ggsave(file="fk_Simpson_boxplot_ByYearForEachStratum_YRsubset.pdf", path="big_csv/plots")
-# shannon
-# by STRAT
-ggplot(data = psu_div_YRsubset) + geom_boxplot(mapping = aes(x = STRAT, y = shannon)) + facet_wrap(~YEAR, scales="free_y")
-ggsave(file="fk_Shannon_boxplot_ByStratumForEachYear_YRsubset.pdf", path="big_csv/plots")
-# by YEAR
-ggplot(data = psu_div_YRsubset) + geom_boxplot(mapping = aes(x = YEAR, y = shannon, group = YEAR)) + facet_wrap(~STRAT, scales="free_y")
-ggsave(file="fk_Shannon_boxplot_ByYearForEachStratum_YRsubset.pdf", path="big_csv/plots")
+#mean abundance 
+ggplot(matrices_strat_grouped, aes(x=YEAR, y=abundance_mean, group=YEAR)) + 
+  geom_bar(position=position_dodge(), stat="identity") + 
+  geom_errorbar(aes(ymin=abundance_mean-abundance_se, ymax=abundance_mean+abundance_se), width=.2, position=position_dodge(.9)) + 
+  theme_classic() + 
+  theme(axis.text.x = element_text(angle=90)) + 
+  facet_wrap(~STRAT, scales='free_y')
+#ggsave(file=".pdf", path="big_csv/plots")
+
+#mean biomass 
+ggplot(matrices_strat_grouped, aes(x=YEAR, y=biomass_mean, group=YEAR)) + 
+  geom_bar(position=position_dodge(), stat="identity") + 
+  geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2, position=position_dodge(.9)) +
+  theme_classic() + 
+  theme(axis.text.x = element_text(angle=90)) +
+  facet_wrap(~STRAT, scales='free_y')
+#ggsave(file=".pdf", path="big_csv/plots")
+
+#mean richness
+ggplot(matrices_strat_grouped, aes(x=YEAR, y=richness_mean, group=YEAR)) +
+  geom_bar(position=position_dodge(), stat="identity") +
+  geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2, position=position_dodge(.9)) + 
+  theme_classic() + 
+  theme(axis.text.x = element_text(angle=90)) + 
+  facet_wrap(~STRAT_GROUPED, scales='free_y')
+#ggsave(file=".pdf", path="big_csv/plots")
+
+#mean simpson
+ggplot(data = matrices_strat_grouped) + 
+  geom_boxplot(mapping = aes(x = YEAR, y = simpson_mean, group = YEAR)) +
+  facet_wrap(~STRAT_GROUPED, scales="free_y")
+#ggsave(file=".pdf", path="big_csv/plots")
+
+#mean shannon 
+ggplot(data = matrices_strat_grouped) + 
+  geom_boxplot(mapping = aes(x = YEAR, y = shannon_mean, group = YEAR)) +
+  facet_wrap(~STRAT_GROUPED, scales="free_y")
+#ggsave(file=".pdf", path="big_csv/plots")
 
 ```
 
@@ -965,52 +1072,7 @@ library(tidyverse)
 library(magrittr) # needed to call this library separately from one in tidyverse in order to get functionality of github version not found in CRAN version
 ```
 
-```{r bind psu metrics and coordinates}
-
-if(!file.exists("psu_metrics_coord_rds")){
-  psu_abun = read_rds("psu_abun_sum_rds") #5,241*4
-  psu_bio = read_rds("psu_bio_sum_rds") #5,241*5
-  psu_div = read_rds("psu_div_rds") # #5,241*7
-  
-  psu_abun_sum = as.data.frame(psu_abun$abundance_sum)
-  psu_bio_sum = as.data.frame(psu_bio$biomass_sum)
-  
-  all_metrics = bind_cols(psu_div, psu_bio_sum, psu_abun_sum) 
-  #dim(all_metrics)  5,241*9
-  
-  RVCdata_FK = read_rds("big_csv/RVCdata_FK.rds")
-  FK_sample_data = RVCdata_FK$sample_data
-  
-  psu_coord = FK_sample_data %>% #4,420,893*22
-    select(YEAR, PRIMARY_SAMPLE_UNIT, STRAT, PROT, LAT_DEGREES, LON_DEGREES) %>% #HABITAT_CD, ZONE_NR, MPA_NR 
-    dplyr::group_by(YEAR, PRIMARY_SAMPLE_UNIT, STRAT, PROT) %>% #5,241 groups 
-    summarize(
-      LAT_DEGREES = first(LAT_DEGREES),
-      LON_DEGREES = first(LON_DEGREES))
-  
-  psu_lat = as.data.frame(psu_coord$LAT_DEGREES)
-  psu_long = as.data.frame(psu_coord$LON_DEGREES)
-    
-  psu_metric_coord = bind_cols(all_metrics, psu_lat, psu_long) %>%
-    mutate(
-       bio_sum = `psu_bio$biomass_sum`,
-       abun_sum = `psu_abun$abundance_sum`,
-       latitude = `psu_coord$LAT_DEGREES`,
-       longitude = `psu_coord$LON_DEGREES`) %>%
-    select(-`psu_bio$biomass_sum`,-`psu_coord$LAT_DEGREES`,-`psu_coord$LON_DEGREES`,-`psu_abun$abundance_sum`)
-
-  saveRDS(psu_metric_coord, "psu_metrics_coord_rds")
-}
-else{
-  psu_metric_coord = read_rds("psu_metrics_coord_rds")
-}
-
-```
-
-Plot each metric by strata and subregion through time 
-
-```{r Diversity by subregion and strata} 
-
+```{r Map matrices}
 #Generate figure legend based on FKNMS map 
 #Read in shapefile and fortify
 if (!file.exists('fk.shp.fortify_rds')){
@@ -1022,7 +1084,7 @@ else{
   fk.shp.fortify = readRDS('fk.shp.fortify_rds')
 }
 
-psu_metric_coord = read_rds("psu_metrics_coord_rds")
+all_matrices_data = read_rds("psu_matrices_data_rds")
 
 #Create data frame for legend points and titles
 data=data.frame(labels=c("Lower","Middle","Upper"),
@@ -1237,17 +1299,12 @@ Conitinuous covariates: modeled using non-parametric smoothing
 
 Categorical factors: models parametrically to determine their mean effect sizes (Zurr et al., 2009)
 
-```{r strata environmental characteristics}
-
-# read in strata data for each year and psu 
-#year, psu, latitude, longitude, rugosity, bottom_depth, vertical_relief, percent_coral_cover, percent_hardbottom
-
-# bind to psu diversity dataframe 
-```
-
 - Extract and interpolate the residuals for each index and fit against each other 
 ```{r GAM}
+
 library(rgdal) #readOGR, spTransform 
+
+all_matrices_data = read_rds("psu_matrices_data_rds")
 
 #Extract residuals for each metric vs richness, evenness, and species diversity after fitting GAM
 resids.list=lapply(alphadiv.list,function(i) { cbind(i,do.call(cbind,
