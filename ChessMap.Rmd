@@ -346,7 +346,7 @@ inset.map=
     axis.text.x=element_blank(),axis.text.y=element_blank(),
     axis.line=element_blank(),axis.ticks=element_blank())    
 
-#Plot mean alpha diversity by region and month for each diversity index
+#Plot mean alpha diversity by region and month for each diversity index  (figure 3)
 lapply(alphadiv.list,function(i) {
   #Melt dataframe so diversity indices are in a single column
   x=melt(i,id.vars=c("Month","Year","Reg"),measure.vars=c("richness","evenness","species.div","func.div","phylo.div","taxo.div"))
@@ -449,7 +449,7 @@ coord_equal()+labs(x="",y="",title=paste(names(krigeall.list[[i]])[j]))+ theme_b
                      axis.text.x=element_blank(),axis.text.y=element_blank(),
                         axis.ticks=element_blank(),legend.title=element_blank()) } ) ) } )
 
-#Now repeat but instead interpolate by month across years
+#Now repeat but instead interpolate by month across years (figure 2)
 #Perform kriging interpolation for each matrix (abundance-,biomass-, and presence/absence-weighted)
 krigemonth.list=parLapply(cl,alphasp.list,function(i) {
   lapply(names(i@data)[66:71],function(j) {
@@ -514,7 +514,7 @@ lapply(seq_along(krigemonth.list),function(i) {
 ```
 
 ```{r EXAMINING SPATIAL SIGNAL IN RESIDUALS}
-#Extract residuals for each metric vs richness, evenness, and species diversity after fitting GAM
+#Extract residuals for each metric vs richness, evenness, and species diversity after fitting GAM (figure 4)
 resids.list=lapply(alphadiv.list,function(i) { cbind(i,do.call(cbind,
   lapply(list(
     "log(species.div)~log(richness)","log(taxo.div)~log(richness)","log(func.div)~log(richness)","log(phylo.div)~log(richness)",
