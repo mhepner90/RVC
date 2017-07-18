@@ -1257,15 +1257,28 @@ Examine spatial and temporal trends in the different dimensions of reef fish div
 ```{r Kriging}
 
 library(parallel) #clusterExport 
+library(rgdal) #readOGR 
+library(sp) #Calls: coordinates, spsample
+all_matrices_data = read_rds("psu_matrices_data_rds")
 
 #Create new list of data frames to convert to SpatialPointsDataFrame
+alphasp.list=all_matrices_data
+names(alphasp.list)=names(all_matrices_data)
 #Convert class("dataframe") into class("SpatialPointsDataFrame")
+for(i in seq_along(alphasp.list)) { sp:::coordinates(alphasp.list[[i]])=~LON_DEGREES+LAT_DEGREES } 
+lapply(alphasp.list,class)
 #Project lat long coordinates onto an ellipse
+for(i in seq_along(alphasp.list)) { 
+  proj4string(alphasp.list[[i]])="+proj=longlat +ellps=GRS80 +datum=NAD83 +no_defs" }
 #Transform the projection into cartesian coordinates
+alphasp.list=lapply(seq_along(alphasp.list),function(i) {
+  spTransform(alphasp.list[[i]],CRS("+proj=utm +zone=18 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")) } )
 
 #Create a spatial grid onto which interpolated values can be plotted
+
 #read in shapefile 
 fk.shp = readOGR( dsn = "FKNMS_sample_grid", layer = "FlaKeys_Grid") 
+
 #Generate interpolation grid
 fknms.shp=spTransform(fk.shp,CRS("+proj=utm +zone=18 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0 ")) 
 grd=spsample(fknms.shp,type="regular",n=2500,nsig=2) #n is sample size
@@ -1273,24 +1286,20 @@ par(mfrow=c(1,1))
 plot(grd)
 
 #Send interpolation grid to each core
-parallel::clusterExport(cl=NULL, varlist=c("grd"))
-#Error in defaultCluster(cl) : no cluster 'cl' supplied and none is registered
+parallel::clusterExport(cl, varlist=c("grd"))
 
-psu_indices= read_rds("psu_metrics_coord_rds")
-psu_indices = as.matrix(psu_indices)
+all_matrices_data = as.matrix(all_matrices_data)
 
 #Perform kriging interpolation for each matrix
 #responses are log transformed to better meet assumptions of normality of errors and constant variance.
-krigeall.list=parLapply(cl,psu_indices,function(i) { #cl=Null, X, function
-  lapply(names(i@data)[66:71],function(j) { #X, function (i think giving names from data columns 66:71??)
-    as.data.frame(autoKrige(formula(paste("log10(",j,")~1")),i,grd)$krige_output) 
-    } ) 
-  } ) 
+krigeall.list=parLapply(cl,alphasp.list,function(i) {
+lapply(names(i@data)[66:71],function(j) {
+as.data.frame(autoKrige(formula(paste("log10(",j,")~1")),i,grd)$krige_output) } ) } )
 
 #Apply names for titling during plotting
 #names(krigeall.list)=c("abund","biomass","pres.abs")
 for(i in seq_along(krigeall.list)) {
-  names(krigeall.list[[i]])=c("mean.abundance", "mean.biomass" "richness", "shannon","simpspn","functional") 
+  names(krigeall.list[[i]])=c("abundance_sum", "biomass_sum" "richness", "shannon","simpspn") 
   }  
 
 #Plot all components across all years 
@@ -1404,149 +1413,6 @@ Conitinuous covariates: modeled using non-parametric smoothing
 Categorical factors: models parametrically to determine their mean effect sizes (Zurr et al., 2009)
 
 - fit GAM to each index separately. 
-```{r GAM}
-
-library(rgdal) #readOGR, spTransform 
-
-all_matrices_data = read_rds("psu_matrices_data_rds")
-
-#Run generalized additive models to identify the contribution of each predictor to % deviance explained
-#Code modified from: https://stat.ethz.ch/pipermail/r-help/2011-November/295324.html
-
-#Send alphadiv.list to each core
-clusterExport(cl,varlist=c("alphadiv.list"))
-
-#Compute models and store summary table of partial deviances in a list
-partial.deviance.list=parLapply(cl,seq_along(alphadiv.list),function(i) {
-  do.call(rbind,lapply(list("richness","evenness","species.div","func.div","phylo.div","taxo.div"),function(j) {
-
-  #Build full model and null model based on (transformed) response variable
-  if(j=="richness") {
-    fullmod=gam(formula(paste(j,"~Month+Year+s(Long,Lat,by=Month,bs='ts')+s(SA,bs='ts')+s(WT,bs='ts')+
-                  s(DO,bs='ts')+s(TDEPTH,bs='ts')")),family=poisson,data=data)
-    nullmod=gam(formula(paste(j,"~1")),family=poisson,data=data)
-  } else {
-    fullmod=gam(formula(paste("log(",j,")~Month+Year+s(Long,Lat,by=Month,bs='ts')+s(SA,bs='ts')+s(WT,bs='ts')+
-                  s(DO,bs='ts')+s(TDEPTH,bs='ts')")),data=data)
-    nullmod=gam(formula(paste("log(",j,")~1")),data=data) }
-
-```
-
-- To assess the explanatory power of each variable calculate the partial deviances by sequentially removing suites of predictors from the full gam model corresponding to indicators of space, time, environment, or management. 
-
-- Repeat this for all possible permutations 
-
-- Average the deviances for all models in which the predictor appeared and calculate the standard error 
-
-- the partial deviances are the proportion of total explained deviance of the model uniquely explained by space, time, environment or management, accounting for the other predictors in the model. 
-
-```{r partial deviances}
-#Set up empty vectors for deviances
-time.dev=c(); space.dev=c(); env.dev=c()
-
-#Sequence 1: time->space->environment
-time.dev[1]=
-  (deviance(update(fullmod,.~.-Month-Year,sp=fullmod$sp))-
-     deviance(fullmod))/deviance(nullmod)
-space.dev[1]=
-  (deviance(update(fullmod,.~.-Month-Year-s(Long,Lat,by=Month,bs='ts'),sp=fullmod$sp[6:9]))-
-     deviance(update(fullmod,.~.-Month-Year,sp=fullmod$sp)))/deviance(nullmod)
-env.dev[1]=
-  (deviance(nullmod)-
-     deviance(update(fullmod,.~.-Month-Year-s(Long,Lat,by=Month,bs='ts'),sp=fullmod$sp[6:9])))/deviance(nullmod)
-
-#Sequence 2: time->environment->space
-time.dev[2]=
-  (deviance(update(fullmod,.~.-Month-Year,sp=fullmod$sp))-
-     deviance(fullmod))/deviance(nullmod)
-env.dev[2]=
-  (deviance(update(fullmod,.~.-Month-Year-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts'),sp=fullmod$sp[1:5]))-
-     deviance(update(fullmod,.~.-Month-Year,sp=fullmod$sp)))/deviance(nullmod)
-space.dev[2]=
-  (deviance(nullmod)-
-     deviance(update(fullmod,.~.-Month-Year-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts'),sp=fullmod$sp[1:5])))/deviance(nullmod)
-
-#Sequence 3: space->time->environment
-space.dev[3]=
-  (deviance(update(fullmod,.~.-s(Long,Lat,by=Month,bs='ts'),sp=fullmod$sp[6:9]))-
-     deviance(fullmod))/deviance(nullmod)
-time.dev[3]=
-  (deviance(update(fullmod,.~.-s(Long,Lat,by=Month,bs='ts')-Month-Year,sp=fullmod$sp[6:9]))-
-     deviance(update(fullmod,.~.-s(Long,Lat,by=Month,bs='ts'),sp=fullmod$sp[6:9])))/deviance(nullmod)
-env.dev[3]=
-  (deviance(nullmod)-
-     deviance(update(fullmod,.~.-s(Long,Lat,by=Month,bs='ts')-Month-Year,sp=fullmod$sp[6:9])))/deviance(nullmod)
-
-#Sequence 4: space->environment->time
-space.dev[4]=
-  (deviance(update(fullmod,.~.-s(Long,Lat,by=Month,bs='ts'),sp=fullmod$sp[6:9]))-
-     deviance(fullmod))/deviance(nullmod)
-env.dev[4]=
-  (deviance(update(fullmod,.~.-s(Long,Lat,by=Month,bs='ts')-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts')))-
-     deviance(update(fullmod,.~.-s(Long,Lat,by=Month,bs='ts'),sp=fullmod$sp[6:9])))/deviance(nullmod)
-time.dev[4]=
-  (deviance(nullmod)-
-     deviance(update(fullmod,.~.-s(Long,Lat,by=Month,bs='ts')-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts'))))/deviance(nullmod)
-
-#Sequence 5: environment->time->space
-env.dev[5]=
-  (deviance(update(fullmod,.~.-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts'),sp=fullmod$sp[1:5]))-
-     deviance(fullmod))/deviance(nullmod)
-time.dev[5]=
-  (deviance(update(fullmod,.~.-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts')-Month-Year,sp=fullmod$sp[1:5]))-
-     deviance(update(fullmod,.~.-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts'),sp=fullmod$sp[1:5])))/deviance(nullmod)
-space.dev[5]=
-  (deviance(nullmod)-
-     deviance(update(fullmod,.~.-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts')-Month-Year,sp=fullmod$sp[1:5])))/deviance(nullmod)
-
-#Sequence 6: environment->space->time
-env.dev[6]=
-  (deviance(update(fullmod,.~.-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts'),sp=fullmod$sp[1:5]))-
-     deviance(fullmod))/deviance(nullmod)
-space.dev[6]=
-  (deviance(update(fullmod,.~.-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts')-s(Long,Lat,by=Month,bs='ts')))-
-     deviance(update(fullmod,.~.-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts'),sp=fullmod$sp[1:5])))/deviance(nullmod)
-time.dev[6]=
-  (deviance(nullmod)-
-     deviance(update(fullmod,.~.-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts')-s(Long,Lat,by=Month,bs='ts'))))/deviance(nullmod)
-
-#Bind results into data.frame
-prop.deviance=data.frame(
-  Diversity=paste(j),
-  Predictor=c("All","Space","Time","Environment"),
-  Partial.Deviance=c(summary(fullmod)$dev.expl,mean(space.dev),mean(time.dev),mean(env.dev)),
-  Partial.Deviance.SE=c(0,std.error(space.dev),std.error(time.dev),std.error(env.dev)) )
-  } ) ) } )
-#Close the cluster
-stopCluster(cl)
-
-#Name objects in list
-names(partial.deviance.list)=c("abund","biomass","pres.abs")
-#Rename diversity levels for better plotting
-for(i in seq_along(partial.deviance.list)) {
-  partial.deviance.list[[i]]=transform(partial.deviance.list[[i]],Diversity=recode(Diversity,
-                                                                                   "'richness'='Richness';'evenness'='Evenness';'species.div'='Gini-Simpson';
-     'func.div'='Functional';'phylo.div'='Phylogenetic';'taxo.div'='Taxonomic'")) }
-#Reorder diversity levels for better plotting
-for(i in seq_along(partial.deviance.list)) {
-  partial.deviance.list[[i]][,"Diversity"]=factor(partial.deviance.list[[i]][,"Diversity"],
-                                                  levels=c("Richness","Evenness","Gini-Simpson","Functional","Phylogenetic","Taxonomic")) }
-
-#Create barplot (8" x 6")
-lapply(seq_along(partial.deviance.list),function(i) {
-  data=subset(partial.deviance.list[[i]],Predictor!="All")
-  ggplot(data,aes(x=Diversity,y=Partial.Deviance*100,fill=Predictor))+
-    geom_bar(position="dodge",color="black")+
-    geom_errorbar(aes(max=(Partial.Deviance+Partial.Deviance.SE)*100,
-                      min=(Partial.Deviance-Partial.Deviance.SE)*100),
-                  width=0.3,size=0.6,position=position_dodge(width=0.9))+
-    labs(x="",y="Total % Deviance Explained\n")+
-    scale_fill_manual(values=c("grey50","grey80","white"))+
-    theme_bw(base_size=18)+theme(
-      panel.grid.major=element_blank(),panel.grid.minor=element_blank(),
-      legend.position="bottom",legend.title=element_blank()) } )
-
-```
 
 ```{r practice GAM}
 
@@ -1555,21 +1421,27 @@ lapply(seq_along(partial.deviance.list),function(i) {
 #bs() a two letter character string indicating the smoothing basis to use (ts plate regression splines)
 
 # 1. Read in data and remove years (optional)
-all_matrices_data = read_rds("all_matrices_data_rds")
+all_matrices_data = read_rds("psu_matrices_data_rds")
+as.data.frame(all_matrices_data)
+#names(all_matrices_data)
 
-#Send alphadiv.list to each core
+#Send all_matrices_data to each core
 clusterExport(cl,varlist=c("all_matrices_data")) #varlist - character vector of names of objects to export
+
 
 partial.deviance.list=parLapply(cl,seq_along(all_matrices_data),function(i) {
   do.call(rbind,lapply(list("abundance_sum","biomass_sum","richness","simpson","shannon"),function(j) {
     
+    #Subset only columns that are necessary to run the models and omit any NAs so all models are run on the same data
+    data=na.omit(all_matrices_data[[i]][,c("YEAR","LONG_DEGREES","LAT_DEGREES","DEPTH","STRAT","PROT","abundance_sum","biomass_sum","richness","simpson","shannon")])
+    
     #Build full model and null model based on (transformed) response variable
     if(j=="richness") {
-      fullmod = gam(formula(paste(j,"~YEAR+STRAT+PROT+s(LAT_DEGREES, LONG_DEGREES, by=YEAR, bs='ts')+s(DEPTH, by='ts')")), family=poisson, data=all_matrices_data)
-      nullmod = gam(formula(paste(j,"~1")), family=poisson, data=all_matrices_data)
+      fullmod = gam(formula(paste(j,"~YEAR+STRAT+PROT+s(LAT_DEGREES, LONG_DEGREES, by=YEAR, bs='ts')+s(DEPTH, by='ts')")), family=poisson, data=data)
+      nullmod = gam(formula(paste(j,"~1")), family=poisson, data=data)
     } else {
-      fullmod = gam(formula(paste("log(",j,")~YEAR+STRAT+PROT+s(LAT_DEGREES, LONG_DEGREES, by=YEAR, bs='ts')+s(DEPTH, by='ts')")), data=all_matrices_data)
-      nullmod = gam(formula(paste("log(",j,")~1")), data=all_matrices_data)
+      fullmod = gam(formula(paste("log(",j,")~YEAR+STRAT+PROT+s(LAT_DEGREES, LONG_DEGREES, by=YEAR, bs='ts')+s(DEPTH, by='ts')")), data=data)
+      nullmod = gam(formula(paste("log(",j,")~1")), data=data)
     }
     
     #Set up empty vectors for deviances
@@ -1640,13 +1512,14 @@ partial.deviance.list=parLapply(cl,seq_along(all_matrices_data),function(i) {
     time.dev[6]=
       (deviance(nullmod)-
          deviance(update(fullmod,.~.-STRAT-s(DEPTH,bs='ts')-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'))))/deviance(nullmod)
-    
+
     #Bind results into data.frame
     prop.deviance=data.frame(
       Diversity=paste(j),
       Predictor=c("All","Space","Time","Environment","Management"),
       Partial.Deviance=c(summary(fullmod)$dev.expl,mean(space.dev),mean(time.dev),mean(env.dev),mean(mngt.dev)),
       Partial.Deviance.SE=c(0,std.error(space.dev),std.error(time.dev),std.error(env.dev),std.error(mngt.dev)))
+
   } 
   ) ) 
 } 
@@ -1674,3 +1547,43 @@ stopCluster(cl)
 # AIC(gam$rich_model)
 
 ```
+
+- To assess the explanatory power of each variable calculate the partial deviances by sequentially removing suites of predictors from the full gam model corresponding to indicators of space, time, environment, or management. 
+
+- Repeat this for all possible permutations 
+
+- Average the deviances for all models in which the predictor appeared and calculate the standard error 
+
+- the partial deviances are the proportion of total explained deviance of the model uniquely explained by space, time, environment or management, accounting for the other predictors in the model. 
+
+```{r partial deviances}
+
+#Name objects in list
+names(partial.deviance.list)=c("abund","biomass","pres.abs")
+#Rename diversity levels for better plotting
+for(i in seq_along(partial.deviance.list)) {
+  partial.deviance.list[[i]]=transform(partial.deviance.list[[i]],Diversity=recode(Diversity,
+                                                                                   "'richness'='Richness';'evenness'='Evenness';'species.div'='Gini-Simpson';
+     'func.div'='Functional';'phylo.div'='Phylogenetic';'taxo.div'='Taxonomic'")) }
+#Reorder diversity levels for better plotting
+for(i in seq_along(partial.deviance.list)) {
+  partial.deviance.list[[i]][,"Diversity"]=factor(partial.deviance.list[[i]][,"Diversity"],
+                                                  levels=c("Richness","Evenness","Gini-Simpson","Functional","Phylogenetic","Taxonomic")) }
+
+#Create barplot (8" x 6")
+lapply(seq_along(partial.deviance.list),function(i) {
+  data=subset(partial.deviance.list[[i]],Predictor!="All")
+  ggplot(data,aes(x=Diversity,y=Partial.Deviance*100,fill=Predictor))+
+    geom_bar(position="dodge",color="black")+
+    geom_errorbar(aes(max=(Partial.Deviance+Partial.Deviance.SE)*100,
+                      min=(Partial.Deviance-Partial.Deviance.SE)*100),
+                  width=0.3,size=0.6,position=position_dodge(width=0.9))+
+    labs(x="",y="Total % Deviance Explained\n")+
+    scale_fill_manual(values=c("grey50","grey80","white"))+
+    theme_bw(base_size=18)+theme(
+      panel.grid.major=element_blank(),panel.grid.minor=element_blank(),
+      legend.position="bottom",legend.title=element_blank()) } )
+
+```
+
+
