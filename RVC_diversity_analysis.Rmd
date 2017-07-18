@@ -1299,7 +1299,7 @@ as.data.frame(autoKrige(formula(paste("log10(",j,")~1")),i,grd)$krige_output) } 
 #Apply names for titling during plotting
 #names(krigeall.list)=c("abund","biomass","pres.abs")
 for(i in seq_along(krigeall.list)) {
-  names(krigeall.list[[i]])=c("abundance_sum", "biomass_sum" "richness", "shannon","simpspn") 
+  names(krigeall.list[[i]])=c("abundance_sum", "biomass_sum", "richness", "shannon","simpspn") 
   }  
 
 #Plot all components across all years 
