@@ -725,7 +725,7 @@ ggplot(stats_all_matrices_data,aes(x=YEAR,y=abundance_mean, colour=STRAT, group=
       strip.background=element_blank(),
       strip.text.x=element_text(size=18,hjust=0),
       plot.caption = element_text(size=10))
-ggsave(file="abundance_by_year_and_strata.pdf", path="big_csv/plots")
+#ggsave(file="abundance_by_year_and_strata.pdf", path="big_csv/plots")
 
 #biomass
 ggplot(stats_all_matrices_data,aes(x=YEAR,y=biomass_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
@@ -798,6 +798,24 @@ ggplot(stats_all_matrices_data,aes(x=YEAR,y=shannon_mean, colour=STRAT, group=ST
       strip.text.x=element_text(size=18,hjust=0),
       plot.caption = element_text(size=10))
 ggsave(file="shannon_diversity_by_year_and_strata.pdf", path="big_csv/plots")
+
+# functional
+ggplot(stats_all_matrices_data,aes(x=YEAR,y=functional_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
+  geom_line(aes(group=STRAT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=functional_mean+functional_se,ymin=functional_mean-functional_se),width=0.1)+
+  labs(title= "F) Functional", x="Year", y="Effective number of species",colour = "Strata")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016))+
+  theme_bw(base_size=16)+
+  theme(
+      plot.margin=unit(c(1,1,1,1),"cm"),
+      legend.position="right",
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      strip.background=element_blank(),
+      strip.text.x=element_text(size=18,hjust=0),
+      plot.caption = element_text(size=10))
+#ggsave(file="functional_diversity_by_year_and_strata.pdf", path="big_csv/plots")
 
 # by STRAT
 #abundance 
@@ -1150,6 +1168,12 @@ library(nortest) #checks for normality
 library(psych) #pairs.panels 
 library(tidyverse)
 library(magrittr) # needed to call this library separately from one in tidyverse in order to get functionality of github version not found in CRAN version
+library(parallel)
+#Create socket cluster of multiple cores 
+cl=makeCluster(detectCores())
+#Load automap on all cores (to access function `autoKrige`)
+clusterEvalQ(cl,c(library(automap),library(mgcv),library(plotrix)) )
+
 ```
 
 ```{r Map matrices}
@@ -1379,134 +1403,12 @@ Conitinuous covariates: modeled using non-parametric smoothing
 
 Categorical factors: models parametrically to determine their mean effect sizes (Zurr et al., 2009)
 
-- Extract and interpolate the residuals for each index and fit against each other 
+- fit GAM to each index separately. 
 ```{r GAM}
 
 library(rgdal) #readOGR, spTransform 
 
 all_matrices_data = read_rds("psu_matrices_data_rds")
-
-#Extract residuals for each metric vs richness, evenness, and species diversity after fitting GAM
-resids.list=lapply(alphadiv.list,function(i) { cbind(i,do.call(cbind,
-  lapply(list(
-    "log(species.div)~log(richness)","log(taxo.div)~log(richness)","log(func.div)~log(richness)","log(phylo.div)~log(richness)",
-    "log(species.div)~log(taxo.div)","log(species.div)~log(func.div)","log(species.div)~log(phylo.div)",
-    "log(func.div)~log(species.div)","log(func.div)~log(taxo.div)","log(func.div)~log(phylo.div)",
-    "log(phylo.div)~log(species.div)","log(phylo.div)~log(taxo.div)","log(phylo.div)~log(func.div)",
-    "log(taxo.div)~log(species.div)","log(taxo.div)~log(func.div)","log(taxo.div)~log(phylo.div)"),
-    function(j) { res=as.data.frame(residuals(gam(formula(paste(j)),data=i))); return(res) } ) ) ) } )
-
-#Replace column names for residuals
-for(i in seq_along(resids.list)) { colnames(resids.list[[i]])[74:89]=c(
-  "species.div.richness","taxo.div.richness","func.div.richness","phylo.div.richness",
-  "species.div.taxo.div","species.div.func.div","species.div.phylo.div",
-  "func.div.species.div","func.div.taxo.div","func.div.phylo.div",
-  "phylo.div.species.div","phylo.div.taxo.div","phylo.div.func.div",
-  "taxo.div.species.div","taxo.div.func.div","taxo.div.phylo.div") }
-                   
-#Save residuals as another object for mapping
-residssp.list=resids.list
-#Convert class("dataframe") into class("SpatialPointsDataFrame")
-for(i in seq_along(residssp.list)) { coordinates(residssp.list[[i]])=~Long+Lat } 
-lapply(residssp.list,class)
-#Project latlong coordinates onto an ellipse
-for(i in seq_along(residssp.list)) { 
-  proj4string(residssp.list[[i]])="+proj=longlat +ellps=GRS80 +datum=NAD83 +no_defs" }
-#Transform the projection into cartesian coordinates
-residssp.list=lapply(seq_along(residssp.list),function(i) {
-  spTransform(residssp.list[[i]],CRS("+proj=utm +zone=18 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")) } )
-# 
-# #Interpolate across all months and years by passing each matrix to a different core 
-# #Perform kriging interpolation for each matrix in the list (abundance- and biomass-weighted))
-# krigeall.resids.list=parLapply(cl,resids.list,function(i) {
-#   lapply(names(i@data)[16:19],function(j) {
-#     as.data.frame(autoKrige(formula(paste(j,"~1")),i,grd)$krige_output) } ) } )
-# 
-# #Apply names for titling during plotting
-# names(krigeall.resids.list)=c("abund","biomass")
-# for(i in seq_along(krigeall.resids.list)) {
-#   names(krigeall.resids.list[[i]])=c("species.div.resids","taxo.div.resids","func.div.resids","phylo.div.resids") }  
-# 
-# #Plot all components across all years and months
-# lapply(seq_along(krigeall.resids.list),function(i) {
-#   do.call(grid.arrange,lapply(seq_along(krigeall.resids.list[[i]]),function(j) {
-#     ggplot()+
-#       geom_raster(data=krigeall.resids.list[[i]][[j]],aes(x=x1,y=x2,fill=var1.pred))+
-#       scale_fill_gradientn(colours=rev(rainbow(3)))+
-#       coord_equal()+labs(x="",y="",title=paste(names(krigeall.resids.list[[i]])[j]))+
-#       theme_bw()+theme(plot.margin=unit(c(0,0,0,0),"cm"),
-#                        axis.text.x=element_blank(),axis.text.y=element_blank(),
-#                        axis.ticks=element_blank(),legend.title=element_blank()) } ) ) } )
-
-#Interpolate across by month across all years by passing each matrix to a different core 
-#Perform kriging interpolation for each matrix in the list (abundance- and biomass-weighted))
-krigemonth.resids.list=parLapply(cl,residssp.list,function(i) {
-  lapply(names(i@data)[72:87],function(j) {
-    lapply(unique((i@data)$Month),function(k) {
-      as.data.frame(autoKrige(formula(paste(j,"~1")),subset(i,i@data$Month==k),grd)$krige_output) 
-} ) } ) } )
-
-#Apply names for titling during plotting
-names(krigemonth.resids.list)=c("abund","biomass","pres.abs")
-
-for(i in seq_along(krigemonth.resids.list)) {
-  names(krigemonth.resids.list[[i]])=c(
-    "Gini-Simpson~Richness","Taxonomic~Richness","Functional~Richness","Phylogenetic~Richness",
-    "Gini-Simpson~Taxonomic","Gini-Simpson~Functional","Gini-Simpson~Phylogenetic",
-    "Functional~Gini-Simpson","Functional~Taxonomic","Functional~Phylogenetic",
-    "Phylogenetic~Gini-Simpson","Phylogenetic~Taxonomic","Phylogenetic~Functional",
-    "Taxonomic~Gini-Simpson","Taxonomic~Functional","Taxonomic~Phylogenetic") }
-
-for(i in seq_along(krigemonth.resids.list)) {
-  for(j in seq_along(krigemonth.resids.list[[i]])) {
-    names(krigemonth.resids.list[[i]][[j]])=c("Mar","May","July","Sept","Nov") } }
-#Collapse lists into data frame
-krigemonth.resids.list=lapply(krigemonth.resids.list,function(i) lapply(i,function(j) do.call(rbind,j)) ) 
-#Split rownames into month value and bind to dataframe
-krigemonth.resids.list=lapply(krigemonth.resids.list,function(i) {
-  lapply(i,function(j) {
-    cbind(data.frame(str_split_fixed(rownames(j),"\\.",2)[,1]),j) } ) } )
-for(i in seq_along(krigemonth.resids.list)) {
-  for(j in seq_along(krigemonth.resids.list[[i]])) { names(krigemonth.resids.list[[i]][[j]])[1]=c("month") } }
-#Order levels of month for facetting
-for(i in seq_along(krigemonth.resids.list)) {
-  for(j in seq_along(krigemonth.resids.list[[i]])) { 
-    krigemonth.resids.list[[i]][[j]]$month=factor(krigemonth.resids.list[[i]][[j]]$month,
-                                                  levels=c("Mar","May","July","Sept","Nov")) } }
-
-#Plot and facet by month (12.5" x 20")
-lapply(seq_along(krigemonth.resids.list),function(i) {
-  do.call(grid.arrange,c(lapply(seq_along(krigemonth.resids.list[[i]]),function(j) {
-    ggplot()+
-      geom_raster(data=krigemonth.resids.list[[i]][[j]],aes(x=x1,y=x2,fill=exp(var1.pred)))+
-      scale_fill_gradientn(colours=rev(rainbow(3)))+
-      facet_wrap(~month,nrow=1)+
-      coord_equal()+labs(x="",y="",title=paste(names(krigemonth.resids.list[[i]])[j]))+
-      theme_bw()+theme(plot.margin=unit(c(0,0,0,0),"cm"),
-                       panel.grid.major=element_blank(),panel.grid.minor=element_blank(),
-                       axis.text.x=element_blank(),axis.text.y=element_blank(),
-                       axis.ticks=element_blank(),legend.title=element_blank()) } ), list(ncol=3)) ) } )
-
-#Repeat but only for subset for figure in main text
-figure3.subset=krigemonth.resids.list[[2]][c("Gini-Simpson~Richness","Functional~Phylogenetic","Functional~Taxonomic","Phylogenetic~Taxonomic")]
-names(figure3.subset)=c("A) Gini-Simpson~Richness","B) Functional~Phylogenetic","C) Functional~Taxonomic","D) Phylogenetic~Taxonomic")
-#Generate figure ("12 x 12")
-do.call(grid.arrange,c(lapply(seq_along(figure3.subset),function(j) {
-  ggplot()+
-    geom_raster(data=figure3.subset[[j]],aes(x=x1,y=x2,fill=exp(var1.pred)))+
-    scale_fill_gradientn(colours=rev(rainbow(3)))+
-    facet_wrap(~month,nrow=1)+
-    coord_equal()+labs(x="",y="",title=paste(names(figure3.subset)[j]))+
-    theme_bw()+theme(plot.margin=unit(c(0.2,0,0,0),"cm"),
-                     plot.title=element_text(size=18,hjust=0,vjust=1),
-                     strip.text=element_text(size=12),
-                     panel.grid.major=element_blank(),panel.grid.minor=element_blank(),
-                     axis.text.x=element_blank(),axis.text.y=element_blank(),
-                     axis.ticks=element_blank(),legend.title=element_blank()) } ), list(ncol=2))) 
-```
-
-- fit GAM to each index separately. 
-```{r DRIVERS OF PATTERNS IN DIVERSITY}
 
 #Run generalized additive models to identify the contribution of each predictor to % deviance explained
 #Code modified from: https://stat.ethz.ch/pipermail/r-help/2011-November/295324.html
@@ -1518,18 +1420,11 @@ clusterExport(cl,varlist=c("alphadiv.list"))
 partial.deviance.list=parLapply(cl,seq_along(alphadiv.list),function(i) {
   do.call(rbind,lapply(list("richness","evenness","species.div","func.div","phylo.div","taxo.div"),function(j) {
 
-  #Subset only columns that are necessary to run the models and omit any NAs so all models are run on the same data
-  data=na.omit(alphadiv.list[[i]][,c("Month","Year","Long","Lat","SA","WT","DO","TDEPTH","richness","evenness","species.div","func.div","phylo.div","taxo.div")])
-  
   #Build full model and null model based on (transformed) response variable
   if(j=="richness") {
     fullmod=gam(formula(paste(j,"~Month+Year+s(Long,Lat,by=Month,bs='ts')+s(SA,bs='ts')+s(WT,bs='ts')+
                   s(DO,bs='ts')+s(TDEPTH,bs='ts')")),family=poisson,data=data)
     nullmod=gam(formula(paste(j,"~1")),family=poisson,data=data)
-  } else if(j=="evenness") {
-    fullmod=gam(formula(paste("asin(sqrt(",j,"))~Month+Year+s(Long,Lat,by=Month,bs='ts')+s(SA,bs='ts')+s(WT,bs='ts')+
-                  s(DO,bs='ts')+s(TDEPTH,bs='ts')")),data=data)
-    nullmod=gam(formula(paste("asin(sqrt(",j,"))~1")),data=data)
   } else {
     fullmod=gam(formula(paste("log(",j,")~Month+Year+s(Long,Lat,by=Month,bs='ts')+s(SA,bs='ts')+s(WT,bs='ts')+
                   s(DO,bs='ts')+s(TDEPTH,bs='ts')")),data=data)
@@ -1546,82 +1441,82 @@ partial.deviance.list=parLapply(cl,seq_along(alphadiv.list),function(i) {
 - the partial deviances are the proportion of total explained deviance of the model uniquely explained by space, time, environment or management, accounting for the other predictors in the model. 
 
 ```{r partial deviances}
-  #Set up empty vectors for deviances
-  time.dev=c(); space.dev=c(); env.dev=c()
-  
-  #Sequence 1: time->space->environment
-  time.dev[1]=
-    (deviance(update(fullmod,.~.-Month-Year,sp=fullmod$sp))-
-       deviance(fullmod))/deviance(nullmod)
-  space.dev[1]=
-    (deviance(update(fullmod,.~.-Month-Year-s(Long,Lat,by=Month,bs='ts'),sp=fullmod$sp[6:9]))-
-      deviance(update(fullmod,.~.-Month-Year,sp=fullmod$sp)))/deviance(nullmod)
-  env.dev[1]=
-    (deviance(nullmod)-
-       deviance(update(fullmod,.~.-Month-Year-s(Long,Lat,by=Month,bs='ts'),sp=fullmod$sp[6:9])))/deviance(nullmod)
+#Set up empty vectors for deviances
+time.dev=c(); space.dev=c(); env.dev=c()
 
-  #Sequence 2: time->environment->space
-  time.dev[2]=
-    (deviance(update(fullmod,.~.-Month-Year,sp=fullmod$sp))-
-       deviance(fullmod))/deviance(nullmod)
-  env.dev[2]=
-    (deviance(update(fullmod,.~.-Month-Year-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts'),sp=fullmod$sp[1:5]))-
-       deviance(update(fullmod,.~.-Month-Year,sp=fullmod$sp)))/deviance(nullmod)
-  space.dev[2]=
-    (deviance(nullmod)-
-       deviance(update(fullmod,.~.-Month-Year-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts'),sp=fullmod$sp[1:5])))/deviance(nullmod)
-       
-  #Sequence 3: space->time->environment
-  space.dev[3]=
-    (deviance(update(fullmod,.~.-s(Long,Lat,by=Month,bs='ts'),sp=fullmod$sp[6:9]))-
-       deviance(fullmod))/deviance(nullmod)
-  time.dev[3]=
-    (deviance(update(fullmod,.~.-s(Long,Lat,by=Month,bs='ts')-Month-Year,sp=fullmod$sp[6:9]))-
-       deviance(update(fullmod,.~.-s(Long,Lat,by=Month,bs='ts'),sp=fullmod$sp[6:9])))/deviance(nullmod)
-  env.dev[3]=
-    (deviance(nullmod)-
-       deviance(update(fullmod,.~.-s(Long,Lat,by=Month,bs='ts')-Month-Year,sp=fullmod$sp[6:9])))/deviance(nullmod)
-  
-  #Sequence 4: space->environment->time
-  space.dev[4]=
-    (deviance(update(fullmod,.~.-s(Long,Lat,by=Month,bs='ts'),sp=fullmod$sp[6:9]))-
-       deviance(fullmod))/deviance(nullmod)
-  env.dev[4]=
-    (deviance(update(fullmod,.~.-s(Long,Lat,by=Month,bs='ts')-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts')))-
-       deviance(update(fullmod,.~.-s(Long,Lat,by=Month,bs='ts'),sp=fullmod$sp[6:9])))/deviance(nullmod)
-  time.dev[4]=
-    (deviance(nullmod)-
-       deviance(update(fullmod,.~.-s(Long,Lat,by=Month,bs='ts')-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts'))))/deviance(nullmod)
-  
-  #Sequence 5: environment->time->space
-  env.dev[5]=
-    (deviance(update(fullmod,.~.-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts'),sp=fullmod$sp[1:5]))-
-       deviance(fullmod))/deviance(nullmod)
-  time.dev[5]=
-    (deviance(update(fullmod,.~.-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts')-Month-Year,sp=fullmod$sp[1:5]))-
-       deviance(update(fullmod,.~.-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts'),sp=fullmod$sp[1:5])))/deviance(nullmod)
-  space.dev[5]=
-    (deviance(nullmod)-
-       deviance(update(fullmod,.~.-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts')-Month-Year,sp=fullmod$sp[1:5])))/deviance(nullmod)
-       
-  #Sequence 6: environment->space->time
-  env.dev[6]=
-    (deviance(update(fullmod,.~.-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts'),sp=fullmod$sp[1:5]))-
-       deviance(fullmod))/deviance(nullmod)
-  space.dev[6]=
-    (deviance(update(fullmod,.~.-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts')-s(Long,Lat,by=Month,bs='ts')))-
-       deviance(update(fullmod,.~.-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts'),sp=fullmod$sp[1:5])))/deviance(nullmod)
-  time.dev[6]=
-    (deviance(nullmod)-
-       deviance(update(fullmod,.~.-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts')-s(Long,Lat,by=Month,bs='ts'))))/deviance(nullmod)
-  
-  #Bind results into data.frame
-  prop.deviance=data.frame(
-    Diversity=paste(j),
-    Predictor=c("All","Space","Time","Environment"),
-    Partial.Deviance=c(summary(fullmod)$dev.expl,mean(space.dev),mean(time.dev),mean(env.dev)),
-    Partial.Deviance.SE=c(0,std.error(space.dev),std.error(time.dev),std.error(env.dev)) )
-} ) ) } )
+#Sequence 1: time->space->environment
+time.dev[1]=
+  (deviance(update(fullmod,.~.-Month-Year,sp=fullmod$sp))-
+     deviance(fullmod))/deviance(nullmod)
+space.dev[1]=
+  (deviance(update(fullmod,.~.-Month-Year-s(Long,Lat,by=Month,bs='ts'),sp=fullmod$sp[6:9]))-
+     deviance(update(fullmod,.~.-Month-Year,sp=fullmod$sp)))/deviance(nullmod)
+env.dev[1]=
+  (deviance(nullmod)-
+     deviance(update(fullmod,.~.-Month-Year-s(Long,Lat,by=Month,bs='ts'),sp=fullmod$sp[6:9])))/deviance(nullmod)
+
+#Sequence 2: time->environment->space
+time.dev[2]=
+  (deviance(update(fullmod,.~.-Month-Year,sp=fullmod$sp))-
+     deviance(fullmod))/deviance(nullmod)
+env.dev[2]=
+  (deviance(update(fullmod,.~.-Month-Year-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts'),sp=fullmod$sp[1:5]))-
+     deviance(update(fullmod,.~.-Month-Year,sp=fullmod$sp)))/deviance(nullmod)
+space.dev[2]=
+  (deviance(nullmod)-
+     deviance(update(fullmod,.~.-Month-Year-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts'),sp=fullmod$sp[1:5])))/deviance(nullmod)
+
+#Sequence 3: space->time->environment
+space.dev[3]=
+  (deviance(update(fullmod,.~.-s(Long,Lat,by=Month,bs='ts'),sp=fullmod$sp[6:9]))-
+     deviance(fullmod))/deviance(nullmod)
+time.dev[3]=
+  (deviance(update(fullmod,.~.-s(Long,Lat,by=Month,bs='ts')-Month-Year,sp=fullmod$sp[6:9]))-
+     deviance(update(fullmod,.~.-s(Long,Lat,by=Month,bs='ts'),sp=fullmod$sp[6:9])))/deviance(nullmod)
+env.dev[3]=
+  (deviance(nullmod)-
+     deviance(update(fullmod,.~.-s(Long,Lat,by=Month,bs='ts')-Month-Year,sp=fullmod$sp[6:9])))/deviance(nullmod)
+
+#Sequence 4: space->environment->time
+space.dev[4]=
+  (deviance(update(fullmod,.~.-s(Long,Lat,by=Month,bs='ts'),sp=fullmod$sp[6:9]))-
+     deviance(fullmod))/deviance(nullmod)
+env.dev[4]=
+  (deviance(update(fullmod,.~.-s(Long,Lat,by=Month,bs='ts')-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts')))-
+     deviance(update(fullmod,.~.-s(Long,Lat,by=Month,bs='ts'),sp=fullmod$sp[6:9])))/deviance(nullmod)
+time.dev[4]=
+  (deviance(nullmod)-
+     deviance(update(fullmod,.~.-s(Long,Lat,by=Month,bs='ts')-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts'))))/deviance(nullmod)
+
+#Sequence 5: environment->time->space
+env.dev[5]=
+  (deviance(update(fullmod,.~.-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts'),sp=fullmod$sp[1:5]))-
+     deviance(fullmod))/deviance(nullmod)
+time.dev[5]=
+  (deviance(update(fullmod,.~.-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts')-Month-Year,sp=fullmod$sp[1:5]))-
+     deviance(update(fullmod,.~.-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts'),sp=fullmod$sp[1:5])))/deviance(nullmod)
+space.dev[5]=
+  (deviance(nullmod)-
+     deviance(update(fullmod,.~.-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts')-Month-Year,sp=fullmod$sp[1:5])))/deviance(nullmod)
+
+#Sequence 6: environment->space->time
+env.dev[6]=
+  (deviance(update(fullmod,.~.-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts'),sp=fullmod$sp[1:5]))-
+     deviance(fullmod))/deviance(nullmod)
+space.dev[6]=
+  (deviance(update(fullmod,.~.-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts')-s(Long,Lat,by=Month,bs='ts')))-
+     deviance(update(fullmod,.~.-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts'),sp=fullmod$sp[1:5])))/deviance(nullmod)
+time.dev[6]=
+  (deviance(nullmod)-
+     deviance(update(fullmod,.~.-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts')-s(Long,Lat,by=Month,bs='ts'))))/deviance(nullmod)
+
+#Bind results into data.frame
+prop.deviance=data.frame(
+  Diversity=paste(j),
+  Predictor=c("All","Space","Time","Environment"),
+  Partial.Deviance=c(summary(fullmod)$dev.expl,mean(space.dev),mean(time.dev),mean(env.dev)),
+  Partial.Deviance.SE=c(0,std.error(space.dev),std.error(time.dev),std.error(env.dev)) )
+  } ) ) } )
 #Close the cluster
 stopCluster(cl)
 
@@ -1630,12 +1525,12 @@ names(partial.deviance.list)=c("abund","biomass","pres.abs")
 #Rename diversity levels for better plotting
 for(i in seq_along(partial.deviance.list)) {
   partial.deviance.list[[i]]=transform(partial.deviance.list[[i]],Diversity=recode(Diversity,
-    "'richness'='Richness';'evenness'='Evenness';'species.div'='Gini-Simpson';
+                                                                                   "'richness'='Richness';'evenness'='Evenness';'species.div'='Gini-Simpson';
      'func.div'='Functional';'phylo.div'='Phylogenetic';'taxo.div'='Taxonomic'")) }
 #Reorder diversity levels for better plotting
 for(i in seq_along(partial.deviance.list)) {
   partial.deviance.list[[i]][,"Diversity"]=factor(partial.deviance.list[[i]][,"Diversity"],
-    levels=c("Richness","Evenness","Gini-Simpson","Functional","Phylogenetic","Taxonomic")) }
+                                                  levels=c("Richness","Evenness","Gini-Simpson","Functional","Phylogenetic","Taxonomic")) }
 
 #Create barplot (8" x 6")
 lapply(seq_along(partial.deviance.list),function(i) {
@@ -1654,38 +1549,128 @@ lapply(seq_along(partial.deviance.list),function(i) {
 ```
 
 ```{r practice GAM}
+
 #Build full model and null model based on (transformed) response variable
-  #s() smooth term in gam model 
-  #bs() a two letter character string indicating the smoothing basis to use (ts plate regression splines)
+#s() smooth term in gam model 
+#bs() a two letter character string indicating the smoothing basis to use (ts plate regression splines)
 
 # 1. Read in data and remove years (optional)
-psu_metric_coord = read_rds("psu_metrics_coord_rds")
+all_matrices_data = read_rds("all_matrices_data_rds")
 
-#Build full model and null model based on (transformed) response variable
+#Send alphadiv.list to each core
+clusterExport(cl,varlist=c("all_matrices_data")) #varlist - character vector of names of objects to export
 
-  richness_fullmodel = gam(formula(richness~YEAR+STRAT+PROTs(latitude, longitude, by=YEAR, bs="ts")), family=poisson, data=psu_metric_coord)
-  
-  richness_nullmodel = gam(formula(richness~1), family=poisson, data=psu_metric_coord) 
-  
-  shannon_fullmodel = gam(formula(shannon~YEAR+STRAT+PROT+s(longitude,latitude, by=YEAR, bs="ts")), data=psu_metric_coord)
-  shannon_nullmodel=gam(formula(shannon~1), data=psu_metric_coord)
-  
-  summary(shannon_fullmodel) #explained deviance (R2), variance of residuals, etc
-  anova(shannon_fullmodel)#p-value and F-test
-  gam.check(shannon_fullmodel) #produces graphical diagnosis for the model. Use to 1) assess normality with QQ plot and the histogram 2) homogeneity (residuals vs fitted values) 3) model fit (fitted values versus observed values). Ideally the response against fitted values should show a straight line. 
-
-    rich_model = gam(formula(richness~YEAR+rugosity+s(longitude,latitude,by=YEAR,bs='ts')+s(depth,bs='ts')+s(vert_relief,bs='ts')+s(per_coral_cover,bs='ts')+s(per_hardbottom,bs='ts')), family=poisson),
-    rich_nullmodel = gam(formula(richness,"~1"), family=poisson) 
+partial.deviance.list=parLapply(cl,seq_along(all_matrices_data),function(i) {
+  do.call(rbind,lapply(list("abundance_sum","biomass_sum","richness","simpson","shannon"),function(j) {
     
-    shan_model = gam(formula(shannon~YEAR+rugosity+s(longitude,latitude,by=YEAR,bs='ts')+s(depth,bs='ts')+s(vert_relief,bs='ts')+s(per_coral_cover,bs='ts')+s(per_hardbottom,bs='ts'))) 
-    shannon_nullmodel = gam(formula("log(",shannon,")~1"))) 
-
-mgcv::summary(gam$rich_model) #explained deviance (R2), variance of residuals, etc. 
-mgcv::anova(gam$rich_model)#p-value and F-test
-mgcv::plot(gam$rich_model) #produces fitted smoother
-gam.check(gam$rich_model) #produces graphical diagnosis for the model. Use to 1) assess normality with QQ plot and the histogram 2) homogeneity (residuals vs fitted values) 3) model fit (fitted values versus observed values). Ideally the response against fitted values should show a straight line. 
-
-#Check how well the model fits using graphical evidence or if it isn't clear with AIC, which measures goodness of fit and model complexity. The lower the AIC, the better the model fits the data. Can also look at GCV value in summary output. 
-AIC(gam$rich_model)
+    #Build full model and null model based on (transformed) response variable
+    if(j=="richness") {
+      fullmod = gam(formula(paste(j,"~YEAR+STRAT+PROT+s(LAT_DEGREES, LONG_DEGREES, by=YEAR, bs='ts')+s(DEPTH, by='ts')")), family=poisson, data=all_matrices_data)
+      nullmod = gam(formula(paste(j,"~1")), family=poisson, data=all_matrices_data)
+    } else {
+      fullmod = gam(formula(paste("log(",j,")~YEAR+STRAT+PROT+s(LAT_DEGREES, LONG_DEGREES, by=YEAR, bs='ts')+s(DEPTH, by='ts')")), data=all_matrices_data)
+      nullmod = gam(formula(paste("log(",j,")~1")), data=all_matrices_data)
+    }
+    
+    #Set up empty vectors for deviances
+    time.dev=c(); space.dev=c(); env.dev=c(); mngt.dev=c()
+    
+    #Sequence 1: time->space->environment
+    time.dev[1]=
+      (deviance(update(fullmod,.~.-YEAR,sp=fullmod$sp))-
+         deviance(fullmod))/deviance(nullmod)
+    space.dev[1]=
+      (deviance(update(fullmod,.~.-YEAR-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'),sp=fullmod$sp[6:9]))-
+         deviance(update(fullmod,.~.-YEAR,sp=fullmod$sp)))/deviance(nullmod)
+    env.dev[1]=
+      (deviance(nullmod)-
+         deviance(update(fullmod,.~.-YEAR-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'),sp=fullmod$sp[6:9])))/deviance(nullmod)
+    
+    #Sequence 2: time->environment->space
+    time.dev[2]=
+      (deviance(update(fullmod,.~.-YEAR,sp=fullmod$sp))-
+         deviance(fullmod))/deviance(nullmod)
+    env.dev[2]=
+      (deviance(update(fullmod,.~.-YEAR-STRAT-s(DEPTH,bs='ts'),sp=fullmod$sp[1:5]))-
+         deviance(update(fullmod,.~.-YEAR,sp=fullmod$sp)))/deviance(nullmod)
+    space.dev[2]=
+      (deviance(nullmod)-
+         deviance(update(fullmod,.~.-YEAR-STRAT-s(DEPTH,bs='ts'),sp=fullmod$sp[1:5])))/deviance(nullmod)
+    
+    #Sequence 3: space->time->environment
+    space.dev[3]=
+      (deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'),sp=fullmod$sp[6:9]))-
+         deviance(fullmod))/deviance(nullmod)
+    time.dev[3]=
+      (deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')-YEAR,sp=fullmod$sp[6:9]))-
+         deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'),sp=fullmod$sp[6:9])))/deviance(nullmod)
+    env.dev[3]=
+      (deviance(nullmod)-
+         deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')-YEAR,sp=fullmod$sp[6:9])))/deviance(nullmod)
+    
+    #Sequence 4: space->environment->time
+    space.dev[4]=
+      (deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'),sp=fullmod$sp[6:9]))-
+         deviance(fullmod))/deviance(nullmod)
+    env.dev[4]=
+      (deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')-STRAT-s(DEPTH,bs='ts')))-
+         deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'),sp=fullmod$sp[6:9])))/deviance(nullmod)
+    time.dev[4]=
+      (deviance(nullmod)-
+         deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')-STRAT-s(DEPTH,bs='ts'))))/deviance(nullmod)
+    
+    #Sequence 5: environment->time->space
+    env.dev[5]=
+      (deviance(update(fullmod,.~.-STRAT-s(DEPTH,bs='ts'),sp=fullmod$sp[1:5]))-
+         deviance(fullmod))/deviance(nullmod)
+    time.dev[5]=
+      (deviance(update(fullmod,.~.-STRAT-s(DEPTH,bs='ts')-YEAR,sp=fullmod$sp[1:5]))-
+         deviance(update(fullmod,.~.-STRAT-s(DEPTH,bs='ts'),sp=fullmod$sp[1:5])))/deviance(nullmod)
+    space.dev[5]=
+      (deviance(nullmod)-
+         deviance(update(fullmod,.~.-STRAT-s(DEPTH,bs='ts')-YEAR,sp=fullmod$sp[1:5])))/deviance(nullmod)
+    
+    #Sequence 6: environment->space->time
+    env.dev[6]=
+      (deviance(update(fullmod,.~.-STRAT-s(DEPTH,bs='ts'),sp=fullmod$sp[1:5]))-
+         deviance(fullmod))/deviance(nullmod)
+    space.dev[6]=
+      (deviance(update(fullmod,.~.-STRAT-s(DEPTH,bs='ts')-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')))-
+         deviance(update(fullmod,.~.-STRAT-s(DEPTH,bs='ts'),sp=fullmod$sp[1:5])))/deviance(nullmod)
+    time.dev[6]=
+      (deviance(nullmod)-
+         deviance(update(fullmod,.~.-STRAT-s(DEPTH,bs='ts')-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'))))/deviance(nullmod)
+    
+    #Bind results into data.frame
+    prop.deviance=data.frame(
+      Diversity=paste(j),
+      Predictor=c("All","Space","Time","Environment","Management"),
+      Partial.Deviance=c(summary(fullmod)$dev.expl,mean(space.dev),mean(time.dev),mean(env.dev),mean(mngt.dev)),
+      Partial.Deviance.SE=c(0,std.error(space.dev),std.error(time.dev),std.error(env.dev),std.error(mngt.dev)))
+  } 
+  ) ) 
+} 
+)
+    
+#Close the cluster
+stopCluster(cl)    
+  
+#   summary(shannon_fullmodel) #explained deviance (R2), variance of residuals, etc
+#   anova(shannon_fullmodel)#p-value and F-test
+#   gam.check(shannon_fullmodel) #produces graphical diagnosis for the model. Use to 1) assess normality with QQ plot and the histogram 2) homogeneity (residuals vs fitted values) 3) model fit (fitted values versus observed values). Ideally the response against fitted values should show a straight line. 
+# 
+#     rich_model = gam(formula(richness~YEAR+rugosity+s(longitude,latitude,by=YEAR,bs='ts')+s(depth,bs='ts')+s(vert_relief,bs='ts')+s(per_coral_cover,bs='ts')+s(per_hardbottom,bs='ts')), family=poisson),
+#     rich_nullmodel = gam(formula(richness,"~1"), family=poisson) 
+#     
+#     shan_model = gam(formula(shannon~YEAR+rugosity+s(longitude,latitude,by=YEAR,bs='ts')+s(depth,bs='ts')+s(vert_relief,bs='ts')+s(per_coral_cover,bs='ts')+s(per_hardbottom,bs='ts'))) 
+#     shannon_nullmodel = gam(formula("log(",shannon,")~1"))) 
+# 
+# mgcv::summary(gam$rich_model) #explained deviance (R2), variance of residuals, etc. 
+# mgcv::anova(gam$rich_model)#p-value and F-test
+# mgcv::plot(gam$rich_model) #produces fitted smoother
+# gam.check(gam$rich_model) #produces graphical diagnosis for the model. Use to 1) assess normality with QQ plot and the histogram 2) homogeneity (residuals vs fitted values) 3) model fit (fitted values versus observed values). Ideally the response against fitted values should show a straight line. 
+# 
+# #Check how well the model fits using graphical evidence or if it isn't clear with AIC, which measures goodness of fit and model complexity. The lower the AIC, the better the model fits the data. Can also look at GCV value in summary output. 
+# AIC(gam$rich_model)
 
 ```
