@@ -1,0 +1,37 @@
+---
+title: "New_RVC_domains"
+author: "Katie Shulzitski"
+date: "July 13, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+#library(plyr)
+
+```
+
+## Get PSU coordinates for domain assignment
+
+```{r bind sample data files and remove duplicate PSU records}
+
+## FK sample data
+cat("bind all csv's\n") #concatenate and print - character string naming the file to print to
+d_fk = data_frame()
+for (f in list.files('big_csv/sample_data/FK', pattern="\\.csv", full.names=T)){
+      cat(' ', f,'\n')
+      d_f = read_csv(
+        f, #path to a file 
+        progress=F, #progress: Display a progress bar
+        trim_ws=T) #trim_ws: leading and trailing whitespace are trimmed 
+     d_fk = bind_rows(d_fk, d_f)
+} 
+
+d_fk_distinct <- d_fk %>% group_by(PRIMARY_SAMPLE_UNIT,YEAR) %>% distinct(.keep_all=TRUE)
+
+write_csv(d_fk_distinct, 'big_csv/sample_data/FK/FK_sample_data_all_years.csv') 
+
+```
+
