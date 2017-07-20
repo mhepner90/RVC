@@ -74,6 +74,7 @@ $Rao Q = \sum_{i=1}^S-1 \sum_{j=i+1}^S d_i p_i p_j$
 
 ```{r setup, include= F}
 knitr::opts_chunk$set(echo = T)
+#ln -s ~/Dropbox/big_csv big_csv - write in terminal window to link to 'big_csv' folder
 #rm(list = ls())
 
 #install.packages('devtools')
