@@ -365,6 +365,8 @@ trait_matrix = trait_matrix %>%
     SPECIES_CD = toupper(as.character(SPECIES_CD))) %>% 
   arrange(SPECIES_CD)
 
+func.dist = read_rds("functional_diversity/func_dist_rds")
+
 domain_fk_abun <- read_csv('big_csv/abundance_domain/domain_fk_abun.csv', 
                            col_types = cols(
                              YEAR = col_integer(),
