@@ -1308,13 +1308,18 @@ else{
 
 # by YEAR and PROT
 #mean abundance
-ggplot(matrices_ntmr,aes(x=YEAR,y=abundance_mean, colour=PROT, group=PROT))+ 
+ggplot(matrices_ntmr,aes(x=YEAR,y=abundance_mean, colour=factor(PROT), group=factor(PROT)))+ 
   geom_line(aes(group=PROT),lwd=1) +
   geom_point(size=3) +
   geom_errorbar(aes(ymax=abundance_mean+abundance_se,ymin=abundance_mean-abundance_se),width=0.1)+
-  labs(title= "A) Mean Abundance", x="Year", y="Abundance of species", colour = "PROT")+
-  #scale_colour_manual(labels=c("0 = not protected", "1 = NTMR"), values= c("red", "green", "blue"))+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016))+
+  labs(title= "A) Mean Abundance", x="Year", y="Abundance of species", color = NULL)+
+  scale_color_manual(
+    values =  c("cyan","blue"),
+    breaks = c("1", "0"), 
+    labels=c("Protected","Not Protected"))+
+  scale_x_continuous(
+    limits = c(1999, 2016), 
+    breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016))+
   theme_bw(base_size=16)+
   theme(
       plot.margin=unit(c(1,1,1,1),"cm"),
@@ -1327,12 +1332,16 @@ ggplot(matrices_ntmr,aes(x=YEAR,y=abundance_mean, colour=PROT, group=PROT))+
 #ggsave(file="abundance_by_year_PROT.pdf", path="big_csv/plots")
 
 #biomass
-ggplot(matrices_ntmr,aes(x=YEAR,y=biomass_mean, colour=PROT, group=PROT))+ #shape=PROT
+ggplot(matrices_ntmr,aes(x=YEAR,y=biomass_mean, colour=factor(PROT), group=factor(PROT)))+ #shape=PROT
   geom_line(aes(group=PROT),lwd=1) +
   geom_point(size=3) +
   geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2) +
-  labs(title= "B) Mean Biomass", x="Year", y="Biomass of species", colour = "PROT")+
+  labs(title= "B) Mean Biomass", x="Year", y="Biomass of species", colour = NULL)+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016))+
+  scale_color_manual(
+    values =  c("cyan","blue"),
+    breaks = c("1", "0"), 
+    labels=c("Protected","Not Protected"))+
   theme_bw(base_size=16)+
   theme(
       plot.margin=unit(c(1,1,1,1),"cm"),
@@ -1345,11 +1354,15 @@ ggplot(matrices_ntmr,aes(x=YEAR,y=biomass_mean, colour=PROT, group=PROT))+ #shap
 #ggsave(file="biomass_by_year_PROT.pdf", path="big_csv/plots")
 
 #richness
-ggplot(matrices_ntmr,aes(x=YEAR,y=richness_mean, colour=PROT, group=PROT))+ #shape=PROT
+ggplot(matrices_ntmr,aes(x=YEAR,y=richness_mean, colour=factor(PROT), group=factor(PROT)))+ #shape=PROT
   geom_line(aes(group=PROT),lwd=1) +
   geom_point(size=3) +
   geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2)+
-  labs(title= "C) Richness", x="Year", y="Effective number of species", colour = "PROT")+
+  labs(title= "C) Richness", x="Year", y="Effective number of species", color = NULL)+
+  scale_color_manual(
+    values =  c("cyan","blue"),
+    breaks = c("1", "0"), 
+    labels=c("Protected","Not Protected"))+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016))+
   theme_bw(base_size=16)+
   theme(
@@ -1363,11 +1376,15 @@ ggplot(matrices_ntmr,aes(x=YEAR,y=richness_mean, colour=PROT, group=PROT))+ #sha
 #ggsave(file="richness_by_year_PROT.pdf", path="big_csv/plots")
 
 #simpson
-ggplot(matrices_ntmr,aes(x=YEAR,y=simpson_mean, colour=PROT, group=PROT))+ #shape=PROT
+ggplot(matrices_ntmr,aes(x=YEAR,y=simpson_mean, colour=factor(PROT), group=factor(PROT)))+ #shape=PROT
   geom_line(aes(group=PROT),lwd=1) +
   geom_point(size=3) +
   geom_errorbar(aes(ymin=simpson_mean-simpson_se, ymax=simpson_mean+simpson_se), width=.2)+
-  labs(title= "D) Simpson", x="Year", y="Effective number of species",colour = "PROT")+
+  labs(title= "D) Simpson", x="Year", y="Effective number of species",color = NULL)+
+  scale_color_manual(
+    values =  c("cyan","blue"),
+    breaks = c("1", "0"), 
+    labels=c("Protected","Not Protected"))+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016))+
   theme_bw(base_size=16)+
   theme(
@@ -1381,11 +1398,15 @@ ggplot(matrices_ntmr,aes(x=YEAR,y=simpson_mean, colour=PROT, group=PROT))+ #shap
 #ggsave(file="simpson_diversity_by_year_PROT.pdf", path="big_csv/plots")
 
 # shannon
-ggplot(matrices_ntmr,aes(x=YEAR,y=shannon_mean, colour=PROT, group=PROT))+ #shape=PROT
+ggplot(matrices_ntmr,aes(x=YEAR,y=shannon_mean, colour=factor(PROT), group=factor(PROT)))+ #shape=PROT
   geom_line(aes(group=PROT),lwd=1) +
   geom_point(size=3) +
   geom_errorbar(aes(ymax=shannon_mean+shannon_se,ymin=shannon_mean-shannon_se),width=0.1)+
-  labs(title= "E) Shannon", x="Year", y="Effective number of species",colour = "PROT")+
+  labs(title= "E) Shannon", x="Year", y="Effective number of species",color = NULL)+
+  scale_color_manual(
+    values =  c("cyan","blue"),
+    breaks = c("1", "0"), 
+    labels=c("Protected","Not Protected"))+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016))+
   theme_bw(base_size=16)+
   theme(
@@ -1400,11 +1421,15 @@ ggsave(file="shannon_diversity_by_year_PROT.pdf", path="big_csv/plots")
 
 
 # functional
-ggplot(matrices_ntmr,aes(x=YEAR,y=func.div_mean, colour=PROT, group=PROT))+ #shape=PROT
+ggplot(matrices_ntmr,aes(x=YEAR,y=func.div_mean, colour=factor(PROT), group=factor(PROT)))+ #shape=PROT
   geom_line(aes(group=PROT),lwd=1) +
   geom_point(size=3) +
   geom_errorbar(aes(ymax=func.div_mean+func.div_se,ymin=func.div_mean-func.div_se),width=0.1)+
-  labs(title= "F) Functional", x="Year", y="Effective number of species",colour = "PROT")+
+  labs(title= "F) Functional", x="Year", y="Effective number of species",color = NULL)+
+  scale_color_manual(
+    values =  c("cyan","blue"),
+    breaks = c("1", "0"), 
+    labels=c("Protected","Not Protected"))+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016))+
   theme_bw(base_size=16)+
   theme(
@@ -1418,11 +1443,15 @@ ggplot(matrices_ntmr,aes(x=YEAR,y=func.div_mean, colour=PROT, group=PROT))+ #sha
 #ggsave(file="functional_diversity_by_year_PROT.pdf", path="big_csv/plots")
 
 # evenness
-ggplot(matrices_ntmr,aes(x=YEAR,y=evenness_mean, colour=PROT, group=PROT))+ #shape=PROT
+ggplot(matrices_ntmr,aes(x=YEAR,y=evenness_mean, colour=factor(PROT), group=factor(PROT)))+ #shape=PROT
   geom_line(aes(group=PROT),lwd=1) +
   geom_point(size=3) +
   geom_errorbar(aes(ymax=evenness_mean+evenness_se,ymin=evenness_mean-evenness_se),width=0.1)+
-  labs(title= "G) Evenness", x="Year", y="UNITS",colour = "PROT")+
+  labs(title= "G) Evenness", x="Year", y="UNITS",color = NULL)+
+  scale_color_manual(
+    values =  c("cyan","blue"),
+    breaks = c("1", "0"), 
+    labels=c("Protected","Not Protected"))+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016))+
   theme_bw(base_size=16)+
   theme(
