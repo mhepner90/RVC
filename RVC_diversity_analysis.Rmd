@@ -655,12 +655,75 @@ if(!file.exists("psu_div_rds")){
 
 ```
 
+```{r biodiversity 2.0}
+
+if(!file.exists("fd_eveness_rds")){
+  
+  sample_data = as.tibble(read_csv("C:/Users/mhepn/Dropbox/github/RVC/big_csv/sample_data/FK/sample_data_all_years.csv"))
+  
+  ##### chesmap 
+  psu_fk_abun <- read_csv("big_csv/abundance_psu/psu_fk_abun.csv", col_types = cols(protected_status = col_character())) #3,643,306*10
+  
+  #dim(psu_fk_abun) #3643306      10
+  
+  psu_fk_abun_no_spp = psu_fk_abun %>%
+    filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$'))  
+  dim(psu_fk_abun_no_spp) #3,379,964      10
+  
+  abund = psu_fk_abun_no_spp %>% 
+    filter(protected_status != "all") %>% #1,689,982 x 10
+    select(YEAR, PRIMARY_SAMPLE_UNIT,STRAT,PROT, SPECIES_CD, abundance) #1,689,982 * 6
+  
+  # Cast abundance longways (species as columns)
+  abundmat <- spread(abund, SPECIES_CD, abundance, fill = 0)
+  #dim(abundmat) #5241  352
+  
+  # What is up with these species not being in the trait matrix??
+  checkthese <- colnames(abundmat)[!colnames(abundmat) %in% rownames(traits)]
+  
+  # Subset species whose names only appear in traits
+  abundmat <- abundmat[colnames(abundmat) %in% rownames(traits)] 
+  #dim(abundmat) #5,241    348
+  
+  # Drop communities with no species (roughly 500 sites)
+  abundmat <- abundmat[!rowSums(abundmat) == 0, ] 
+  #dim(abundmat) #5,241     348
+  
+  #Calculate relative values for community matrix
+  rel.mat=abundmat/apply(abundmat,1,sum)
+  
+  #Compute species diversity
+  species.dist=matrix(1,ncol(abundmat),ncol(abundmat))-diag(rep(1,ncol(abundmat))) 
+  species.div=1/(1-apply(rel.mat,1,function(x) t(x) %*% species.dist %*% x))
+  
+  #Compute evenness (as in Jost 2010 Diversity)
+  evenness=log(species.div)/log(rowSums(abundmat>0))
+  
+  #Ensure that all evenness calculations are not >1 (bug)
+  func.div=1/(1-apply(rel.mat,1,function(x) t(x) %*% as.matrix(traitsmat) %*% x))
+  
+  #Bind all to the original dataframe
+  list = cbind(sample_data, evenness,species.div,func.div)
+  
+  fd_evenness = list %>%
+    select(PRIMARY_SAMPLE_UNIT, YEAR,STRAT,PROT,species.div,func.div,evenness) %>%
+    group_by(YEAR,PRIMARY_SAMPLE_UNIT)
+  
+  saveRDS(fd_evenness,"fd_eveness_rds")
+  
+} {else
+  fd_evenness = read_rds("fd_eveness_rds")
+}
+
+```
+
 ```{r bind psu matrices and sample data}
 
 if(!file.exists("psu_matrices_data_rds")){
   psu_abun = read_rds("psu_abun_sum_rds") #5,241*4
   psu_bio = read_rds("psu_bio_sum_rds") #5,241*5
   psu_div = read_rds("psu_div_rds") # #5,241*7
+  fd_evenness = read_rds("fd_eveness_rds")
   sample_data = as.tibble(read_csv("big_csv/sample_data/FK/sample_data_all_years.csv")) 
   #PRIMARY_SAMPLE_UNIT, YEAR, MONTH, DAY, STATION_N,R LAT_DEGREES, LON_DEGREES, DEPTH, UNDERWATER_VISIBILITY, MAPGRID_NR, HABITAT_CD, ZONE_NR, SUBREGION_NR, MPA_NR, PROT, STRAT
   
