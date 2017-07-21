@@ -356,74 +356,6 @@ d3tree2(
 
 ```
 
-```{r practice FD code}
-
-trait_matrix = read_csv('functional_diversity/species_trait_matrix_348_spp.csv')
-trait_matrix = trait_matrix %>%
-  as.tibble() %>%
-  mutate(
-    SPECIES_CD = toupper(as.character(SPECIES_CD))) %>% 
-  arrange(SPECIES_CD)
-
-traitsmat <- gowdis(traits)
-
-#func.dist = read_rds("functional_diversity/func_dist_rds")
-
-domain_fk_abun <- read_csv('big_csv/abundance_domain/domain_fk_abun.csv', 
-                           col_types = cols(
-                             YEAR = col_integer(),
-                             REGION = col_character(),
-                             SPECIES_CD = col_character(),
-                             abundance = col_double(),
-                             var = col_double(),
-                             n = col_integer(),
-                             nm = col_integer(),
-                             N = col_double(),
-                             NM = col_double(),
-                             protected_status = col_character()
-                           ))
-
-domain_fk_abun_no_spp = domain_fk_abun %>%
-  filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species 
-
-fd_trial = domain_fk_abun_no_spp %>% #15,651 x 10
-  filter(protected_status != "all") %>% 
-  select(YEAR, protected_status, SPECIES_CD, abundance) %>% #10,434 * 4
-  group_by(YEAR, protected_status) %>% ##32 groups (fk 16*2)
-  nest(-YEAR) %>%  
-  mutate(
-    data_wide = map(data, function(x) 
-      full_join(x, trait_matrix %>% select(SPECIES_CD), by='SPECIES_CD') %>%
-        mutate(abundance = ifelse(is.na(abundance), 0, abundance)))) %>%
-  unnest(data_wide) %>% 
-  spread(SPECIES_CD, abundance, fill =0) %>% 
-  select(-YEAR, -protected_status) %>% 
-  as.matrix()
-
-# Drop communities with no species 
-fd_trial_removed_zeros <- fd_trial[!rowSums(fd_trial) == 0, ]
-
-# Scale relative abundances within each community
-abundmat_2 <- t(apply(fd_trial_removed_zeros, 1, function(x) x / sum(x)))
-
-# Perform matrix multiplication
-Q <- c()
-
-for(i in 1:nrow(abundmat_2)) { # you can probably be more efficient here but apply was being a jerk
-  
-  x <- abundmat_2[i, , drop = F]
-  
-  Qi <- x %*% as.matrix(traitsmat) %*% t(x)
-  
-  # Convert to effective numbers
-  Q[i] <- 1/(1 - Qi)
-  
-}
-
-hist(Q)
-
-```
-
 ### Fetch the RVC data from 
 [NOAA's Southeast Fisheries Science Center server](https://grunt.sefsc.noaa.gov/rvc_analysis20/) using the [RVC package](https://github.com/jeremiaheb/rvc)
 - Fetched weighted abundance and biomass data by domain, strata, and primary sampling units 
@@ -655,47 +587,15 @@ if(!file.exists("psu_div_rds")){
 
 ```
 
-```{r traits}
-library(FD)
-
-###MEGAN'S WAY TO GET TRAIT MATRIX 
-trait_matrix = read_csv('functional_diversity/species_trait_matrix_348_spp.csv')
-trait_matrix = trait_matrix %>%
-  as.tibble() %>%
-  mutate(
-    SPECIES_CD = toupper(as.character(SPECIES_CD))) %>% 
-  arrange(SPECIES_CD)
-#dim(trait_matrix) 348  12
-
-traitmat = trait_matrix %>%
-  select(-Species_code,-Latin_name,-Common_name) %>%
-  as.data.frame()
-
-traitmat = gowdis(traitmat)
-
-### LEFCHECK'S WAY TO GET TRAIT MATRIX 
-# Read in CSVs
-traits <- read.csv("functional_diversity/species_trait_matrix_348_spp.csv")
-# Set rownames on traits and remove other info
-rownames(traits) <- traits$SPECIES_CD
-traits <- traits[, -c(1:4)]
-# Convert rownames to all caps
-rownames(traits) <- toupper(rownames(traits))
-# Get gower distances from traits
-traitsmat <- gowdis(traits)
-
-#### BOTH WORK 
-  
-```
-
 ```{r biodiversity 2.0}
 
 if(!file.exists("fd_eveness_rds")){
   
   sample_data = as.tibble(read_csv("big_csv/sample_data/FK/sample_data_all_years.csv"))
   
-  ##### chesmap 
   psu_fk_abun <- read_csv("big_csv/abundance_psu/psu_fk_abun.csv", col_types = cols(protected_status = col_character())) #3,643,306*10
+  
+  func.dist = read_rds("functional_diversity/func_dist_rds")
   
   #dim(psu_fk_abun) #3643306      10
   
@@ -733,7 +633,10 @@ if(!file.exists("fd_eveness_rds")){
   evenness=log(species.div)/log(rowSums(abundmat>0))
   
   #Ensure that all evenness calculations are not >1 (bug)
-  func.div=1/(1-apply(rel.mat,1,function(x) t(x) %*% as.matrix(traitsmat) %*% x))
+  #func.div=1/(1-apply(rel.mat,1,function(x) t(x) %*% as.matrix(traitsmat) %*% x))
+  
+  #Ensure that all evenness calculations are not >1 (bug)
+  func.div=1/(1-apply(rel.mat,1,function(x) t(x) %*% as.matrix(func.dist) %*% x))
   
   #Bind all to the original dataframe
   list = cbind(sample_data,evenness,species.div,func.div)
@@ -760,10 +663,10 @@ if(!file.exists("psu_matrices_data_rds")){
   sample_data = as.tibble(read_csv("big_csv/sample_data/FK/sample_data_all_years.csv")) 
   #PRIMARY_SAMPLE_UNIT, YEAR, MONTH, DAY, STATION_N,R LAT_DEGREES, LON_DEGREES, DEPTH, UNDERWATER_VISIBILITY, MAPGRID_NR, HABITAT_CD, ZONE_NR, SUBREGION_NR, MPA_NR, PROT, STRAT
   
-  all_matrices = inner_join(psu_abun, psu_bio)
-  all_matrices = inner_join(all_matrices, psu_div)
-  all_matrices = inner_join(all_matrices, fd_evenness)
-  all_matrices_data = inner_join(all_matrices, sample_data)
+  all_matrices = inner_join(psu_abun, psu_bio) #5,241*6 (+mean abundance and biomass)
+  all_matrices = inner_join(all_matrices, psu_div) #5,241*9 (+richness, simpson, shannon)
+  all_matrices = inner_join(all_matrices, fd_evenness) #5,241*12(+spec.div, functional.div, evenness)
+  all_matrices_data = inner_join(all_matrices, sample_data) #5,241 x 24
 
   saveRDS(all_matrices_data, "psu_matrices_data_rds")
 }
@@ -782,7 +685,7 @@ all_matrices_data = read_rds("psu_matrices_data_rds")
 if(!file.exists("stats_all_matrices_data_rds")){
   
   stats_all_matrices_data = all_matrices_data %>%
-    group_by(YEAR, STRAT) %>% 
+    group_by(YEAR, STRAT) %>% #110 groups 
     summarize(
       abundance_mean = mean(abundance_sum),
       abundance_n = length(abundance_sum),
@@ -813,7 +716,19 @@ if(!file.exists("stats_all_matrices_data_rds")){
       shannon_sd = sd(shannon),
       shannon_se = shannon_sd / sqrt(shannon_n),
       shannon_min = min(shannon),
-      shannon_max = max(shannon))
+      shannon_max = max(shannon),
+      func.div_mean = mean(func.div),
+      func.div_n = length(func.div),
+      func.div_sd = sd(func.div),
+      func.div_se = func.div_sd / sqrt(func.div_n),
+      func.div_min = min(func.div),
+      func.div_max = max(func.div),
+      evenness_mean = mean(evenness),
+      evenness_n = length(evenness),
+      evenness_sd = sd(evenness),
+      evenness_se = evenness_sd / sqrt(evenness_n),
+      evenness_min = min(evenness),
+      evenness_max = max(evenness))
   
   saveRDS(stats_all_matrices_data, "stats_all_matrices_data_rds")
   
@@ -858,7 +773,7 @@ ggplot(stats_all_matrices_data,aes(x=YEAR,y=biomass_mean, colour=STRAT, group=ST
       strip.background=element_blank(),
       strip.text.x=element_text(size=18,hjust=0),
       plot.caption = element_text(size=10))
-ggsave(file="biomass_by_year_and_strata.pdf", path="big_csv/plots")
+#ggsave(file="biomass_by_year_and_strata.pdf", path="big_csv/plots")
 
 #richness
 ggplot(stats_all_matrices_data,aes(x=YEAR,y=richness_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
@@ -876,7 +791,7 @@ ggplot(stats_all_matrices_data,aes(x=YEAR,y=richness_mean, colour=STRAT, group=S
       strip.background=element_blank(),
       strip.text.x=element_text(size=18,hjust=0),
       plot.caption = element_text(size=10))
-ggsave(file="richness_by_year_and_strata.pdf", path="big_csv/plots")
+#ggsave(file="richness_by_year_and_strata.pdf", path="big_csv/plots")
 
 #simpson
 ggplot(stats_all_matrices_data,aes(x=YEAR,y=simpson_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
@@ -894,7 +809,7 @@ ggplot(stats_all_matrices_data,aes(x=YEAR,y=simpson_mean, colour=STRAT, group=ST
       strip.background=element_blank(),
       strip.text.x=element_text(size=18,hjust=0),
       plot.caption = element_text(size=10))
-ggsave(file="simpson_diversity_by_year_and_strata.pdf", path="big_csv/plots")
+#ggsave(file="simpson_diversity_by_year_and_strata.pdf", path="big_csv/plots")
 
 # shannon
 ggplot(stats_all_matrices_data,aes(x=YEAR,y=shannon_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
@@ -915,11 +830,29 @@ ggplot(stats_all_matrices_data,aes(x=YEAR,y=shannon_mean, colour=STRAT, group=ST
 ggsave(file="shannon_diversity_by_year_and_strata.pdf", path="big_csv/plots")
 
 # functional
-ggplot(stats_all_matrices_data,aes(x=YEAR,y=functional_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
+ggplot(stats_all_matrices_data,aes(x=YEAR,y=func.div_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
   geom_line(aes(group=STRAT),lwd=1) +
   geom_point(size=3) +
-  geom_errorbar(aes(ymax=functional_mean+functional_se,ymin=functional_mean-functional_se),width=0.1)+
+  geom_errorbar(aes(ymax=func.div_mean+func.div_se,ymin=func.div_mean-func.div_se),width=0.1)+
   labs(title= "F) Functional", x="Year", y="Effective number of species",colour = "Strata")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016))+
+  theme_bw(base_size=16)+
+  theme(
+      plot.margin=unit(c(1,1,1,1),"cm"),
+      legend.position="right",
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      strip.background=element_blank(),
+      strip.text.x=element_text(size=18,hjust=0),
+      plot.caption = element_text(size=10))
+#ggsave(file="functional_diversity_by_year_and_strata.pdf", path="big_csv/plots")
+
+# evenness
+ggplot(stats_all_matrices_data,aes(x=YEAR,y=evenness_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
+  geom_line(aes(group=STRAT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=evenness_mean+evenness_se,ymin=evenness_mean-evenness_se),width=0.1)+
+  labs(title= "G) Evenness", x="Year", y="UNITS",colour = "Strata")+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016))+
   theme_bw(base_size=16)+
   theme(
@@ -978,6 +911,24 @@ ggplot(stats_all_matrices_data, aes(x=STRAT, y=shannon_mean)) +
   facet_wrap(~YEAR, scales='free_y')
 #ggsave(file=".pdf", path="big_csv/plots")
 
+# functional 
+ggplot(stats_all_matrices_data,aes(x=STRAT,y=func.div_mean))+ 
+  geom_bar(position=position_dodge(), stat="identity") +
+  geom_errorbar(aes(ymin=func.div_mean-func.div_se, ymax=func.div_mean+func.div_se), width=.2,  position=position_dodge(.9))+ 
+  theme_classic() +
+  theme(axis.text.x = element_text(angle=90)) + 
+  facet_wrap(~YEAR, scales='free_y')
+#ggsave(file=".pdf", path="big_csv/plots")
+
+# evenness
+ggplot(stats_all_matrices_data,aes(x=STRAT,y=evenness_mean))+ 
+  geom_bar(position=position_dodge(), stat="identity") +
+  geom_errorbar(aes(ymin=evenness_mean-evenness_se, ymax=evenness_mean+evenness_se), width=.2,  position=position_dodge(.9))+ 
+  theme_classic() +
+  theme(axis.text.x = element_text(angle=90)) + 
+  facet_wrap(~YEAR, scales='free_y')
+#ggsave(file=".pdf", path="big_csv/plots")
+
 # by YEAR
 #abundance 
 ggplot(stats_all_matrices_data, aes(x=YEAR, y=abundance_mean, group=YEAR)) + 
@@ -1024,17 +975,35 @@ ggplot(stats_all_matrices_data, aes(x=YEAR, y=shannon_mean, group=YEAR)) +
   facet_wrap(~STRAT, scales='free_y')
 #ggsave(file=".pdf", path="big_csv/plots")
 
+#functional
+ggplot(stats_all_matrices_data, aes(x=YEAR, y=func.div_mean, group=YEAR)) +  
+  geom_bar(position=position_dodge(), stat="identity") + 
+  geom_errorbar(aes(ymin=func.div_mean-func.div_se, ymax=func.div_mean+func.div_se), width=.2, position=position_dodge(.9)) + 
+  theme_classic() + 
+  theme(axis.text.x = element_text(angle=90)) + 
+  facet_wrap(~STRAT, scales='free_y')
+#ggsave(file=".pdf", path="big_csv/plots")
+
+#evenness
+ggplot(stats_all_matrices_data, aes(x=YEAR, y=evenness_mean, group=YEAR)) +  
+  geom_bar(position=position_dodge(), stat="identity") + 
+  geom_errorbar(aes(ymin=evenness_mean-evenness_se, ymax=evenness_mean+evenness_se), width=.2, position=position_dodge(.9)) + 
+  theme_classic() + 
+  theme(axis.text.x = element_text(angle=90)) + 
+  facet_wrap(~STRAT, scales='free_y')
+#ggsave(file=".pdf", path="big_csv/plots")
+
 ```
 
 Plot each metric by grouped strata and subregion through time 
 
 Group strata by: patch reef, forereef, and high relief 
 
-```{r Plot by year strata and subregion} 
-
-all_matrices_data = read_rds("psu_matrices_data_rds")
+```{r Plot by year grouped strata and subregion} 
 
 if(!file.exists("matrices_strat_grouped_rds"){
+  
+  all_matrices_data = read_rds("psu_matrices_data_rds")
   
   matrices_strat_grouped = all_matrices_data %>% 
     mutate(
@@ -1073,11 +1042,25 @@ if(!file.exists("matrices_strat_grouped_rds"){
       shannon_sd = sd(shannon),
       shannon_se = shannon_sd / sqrt(shannon_n),
       shannon_min = min(shannon),
-      shannon_max = max(shannon))
+      shannon_max = max(shannon),
+      func.div_mean = mean(func.div),
+      func.div_n = length(func.div),
+      func.div_sd = sd(func.div),
+      func.div_se = func.div_sd / sqrt(func.div_n),
+      func.div_min = min(func.div),
+      func.div_max = max(func.div),
+      evenness_mean = mean(evenness),
+      evenness_n = length(evenness),
+      evenness_sd = sd(evenness),
+      evenness_se = evenness_sd / sqrt(evenness_n),
+      evenness_min = min(evenness),
+      evenness_max = max(evenness))
+  
+  saveRDS(matrices_strat_grouped, "matrices_strat_grouped_rds")
 }
 
 else{
-  matrices_strat_grouped = write_rds("matrices_strat_grouped_rds")
+  matrices_strat_grouped = read_rds("matrices_strat_grouped_rds")
 }
 
 
@@ -1261,6 +1244,196 @@ ggplot(data = matrices_strat_grouped) +
   geom_boxplot(mapping = aes(x = YEAR, y = shannon_mean, group = YEAR)) +
   facet_wrap(~STRAT_GROUPED, scales="free_y")
 #ggsave(file=".pdf", path="big_csv/plots")
+
+```
+
+```{r plots by NTMR}
+
+if(!file.exists("matrices_strat_grouped_rds"){
+  
+  all_matrices_data = read_rds("psu_matrices_data_rds")
+  
+  matrices_ntmr = all_matrices_data %>% 
+    group_by(YEAR, PROT) %>% #add subregion later 
+    summarize(
+      abundance_mean = mean(abundance_sum),
+      abundance_n = length(abundance_sum),
+      abundance_sd = sd(abundance_sum),
+      abundance_se = abundance_sd / sqrt(abundance_n),
+      abundance_min = min(abundance_sum),
+      abundance_max = max(abundance_sum),
+      biomass_mean = mean(biomass_sum),
+      biomass_n = length(biomass_sum),
+      biomass_sd = sd(biomass_sum),
+      biomass_se = biomass_sd / sqrt(biomass_n),
+      biomass_min = min(biomass_sum),
+      biomass_max = max(biomass_sum),
+      richness_mean = mean(richness),
+      richness_n = length(richness),
+      richness_sd = sd(richness),
+      richness_se = richness_sd / sqrt(richness_n),
+      richness_min = min(richness),
+      richness_max = max(richness),
+      simpson_mean = mean(simpson),
+      simpson_n = length(simpson),
+      simpson_sd = sd(simpson),
+      simpson_se = simpson_sd / sqrt(simpson_n),
+      simpson_min = min(simpson),
+      simpson_max = max(simpson),
+      shannon_mean = mean(shannon),
+      shannon_n = length(shannon),
+      shannon_sd = sd(shannon),
+      shannon_se = shannon_sd / sqrt(shannon_n),
+      shannon_min = min(shannon),
+      shannon_max = max(shannon),
+      func.div_mean = mean(func.div),
+      func.div_n = length(func.div),
+      func.div_sd = sd(func.div),
+      func.div_se = func.div_sd / sqrt(func.div_n),
+      func.div_min = min(func.div),
+      func.div_max = max(func.div),
+      evenness_mean = mean(evenness),
+      evenness_n = length(evenness),
+      evenness_sd = sd(evenness),
+      evenness_se = evenness_sd / sqrt(evenness_n),
+      evenness_min = min(evenness),
+      evenness_max = max(evenness))
+  
+  saveRDS(matrices_ntmr, "matrices_ntmr_rds")
+}
+
+else{
+  matrices_ntmr = read_rds("matrices_ntmr_rds")
+}
+
+# by YEAR and PROT
+#mean abundance
+ggplot(matrices_ntmr,aes(x=YEAR,y=abundance_mean, colour=PROT, group=PROT))+ 
+  geom_line(aes(group=PROT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=abundance_mean+abundance_se,ymin=abundance_mean-abundance_se),width=0.1)+
+  labs(title= "A) Mean Abundance", x="Year", y="Abundance of species", colour = "PROT")+
+  #scale_colour_manual(labels=c("0 = not protected", "1 = NTMR"), values= c("red", "green", "blue"))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016))+
+  theme_bw(base_size=16)+
+  theme(
+      plot.margin=unit(c(1,1,1,1),"cm"),
+      legend.position="right",
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      strip.background=element_blank(),
+      strip.text.x=element_text(size=18,hjust=0),
+      plot.caption = element_text(size=10))
+#ggsave(file="abundance_by_year_PROT.pdf", path="big_csv/plots")
+
+#biomass
+ggplot(matrices_ntmr,aes(x=YEAR,y=biomass_mean, colour=PROT, group=PROT))+ #shape=PROT
+  geom_line(aes(group=PROT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2) +
+  labs(title= "B) Mean Biomass", x="Year", y="Biomass of species", colour = "PROT")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016))+
+  theme_bw(base_size=16)+
+  theme(
+      plot.margin=unit(c(1,1,1,1),"cm"),
+      legend.position="right",
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      strip.background=element_blank(),
+      strip.text.x=element_text(size=18,hjust=0),
+      plot.caption = element_text(size=10))
+#ggsave(file="biomass_by_year_PROT.pdf", path="big_csv/plots")
+
+#richness
+ggplot(matrices_ntmr,aes(x=YEAR,y=richness_mean, colour=PROT, group=PROT))+ #shape=PROT
+  geom_line(aes(group=PROT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2)+
+  labs(title= "C) Richness", x="Year", y="Effective number of species", colour = "PROT")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016))+
+  theme_bw(base_size=16)+
+  theme(
+      plot.margin=unit(c(1,1,1,1),"cm"),
+      legend.position="right",
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      strip.background=element_blank(),
+      strip.text.x=element_text(size=18,hjust=0),
+      plot.caption = element_text(size=10))
+#ggsave(file="richness_by_year_PROT.pdf", path="big_csv/plots")
+
+#simpson
+ggplot(matrices_ntmr,aes(x=YEAR,y=simpson_mean, colour=PROT, group=PROT))+ #shape=PROT
+  geom_line(aes(group=PROT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymin=simpson_mean-simpson_se, ymax=simpson_mean+simpson_se), width=.2)+
+  labs(title= "D) Simpson", x="Year", y="Effective number of species",colour = "PROT")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016))+
+  theme_bw(base_size=16)+
+  theme(
+      plot.margin=unit(c(1,1,1,1),"cm"),
+      legend.position="right",
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      strip.background=element_blank(),
+      strip.text.x=element_text(size=18,hjust=0),
+      plot.caption = element_text(size=10))
+#ggsave(file="simpson_diversity_by_year_PROT.pdf", path="big_csv/plots")
+
+# shannon
+ggplot(matrices_ntmr,aes(x=YEAR,y=shannon_mean, colour=PROT, group=PROT))+ #shape=PROT
+  geom_line(aes(group=PROT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=shannon_mean+shannon_se,ymin=shannon_mean-shannon_se),width=0.1)+
+  labs(title= "E) Shannon", x="Year", y="Effective number of species",colour = "PROT")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016))+
+  theme_bw(base_size=16)+
+  theme(
+      plot.margin=unit(c(1,1,1,1),"cm"),
+      legend.position="right",
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      strip.background=element_blank(),
+      strip.text.x=element_text(size=18,hjust=0),
+      plot.caption = element_text(size=10))
+ggsave(file="shannon_diversity_by_year_PROT.pdf", path="big_csv/plots")
+
+
+# functional
+ggplot(matrices_ntmr,aes(x=YEAR,y=func.div_mean, colour=PROT, group=PROT))+ #shape=PROT
+  geom_line(aes(group=PROT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=func.div_mean+func.div_se,ymin=func.div_mean-func.div_se),width=0.1)+
+  labs(title= "F) Functional", x="Year", y="Effective number of species",colour = "PROT")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016))+
+  theme_bw(base_size=16)+
+  theme(
+      plot.margin=unit(c(1,1,1,1),"cm"),
+      legend.position="right",
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      strip.background=element_blank(),
+      strip.text.x=element_text(size=18,hjust=0),
+      plot.caption = element_text(size=10))
+#ggsave(file="functional_diversity_by_year_PROT.pdf", path="big_csv/plots")
+
+# evenness
+ggplot(matrices_ntmr,aes(x=YEAR,y=evenness_mean, colour=PROT, group=PROT))+ #shape=PROT
+  geom_line(aes(group=PROT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=evenness_mean+evenness_se,ymin=evenness_mean-evenness_se),width=0.1)+
+  labs(title= "G) Evenness", x="Year", y="UNITS",colour = "PROT")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016))+
+  theme_bw(base_size=16)+
+  theme(
+      plot.margin=unit(c(1,1,1,1),"cm"),
+      legend.position="right",
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      strip.background=element_blank(),
+      strip.text.x=element_text(size=18,hjust=0),
+      plot.caption = element_text(size=10))
+#ggsave(file="functional_diversity_by_year_PROT.pdf", path="big_csv/plots")
 
 ```
 
