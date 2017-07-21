@@ -9,6 +9,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r triats}
 library(FD)
+
+###MEGAN'S WAY TO GET TRAIT MATRIX 
 trait_matrix = read_csv('functional_diversity/species_trait_matrix_348_spp.csv')
 trait_matrix = trait_matrix %>%
   as.tibble() %>%
@@ -23,6 +25,7 @@ traitmat = trait_matrix %>%
 
 traitmat = gowdis(traitmat)
 
+### LEFCHECK'S WAY TO GET TRAIT MATRIX 
 # Read in CSVs
 traits <- read.csv("functional_diversity/species_trait_matrix_348_spp.csv")
 # Set rownames on traits and remove other info
@@ -32,6 +35,8 @@ traits <- traits[, -c(1:4)]
 rownames(traits) <- toupper(rownames(traits))
 # Get gower distances from traits
 traitsmat <- gowdis(traits)
+
+#### BOTH WORK 
   
 ```
 
