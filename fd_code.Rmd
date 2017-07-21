@@ -158,7 +158,7 @@ abund = psu_fk_abun_no_spp %>%
   filter(protected_status != "all") %>% #1,689,982 x 10
   select(YEAR, PRIMARY_SAMPLE_UNIT,STRAT,PROT, SPECIES_CD, abundance) #1,689,982 * 6
 
-# Cast abundance longways
+# Cast abundance longways (species as columns)
 abundmat <- spread(abund, SPECIES_CD, abundance, fill = 0)
 #dim(abundmat) #5241  352
 
