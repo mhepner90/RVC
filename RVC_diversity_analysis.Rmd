@@ -655,11 +655,44 @@ if(!file.exists("psu_div_rds")){
 
 ```
 
+```{r traits}
+library(FD)
+
+###MEGAN'S WAY TO GET TRAIT MATRIX 
+trait_matrix = read_csv('functional_diversity/species_trait_matrix_348_spp.csv')
+trait_matrix = trait_matrix %>%
+  as.tibble() %>%
+  mutate(
+    SPECIES_CD = toupper(as.character(SPECIES_CD))) %>% 
+  arrange(SPECIES_CD)
+#dim(trait_matrix) 348  12
+
+traitmat = trait_matrix %>%
+  select(-Species_code,-Latin_name,-Common_name) %>%
+  as.data.frame()
+
+traitmat = gowdis(traitmat)
+
+### LEFCHECK'S WAY TO GET TRAIT MATRIX 
+# Read in CSVs
+traits <- read.csv("functional_diversity/species_trait_matrix_348_spp.csv")
+# Set rownames on traits and remove other info
+rownames(traits) <- traits$SPECIES_CD
+traits <- traits[, -c(1:4)]
+# Convert rownames to all caps
+rownames(traits) <- toupper(rownames(traits))
+# Get gower distances from traits
+traitsmat <- gowdis(traits)
+
+#### BOTH WORK 
+  
+```
+
 ```{r biodiversity 2.0}
 
 if(!file.exists("fd_eveness_rds")){
   
-  sample_data = as.tibble(read_csv("C:/Users/mhepn/Dropbox/github/RVC/big_csv/sample_data/FK/sample_data_all_years.csv"))
+  sample_data = as.tibble(read_csv("big_csv/sample_data/FK/sample_data_all_years.csv"))
   
   ##### chesmap 
   psu_fk_abun <- read_csv("big_csv/abundance_psu/psu_fk_abun.csv", col_types = cols(protected_status = col_character())) #3,643,306*10
@@ -703,7 +736,7 @@ if(!file.exists("fd_eveness_rds")){
   func.div=1/(1-apply(rel.mat,1,function(x) t(x) %*% as.matrix(traitsmat) %*% x))
   
   #Bind all to the original dataframe
-  list = cbind(sample_data, evenness,species.div,func.div)
+  list = cbind(sample_data,evenness,species.div,func.div)
   
   fd_evenness = list %>%
     select(PRIMARY_SAMPLE_UNIT, YEAR,STRAT,PROT,species.div,func.div,evenness) %>%
@@ -729,6 +762,7 @@ if(!file.exists("psu_matrices_data_rds")){
   
   all_matrices = inner_join(psu_abun, psu_bio)
   all_matrices = inner_join(all_matrices, psu_div)
+  all_matrices = inner_join(all_matrices, fd_evenness)
   all_matrices_data = inner_join(all_matrices, sample_data)
 
   saveRDS(all_matrices_data, "psu_matrices_data_rds")
