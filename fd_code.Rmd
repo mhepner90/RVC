@@ -1,0 +1,148 @@
+---
+title: "fd code"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r triats}
+library(FD)
+trait_matrix = read_csv('functional_diversity/species_trait_matrix_348_spp.csv')
+trait_matrix = trait_matrix %>%
+  as.tibble() %>%
+  mutate(
+    SPECIES_CD = toupper(as.character(SPECIES_CD))) %>% 
+  arrange(SPECIES_CD)
+#dim(trait_matrix) 348  12
+
+traitmat = trait_matrix %>%
+  select(-Species_code,-Latin_name,-Common_name) %>%
+  as.data.frame()
+
+traitmat = gowdis(traitmat)
+
+# Read in CSVs
+traits <- read.csv("functional_diversity/species_trait_matrix_348_spp.csv")
+# Set rownames on traits and remove other info
+rownames(traits) <- traits$SPECIES_CD
+traits <- traits[, -c(1:4)]
+# Convert rownames to all caps
+rownames(traits) <- toupper(rownames(traits))
+# Get gower distances from traits
+traitsmat <- gowdis(traits)
+  
+```
+
+```{r jon lefcheck}
+
+library(tidyr)
+
+psu_fk_abun <- read_csv("big_csv/abundance_psu/psu_fk_abun.csv", col_types = cols(protected_status = col_character())) #3,643,306*10
+
+#dim(psu_fk_abun) #3643306      10
+
+psu_fk_abun_no_spp = psu_fk_abun %>%
+  filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$'))  
+dim(psu_fk_abun_no_spp) #3,379,964      10
+
+abund = psu_fk_abun_no_spp %>% 
+  filter(protected_status != "all") %>% #1,689,982 x 10
+  select(YEAR, PRIMARY_SAMPLE_UNIT,STRAT,PROT, SPECIES_CD, abundance) #1,689,982 * 6
+
+# Cast abundance longways
+abundmat <- spread(abund, SPECIES_CD, abundance, fill = 0)
+#dim(abundmat) #5241  352
+
+# What is up with these species not being in the trait matrix??
+checkthese <- colnames(abundmat)[!colnames(abundmat) %in% rownames(traits)]
+
+# Subset species whose names only appear in traits
+abundmat <- abundmat[colnames(abundmat) %in% rownames(traits)] 
+#dim(abundmat) #5,241    348
+
+# Drop communities with no species (roughly 500 sites)
+abundmat <- abundmat[!rowSums(abundmat) == 0, ] 
+#dim(abundmat) #5,241     348
+
+# Here is where you perform the different clustering
+
+# Scale relative abundances within each community
+abundmat <- t(apply(abundmat, 1, function(x) x / sum(x)))
+
+# Perform matrix multiplication
+Q <- c()
+
+for(i in 1:nrow(abundmat)) { # you can probably be more efficient here but apply was being a jerk
+  
+  x <- abundmat[i, , drop = F]
+  
+  Qi <- x %*% as.matrix(traitsmat) %*% t(x)
+  
+  # Convert to effective numbers
+  Q[i] <- 1/(1 - Qi)
+
+}
+
+hist(Q)
+```
+
+
+```{r megan}
+
+#psu_fk_abun <- read_csv("C:/Users/mhepn/Dropbox/github/RVC/big_csv/abundance_psu/psu_fk_abun.csv", col_types = cols(protected_status = col_character())) #3,643,306      10
+
+psu_fk_abun <- read_csv("big_csv/abundance_psu/psu_fk_abun.csv", col_types = cols(protected_status = col_character())) #3,643,306*10
+
+# remove species identified to genus level 
+psu_fk_abun_no_spp = psu_fk_abun %>%
+  filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$'))  
+dim(psu_fk_abun_no_spp) #3,379,964      10
+
+fd_trial = psu_fk_abun_no_spp %>% 
+  filter(protected_status != "all") %>% #1,689,982 x 10
+  select(YEAR, PRIMARY_SAMPLE_UNIT,STRAT,PROT, SPECIES_CD, abundance) %>% #1,689,982 * 6
+  group_by(YEAR, PRIMARY_SAMPLE_UNIT) %>% #5,241 groups 
+  nest(-YEAR) %>%  
+  mutate(
+     data_wide = map(data, function(x) 
+        full_join(x, trait_matrix %>% select(SPECIES_CD), by='SPECIES_CD') %>%
+          mutate(abundance = ifelse(is.na(abundance), 0, abundance)) %>%
+          spread(SPECIES_CD, abundance, fill =0)),
+     data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abundance, fill =0)),  
+     rel_abun = map(data_wide, 
+                    function(x) x %>% select(-STRAT, -PROT) / sum(x)),
+     rao = map(rel_abun,
+               function(x) 1/1- (x %*% as.matrix(traitsmat) %*% t(x)))) 
+     
+# Drop communities with no species detected (none so we are good)
+test = fd_trial[,(5:352)]
+testmat <- test[!rowSums(test) == 0, ] #5241  348
+
+#Check to make sure the matrices match (match so we are good)  
+checkthese <- colnames(fd_trial)[!colnames(fd_trial) %in% rownames(traits)]
+
+# Scale relative abundances within each community
+abundmat <- t(apply(abundmat, 1, function(x) x / sum(x)))
+
+# Perform matrix multiplication
+Q <- c()
+
+for(i in 1:nrow(abundmat)) { # you can probably be more efficient here but apply was being a jerk
+  
+  x <- abundmat[i, , drop = F]
+  
+  Qi <- x %*% as.matrix(traitsmat) %*% t(x)
+  
+  # Convert to effective numbers
+  Q[i] <- 1/(1 - Qi)
+
+}
+
+hist(Q)
+
+
+```
+
+
