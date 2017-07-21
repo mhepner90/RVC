@@ -365,7 +365,9 @@ trait_matrix = trait_matrix %>%
     SPECIES_CD = toupper(as.character(SPECIES_CD))) %>% 
   arrange(SPECIES_CD)
 
-func.dist = read_rds("functional_diversity/func_dist_rds")
+traitsmat <- gowdis(traits)
+
+#func.dist = read_rds("functional_diversity/func_dist_rds")
 
 domain_fk_abun <- read_csv('big_csv/abundance_domain/domain_fk_abun.csv', 
                            col_types = cols(
@@ -398,14 +400,27 @@ fd_trial = domain_fk_abun_no_spp %>% #15,651 x 10
   select(-YEAR, -protected_status) %>% 
   as.matrix()
 
-raoQ.2 = 1/(1-apply(fd_trial, 1, function(x) t(x) %*% as.matrix(func.dist) %*% x))
+# Drop communities with no species 
+fd_trial_removed_zeros <- fd_trial[!rowSums(fd_trial) == 0, ]
 
-dim(fd_trial) # 32 348
-dim(as.matrix(func.dist)) #348 348
+# Scale relative abundances within each community
+abundmat_2 <- t(apply(fd_trial_removed_zeros, 1, function(x) x / sum(x)))
 
-#abundance.matrix 348 species (columns) * 32 communities (rows)
-#func.dist matrix 348 species (columns) * 348 species (rows)
-#can't multiple matrices 
+# Perform matrix multiplication
+Q <- c()
+
+for(i in 1:nrow(abundmat_2)) { # you can probably be more efficient here but apply was being a jerk
+  
+  x <- abundmat_2[i, , drop = F]
+  
+  Qi <- x %*% as.matrix(traitsmat) %*% t(x)
+  
+  # Convert to effective numbers
+  Q[i] <- 1/(1 - Qi)
+  
+}
+
+hist(Q)
 
 ```
 
