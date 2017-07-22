@@ -1567,24 +1567,22 @@ ggplot(matrices_ntmr,aes(x=YEAR,y=evenness_mean, colour=factor(PROT), group=fact
 - Are doversoty values and subregions related? 
 - Are diversity values and protection level related?
 
-```{r stat libraries}
+```{r mapping libraries}
 
-library(MASS) # contains boxcox function
-library(moments) # contains skewness function
-library(DescTools)
-library(rpsychi) #statistical tests using summary data
-library(AICcmodavg) #AIC
-library(ade4) #mantel.rtest
-library(ggplot2) #geom_boxplot and other plots
-library(nortest) #checks for normality 
-library(psych) #pairs.panels 
+library(automap) #Calls: autoKrige
+library(ggplot2) #Calls: ggplot
+library(gridExtra) #Calls: grid.arrange
+library(parallel) #Calls: clusterEvalQ,clusterExport,detectCores,makeCluster,parLapply
+library(raster)
+library(rgdal) #readOGR 
+library(rgeos)
+library(sp) #Calls: coordinates, spsample
 library(tidyverse)
-library(magrittr) # needed to call this library separately from one in tidyverse in order to get functionality of github version not found in CRAN version
-library(parallel)
+
 #Create socket cluster of multiple cores 
 cl=makeCluster(detectCores())
 #Load automap on all cores (to access function `autoKrige`)
-clusterEvalQ(cl,c(library(automap),library(mgcv),library(plotrix)) )
+clusterEvalQ(cl,c(library(automap),library(mgcv),library(plotrix)))
 
 ```
 
@@ -1668,20 +1666,35 @@ Examine spatial and temporal trends in the different dimensions of reef fish div
 - Interpolate diversity for each strata/region/year groupings using kriging 
 ```{r Kriging}
 
-library(parallel) #clusterExport 
-library(rgdal) #readOGR 
-library(sp) #Calls: coordinates, spsample
+#read in data 
 all_matrices_data = read_rds("psu_matrices_data_rds")
 
+#remove 1999 and 2000 where there is no FDLR 
+all_matrices_data = all_matrices_data %>%
+  filter(YEAR != "1999") %>%
+  filter(YEAR != "2000") %>% #4852*24 variables 
+  select(YEAR, PRIMARY_SAMPLE_UNIT, abundance_sum, biomass_sum, richness,   simpson,shannon, func.div, evenness, LAT_DEGREES, LON_DEGREES) %>%
+  as.data.frame()
+
 #Create new list of data frames to convert to SpatialPointsDataFrame
-alphasp.list=all_matrices_data
+alphasp.list= all_matrices_data
 names(alphasp.list)=names(all_matrices_data)
+
+#remove YEAR and PSU columns 
+alphasp.list = alphasp.list[,(3:11)] #4552 obv of 9 variables 
+
 #Convert class("dataframe") into class("SpatialPointsDataFrame")
-for(i in seq_along(alphasp.list)) { sp:::coordinates(alphasp.list[[i]])=~LON_DEGREES+LAT_DEGREES } 
-lapply(alphasp.list,class)
+for(i in seq_along(alphasp.list)) {
+  coordinates(alphasp.list[[i]])=~LON_DEGREES+LAT_DEGREES 
+  } 
+lapply(alphasp.list, class)
+#Error in (function (classes, fdef, mtable): unable to find an inherited method for function ‘coordinates<-’ for signature ‘"numeric"’
+
 #Project lat long coordinates onto an ellipse
 for(i in seq_along(alphasp.list)) { 
-  proj4string(alphasp.list[[i]])="+proj=longlat +ellps=GRS80 +datum=NAD83 +no_defs" }
+  sp::proj4string(alphasp.list[[i]])="+proj=longlat +ellps=GRS80 +datum=NAD83 +no_defs" }
+#Error in (function (classes, fdef, mtable)  : unable to find an inherited method for function ‘proj4string<-’ for signature ‘"integer", "character"’
+
 #Transform the projection into cartesian coordinates
 alphasp.list=lapply(seq_along(alphasp.list),function(i) {
   spTransform(alphasp.list[[i]],CRS("+proj=utm +zone=18 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")) } )
