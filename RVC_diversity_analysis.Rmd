@@ -678,6 +678,51 @@ else{
 
 ## Plots
 
+- create multiplot function from (https://stackoverflow.com/questions/24387376/r-weird-error-could-not-find-function-multiplot)
+
+```{r multiplot}
+
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  library(grid)
+
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+
+  numPlots = length(plots)
+
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                    ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+
+ if (numPlots==1) {
+    print(plots[[1]])
+
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+
+library(gridExtra)
+library(grid)
+library(ggplot2)
+library(lattice)
+library(tidyverse)
+```
+
+
 ```{r Plot by year and strata}
 
 all_matrices_data = read_rds("psu_matrices_data_rds")
@@ -740,7 +785,7 @@ if(!file.exists("stats_all_matrices_data_rds")){
 
 # BY STRAT and YEAR
 #abundance 
-ggplot(stats_all_matrices_data,aes(x=YEAR,y=abundance_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
+ab_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=abundance_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
   geom_line(aes(group=STRAT),lwd=1) +
   geom_point(size=3) +
   geom_errorbar(aes(ymax=abundance_mean+abundance_se,ymin=abundance_mean-abundance_se),width=0.1)+
@@ -758,7 +803,7 @@ ggplot(stats_all_matrices_data,aes(x=YEAR,y=abundance_mean, colour=STRAT, group=
 #ggsave(file="abundance_by_year_and_strata.pdf", path="big_csv/plots")
 
 #biomass
-ggplot(stats_all_matrices_data,aes(x=YEAR,y=biomass_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
+bio_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=biomass_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
   geom_line(aes(group=STRAT),lwd=1) +
   geom_point(size=3) +
   geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2) +
@@ -776,7 +821,7 @@ ggplot(stats_all_matrices_data,aes(x=YEAR,y=biomass_mean, colour=STRAT, group=ST
 #ggsave(file="biomass_by_year_and_strata.pdf", path="big_csv/plots")
 
 #richness
-ggplot(stats_all_matrices_data,aes(x=YEAR,y=richness_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
+rich_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=richness_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
   geom_line(aes(group=STRAT),lwd=1) +
   geom_point(size=3) +
   geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2)+
@@ -785,7 +830,7 @@ ggplot(stats_all_matrices_data,aes(x=YEAR,y=richness_mean, colour=STRAT, group=S
   theme_bw(base_size=16)+
   theme(
       plot.margin=unit(c(1,1,1,1),"cm"),
-      legend.position="right",
+      legend.position="none",
       panel.grid.major=element_blank(),
       panel.grid.minor=element_blank(),
       strip.background=element_blank(),
@@ -793,12 +838,30 @@ ggplot(stats_all_matrices_data,aes(x=YEAR,y=richness_mean, colour=STRAT, group=S
       plot.caption = element_text(size=10))
 #ggsave(file="richness_by_year_and_strata.pdf", path="big_csv/plots")
 
+# evenness
+eve_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=evenness_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
+  geom_line(aes(group=STRAT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=evenness_mean+evenness_se,ymin=evenness_mean-evenness_se),width=0.1)+
+  labs(title= "D) Evenness", x="Year", y="Relative evenness",colour = "Strata")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016))+
+  theme_bw(base_size=16)+
+  theme(
+      plot.margin=unit(c(1,1,1,1),"cm"),
+      legend.position="none", #right
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      strip.background=element_blank(),
+      strip.text.x=element_text(size=18,hjust=0),
+      plot.caption = element_text(size=10))
+#ggsave(file="functional_diversity_by_year_and_strata.pdf", path="big_csv/plots")
+
 #simpson
-ggplot(stats_all_matrices_data,aes(x=YEAR,y=simpson_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
+sim_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=simpson_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
   geom_line(aes(group=STRAT),lwd=1) +
   geom_point(size=3) +
   geom_errorbar(aes(ymin=simpson_mean-simpson_se, ymax=simpson_mean+simpson_se), width=.2)+
-  labs(title= "D) Simpson", x="Year", y="Effective number of species",colour = "Strata")+
+  labs(title= "E) Simpson", x="Year", y="Effective number of species",colour = "Strata")+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016))+
   theme_bw(base_size=16)+
   theme(
@@ -812,11 +875,11 @@ ggplot(stats_all_matrices_data,aes(x=YEAR,y=simpson_mean, colour=STRAT, group=ST
 #ggsave(file="simpson_diversity_by_year_and_strata.pdf", path="big_csv/plots")
 
 # shannon
-ggplot(stats_all_matrices_data,aes(x=YEAR,y=shannon_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
+shan_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=shannon_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
   geom_line(aes(group=STRAT),lwd=1) +
   geom_point(size=3) +
   geom_errorbar(aes(ymax=shannon_mean+shannon_se,ymin=shannon_mean-shannon_se),width=0.1)+
-  labs(title= "E) Shannon", x="Year", y="Effective number of species",colour = "Strata")+
+  labs(title= "F) Shannon", x="Year", y="Effective number of species",colour = "Strata")+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016))+
   theme_bw(base_size=16)+
   theme(
@@ -830,11 +893,11 @@ ggplot(stats_all_matrices_data,aes(x=YEAR,y=shannon_mean, colour=STRAT, group=ST
 ggsave(file="shannon_diversity_by_year_and_strata.pdf", path="big_csv/plots")
 
 # functional
-ggplot(stats_all_matrices_data,aes(x=YEAR,y=func.div_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
+func_ys= ggplot(stats_all_matrices_data,aes(x=YEAR,y=func.div_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
   geom_line(aes(group=STRAT),lwd=1) +
   geom_point(size=3) +
   geom_errorbar(aes(ymax=func.div_mean+func.div_se,ymin=func.div_mean-func.div_se),width=0.1)+
-  labs(title= "F) Functional", x="Year", y="Effective number of species",colour = "Strata")+
+  labs(title= "G) Functional", x="Year", y="Effective number of species",colour = "Strata")+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016))+
   theme_bw(base_size=16)+
   theme(
@@ -847,23 +910,44 @@ ggplot(stats_all_matrices_data,aes(x=YEAR,y=func.div_mean, colour=STRAT, group=S
       plot.caption = element_text(size=10))
 #ggsave(file="functional_diversity_by_year_and_strata.pdf", path="big_csv/plots")
 
-# evenness
-ggplot(stats_all_matrices_data,aes(x=YEAR,y=evenness_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
-  geom_line(aes(group=STRAT),lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=evenness_mean+evenness_se,ymin=evenness_mean-evenness_se),width=0.1)+
-  labs(title= "G) Evenness", x="Year", y="UNITS",colour = "Strata")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016))+
-  theme_bw(base_size=16)+
-  theme(
-      plot.margin=unit(c(1,1,1,1),"cm"),
-      legend.position="right",
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      strip.background=element_blank(),
-      strip.text.x=element_text(size=18,hjust=0),
-      plot.caption = element_text(size=10))
-#ggsave(file="functional_diversity_by_year_and_strata.pdf", path="big_csv/plots")
+
+
+#########KATIE: I tried using multiplot and grid.arrange but I couldn't get the height and width functions to work correctly. I am thinking we only need one legend of Strat. Preferable enlarged on the right with all 7 plots, but that might be something that has to be done in powerpoint or paint. Maybe also have the bottom read "Year" so that its not below each chart. I am thinking the order should be: 
+#           a)Mean abundance, b)Mean Biomass, 
+#           c)Richness,        d)Evennnesss, 
+#           e)Simpson,         f) Shannon, 
+#           g) Functional 
+
+
+#combine multiple plots
+checkit = multiplot(ab_ys, rich_ys, sim_ys, func_ys, bio_ys, eve_ys, shan_ys, cols = 2)
+#want to remove STRAT. Just wamt one legend ideally. 
+
+grid.arrange(
+  arrangeGrob(ab_ys,bio_ys, ncol=2, nrow=1), 
+  arrangeGrob(rich_ys,eve_ys, ncol=2, nrow=1),
+  arrangeGrob(sim_ys,shan_ys, ncol=2, nrow=1),
+  func_ys,
+  #arrangeGrob(func_ys, ncol=2, nrow=1), 
+  bottom = "Year") #heights=c(4,4,4), widths=c(16,16,16))
+
+grid.arrange(
+  arrangeGrob(ab_ys,bio_ys, eve_ys, ncol=3, nrow=1), 
+  arrangeGrob(rich_ys, sim_ys,shan_ys, func_ys, ncol=4, nrow=1), bottom = "Year", heights=c(8,8))
+
+grid.arrange(
+  arrangeGrob(rich_ys,sim_ys, ncol=2, nrow=1),
+  arrangeGrob(shan_ys,func_ys, ncol=2, nrow=1),bottom = "Year", left = "Effective number of species")
+#want to remove STRAT. Just wamt one legend ideally. 
+
+
+grid.arrange(
+  arrangeGrob(ab_ys,bio_ys, ncol=2, nrow=1), 
+  arrangeGrob(rich_ys,sim_ys, ncol=2, nrow=1),
+  arrangeGrob(shan_ys,func_ys, ncol=2, nrow=1),bottom = "Year") #heights=c(4,4,4), widths=c(16,16,16))
+#want to remove STRAT. Just wamt one legend ideally. 
+
+### ***Don't need to combine plots by STRAT and by YEAR just YEAR & STRAT for now***
 
 # by STRAT
 #abundance 
@@ -1902,5 +1986,4 @@ lapply(seq_along(partial.deviance.list),function(i) {
       legend.position="bottom",legend.title=element_blank()) } )
 
 ```
-
 
