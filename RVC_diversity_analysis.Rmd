@@ -15,20 +15,31 @@ output: html_document
 + Trait-matrix visualization 
 
 1.  By *strata* for each sampling year (using PSU data)  
-+ Species abundance and plot
-+ Species biomass and plot
-+ species richness and plot
++ Mean abundance and plot
++ Mean biomass and plot
++ Richness and plot
 + Simpson diversity as effective number of species and plot
 + Shannon diversity as effective number of species and plot
 + Functional diversity as effective number of species and plot
++ Pielou's evenness and plot 
 
-1. By *strata and subregion* for each sampling year (using PSU data) 
-+ Species abundance and plot
-+ Species biomass and plot
-+ species richness and plot
+1. By *strata grouped and subregion* for each sampling year (using PSU data) 
++ Mean abundance and plot
++ Mean biomass and plot
++ Richness and plot
 + Simpson diversity as effective number of species and plot
 + Shannon diversity as effective number of species and plot
 + Functional diversity as effective number of species and plot
++ Pielou's evenness and plot 
+
+1. By *NTMR* for each sampling year (using PSU data) 
++ Mean abundance and plot
++ Mean biomass and plot
++ Richness and plot
++ Simpson diversity as effective number of species and plot
++ Shannon diversity as effective number of species and plot
++ Functional diversity as effective number of species and plot
++ Pielou's evenness and plot 
 
 1. Figure of the FKNMS coral reef tract with strata, subregions, and NTMR 
 
@@ -1331,7 +1342,7 @@ ggplot(data = matrices_strat_grouped) +
 
 ```
 
-```{r plots by NTMR}
+```{r plots by PROT}
 
 if(!file.exists("matrices_strat_grouped_rds"){
   
