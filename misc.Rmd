@@ -7,6 +7,18 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+library(MASS) # contains boxcox function
+library(moments) # contains skewness function
+library(DescTools)
+library(rpsychi) #statistical tests using summary data
+library(AICcmodavg) #AIC
+library(ade4) #mantel.rtest
+library(ggplot2) #geom_boxplot and other plots
+library(nortest) #checks for normality 
+library(psych) #pairs.panels 
+
+#library(magrittr) # needed to call this library separately from one in tidyverse in order to get functionality of github version not found in CRAN version
 ```
 
 ## R Markdown
