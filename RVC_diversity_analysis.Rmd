@@ -734,6 +734,13 @@ library(lattice)
 library(tidyverse)
 ```
 
+## Questions
+
+- Are diversity values and strata related? 
+- Are diversity values and subregions related? 
+- Are diversity values and protection level related?
+
+## Plots of diversity indices by strata across all years 
 
 ```{r Plot by year and strata}
 
@@ -1091,7 +1098,7 @@ ggplot(stats_all_matrices_data, aes(x=YEAR, y=evenness_mean, group=YEAR)) +
 
 ```
 
-Plot each metric by grouped strata and subregion through time 
+## Plots of diversity indices by subregion and grouped strata across all years 
 
 Group strata by: patch reef, forereef, and high relief 
 
@@ -1343,6 +1350,8 @@ ggplot(data = matrices_strat_grouped) +
 
 ```
 
+## Plots of diversity indices by level of protection (NTMR) across all years 
+
 ```{r plots by PROT}
 
 if(!file.exists("matrices_strat_grouped_rds"){
@@ -1562,11 +1571,7 @@ ggplot(matrices_ntmr,aes(x=YEAR,y=evenness_mean, colour=factor(PROT), group=fact
 
 ```
 
-## Statistical analysis 
-
-- Are diversity values and strata related? 
-- Are doversoty values and subregions related? 
-- Are diversity values and protection level related?
+# Map of diversity indices 
 
 ```{r mapping libraries}
 
@@ -1588,7 +1593,9 @@ clusterEvalQ(cl,c(library(automap),library(mgcv),library(plotrix)))
 ```
 
 ```{r Map matrices}
+
 #Generate figure legend based on FKNMS map 
+
 #Read in shapefile and fortify
 if (!file.exists('fk.shp.fortify_rds')){
 fk.shp = readOGR( dsn = "FKNMS_sample_grid", layer = "FlaKeys_Grid") 
@@ -1599,67 +1606,6 @@ else{
   fk.shp.fortify = readRDS('fk.shp.fortify_rds')
 }
 
-all_matrices_data = read_rds("psu_matrices_data_rds")
-
-#Create data frame for legend points and titles
-data=data.frame(labels=c("Lower","Middle","Upper"),
-                shape=c(15:18,6),color=c("grey15","grey30","grey45"),
-                long=c(-76.15,-76.135,-76.21,-76.41,-76.34),
-                lat=c(37.2,37.7,38.15,38.67,39.16),
-                lat2=c(37.08,37.54,38.03,38.51,39.04))
-data$labels=factor(data$labels,levels=c("Lower","Middle","Upper"))
-
-#Generate map legend for inset
-inset.map=
-  ggplot()+
-  #Plot outline of Florida Keys 
-  geom_polygon(data=subset(fk.shp.fortify,group==0.1),aes(x=long,y=lat,group=group),col="grey50",fill="white",lwd=0.4)+
-  geom_segment(aes(x=-75.98281,y=37.39372,xend=-76.24769,yend=37.39372),col="grey50",lwd=1)+
-  geom_segment(aes(x=-76.24572,y=37.87455,xend=-76.01332,yend=37.87455),col="grey50",lwd=1)+
-  geom_segment(aes(x=-76.41753,y=38.35538,xend=-76.26395,yend=38.35538),col="grey50",lwd=1)+
-  geom_segment(aes(x=-76.49554,y=38.83621,xend=-76.35090,yend=38.83621),col="grey50",lwd=1)+
-  #Add legend points
-  geom_point(data=data,aes(x=long,y=lat,shape=labels,color=labels),size=8)+
-  scale_color_manual(values=c("grey45","grey30","grey15"))+
-  scale_shape_manual(values=c(6,18:15))+
-  #Add legend labels
-  geom_text(data=data,aes(x=long,y=lat2,label=labels),size=4.6,fontface="bold")+
-  theme(
-    plot.margin=unit(c(0,0,0,0),"cm"),
-    panel.background=element_blank(),
-    legend.position="none",panel.border=element_blank(),
-    panel.grid.major=element_blank(),panel.grid.minor=element_blank(),
-    axis.title.x=element_blank(),axis.title.y=element_blank(),
-    axis.text.x=element_blank(),axis.text.y=element_blank(),
-    axis.line=element_blank(),axis.ticks=element_blank())  
-
-#Plot diversity by region, strata and year for each diversity index
-lapply(alphadiv.list,function(i) {
-  #Melt dataframe so diversity indices are in a single column
-  x=melt(i,id.vars=c("Month","Year","Reg"),measure.vars=c("abundance", "biomass", "richness","simpson","shannon", "raoQ"))
-  #Summarize means and SEs by month, region, and variable
-  x=ddply(x,c("Month","Reg","variable"),summarize,value.mean=mean(value),value.se=std.error(value))
-  #Rename levels for figure plotting
-  levels(x$variable)=c("A) Abundance","B) Biomass","C) Richness ","D) Shannon","E) Gini-Simpson","F) Functional")
-  #Rename regions for figure plotting
-  x$Reg=factor(x$Reg); levels(x$Reg)=c("Upper","Middle","Lower")
-  #Plot line graph
-  p=ggplot(x,aes(x=as.factor(Month),y=value.mean,col=as.factor(Reg),shape=as.factor(Reg)))+
-    #annotation_custom(grob=inset.map,xmin=19,xmax=22.5,ymin=0,ymax=1.5)+
-    geom_line(aes(group=as.factor(Reg)),lwd=1)+geom_point(size=5)+
-    scale_color_manual(values=c("grey15","grey30","grey45","grey60","black"),name="Region")+
-    scale_shape_manual(values=c(15:18,6),name="Region")+
-    geom_errorbar(aes(ymax=value.mean+value.se,ymin=value.mean-value.se),width=0.1)+facet_wrap(~variable,scales="free")+
-    labs(x="",y="Diversity")+theme_bw(base_size=16)+
-    theme(
-      plot.margin=unit(c(0,1,0,0),"cm"),legend.position="none",
-      panel.grid.major=element_blank(),panel.grid.minor=element_blank(),panel.margin=unit(0.8,"lines"),
-      strip.background=element_blank(),strip.text.x=element_text(size=18,hjust=0))
-  #Add legend map
-  grid.arrange(p,inset.map,nrow=1,widths=c(1,0.2))
-} )
-
-#Save PDF (13" x 8")
 ```
 
 Examine spatial and temporal trends in the different dimensions of reef fish diversity. 
@@ -1675,17 +1621,21 @@ all_matrices_data = all_matrices_data %>%
   filter(YEAR != "1999") %>%
   filter(YEAR != "2000") %>% #4852*24 variables 
   select(YEAR, PRIMARY_SAMPLE_UNIT, abundance_sum, biomass_sum, richness,   simpson,shannon, func.div, evenness, LAT_DEGREES, LON_DEGREES) %>%
-  as.data.frame()
-
+  mutate(YEARGRP = 
+         if_else(grepl("2001|2002|2003|2004|2005|2006|2007", YEAR), "2001-2007",
+                 if_else(grepl("2008|2009|2010|2011|2012|2014|2016", YEAR), "2008-2016", "whatevs")))
+  
 #Create new list of data frames to convert to SpatialPointsDataFrame
-alphasp.list= all_matrices_data
-names(alphasp.list)=names(all_matrices_data)
+  alphasp.list= all_matrices_data
+  names(alphasp.list)=names(all_matrices_data)
 
 #remove YEAR and PSU columns 
 alphasp.list = alphasp.list[,(3:11)] #4552 obv of 9 variables 
+as.data.frame(alphasp.list)
 
 #Convert class("dataframe") into class("SpatialPointsDataFrame")
-coordinates(alphasp.list)=~LON_DEGREES+LAT_DEGREES 
+for(i in (alphasp.list)) {
+coordinates(alphasp.list)=~LON_DEGREES+LAT_DEGREES }
 class(alphasp.list)
 
 #Project lat long coordinates onto an ellipse
@@ -1714,8 +1664,7 @@ for(i in seq_along(alphasp.list)) {
 #Transform the projection into cartesian coordinates
 alphasp.list=lapply(seq_along(alphasp.list),function(i) {
   spTransform(alphasp.list[[i]],CRS("+proj=utm +zone=18 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")) } )
-
-
+########################################
 
 #Create a spatial grid onto which interpolated values can be plotted
 
@@ -1723,6 +1672,9 @@ if(!file.exists("krigeall.list_rds")){
   
   #read in shapefile 
   fk.shp = readOGR( dsn = "FKNMS_sample_grid", layer = "FlaKeys_Grid") 
+  #OGR data source with driver: ESRI Shapefile 
+  #Source: "FKNMS_sample_grid", layer: "FlaKeys_Grid" with 67568 features
+  #It has 21 fields
   
   #Generate interpolation grid
   fknms.shp=spTransform(fk.shp,CRS("+proj=utm +zone=18 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0 ")) 
@@ -1740,6 +1692,8 @@ if(!file.exists("krigeall.list_rds")){
   krigeall.list= parLapply(cl,alphasp.list,function(i) {
     lapply(names(i@data)[1:7],function(j) {
       as.data.frame(autoKrige(formula(paste("log10(",j,")~1")),i,grd)$krige_output) } ) } )
+
+  #Error in checkForRemoteErrors(val) :  8 nodes produced errors; first error: missing values in object
   
   saveRDS(krigeall.list, "krigeall.list_rds") 
 } 
@@ -1747,57 +1701,58 @@ if(!file.exists("krigeall.list_rds")){
 }
 
 #Apply names for titling during plotting
-#names(krigeall.list)=c("abund","biomass","pres.abs")
-for(i in seq_along(krigeall.list)) {
-  names(krigeall.list[[i]])=c("mean_abundance", "mean_biomass", "richness", "simpspn", "shannon", "functional", "evenness") 
-  }  
-
-#Plot all components across all years 
-lapply(seq_along(krigeall.list),function(i) {
-  do.call(grid.arrange,lapply(seq_along(krigeall.list[[i]]),function(j) {
-    ggplot()+
-      geom_raster(data=krigeall.list[[i]][[j]],aes(x=x1,y=x2,fill=var1.pred))+
-      scale_fill_gradientn(colours=rev(rainbow(3)))+
-      coord_equal()+labs(x="",y="",title=paste(names(krigeall.list[[i]])[j]))+ theme_bw()+theme(plot.margin=unit(c(0,0,0,0),"cm"),
-                                                                                                axis.text.x=element_blank(),axis.text.y=element_blank(),
-                                                                                                axis.ticks=element_blank(),legend.title=element_blank()) 
-    } ) ) 
-  } )
-
-
-#Apply names for titling during plotting
-for(i in seq_along(krigemonth.list)) {
-  names(krigemonth.list[[i]])=c("A) Mean Abundance","B) Mean Biomass","C) Richness","D) Shannon","E) Gini-Simpson","F) Functional") 
-  }
-for(i in seq_along(krigemonth.list)) {
-  for(j in seq_along(krigemonth.list[[i]])) {
-    names(krigemonth.list[[i]][[j]])=c("1999-2004","2005-2010","2011-2016") #change to year groupings 
-  } 
+for(i in (krigeall.list)) {
+  names(krigeall.list)= c("A) Mean Abundance","B) Mean Biomass","C) Richness", "D) Evenness", "E) Simpson","F) Shannon","G) Functional")) 
 }
 
+#Plot all components across all years 
+lapply((krigeall.list),function(i) {
+  do.call(grid.arrange,lapply((krigeall.list[[i]]),function(j) {
+    ggplot()+
+      geom_raster(data=krigeall.list[[j]],aes(x=x1,y=x2,fill=var1.pred))+
+      scale_fill_gradientn(colours=rev(rainbow(3)))+
+      coord_equal()+labs(x="",y="",title=paste(names(krigeall.list))+
+                         theme_bw()+
+                         theme(plot.margin=unit(c(0,0,0,0),"cm"),
+                               axis.text.x=element_blank(),axis.text.y=element_blank(),
+                               axis.ticks=element_blank(),legend.title=element_blank()) 
+  } ) ) 
+} )
+
+#Repeat for grouped years 
+  krigeyear.list=parLapply(cl,alphasp.list,function(i) {
+    lapply(names(i@data)[66:71],function(j) {
+      lapply(unique((i@data)$YEARGRP),function(k) {
+        if(j=="evenness") {
+          as.data.frame(autoKrige(formula(paste("asin(sqrt(",j,"))~1")),subset(i,i@data$YEARGRP==k),grd)$krige_output)
+        } else {
+          as.data.frame(autoKrige(formula(paste("log(",j,")~1")),subset(i,i@data$YEARGRP==k),grd)$krige_output)  }
+      } ) } ) } )
+
+#Apply names for titling during plotting for grouped years 
+for(i in (krigeyear.list)) {
+  names(krigeyear.list[[i]])=c("A) Mean Abundance","B) Mean Biomass","C) Richness", "D) Evenness", "E) Simpson","F) Shannon","G) Functional") }
+for(i in (krigeyear.list)) {
+  for(j in (krigeyear.list[[i]])) {
+    names(krigeyear.list[[i]][[j]])=c("2001-2007","2007-2017") } }
+
 #Collapse lists into data frame
-krigemonth.list=lapply(krigemonth.list,function(i) lapply(i,function(j) do.call(rbind,j)) )
+krigeyear.list=lapply(krigeyear.list,function(i) lapply(i,function(j) do.call(rbind,j)))
 
-#Split rownames into month value and bind to dataframe
-krigemonth.list=lapply(krigemonth.list,function(i) {
-  lapply(i,function(j) {
-    cbind(data.frame(str_split_fixed(rownames(j),"\\.",2)[,1]),j) } ) } )
-for(i in seq_along(krigemonth.list)) {
-  for(j in seq_along(krigemonth.list[[i]])) { names(krigemonth.list[[i]][[j]])[1]=c("month") } }
-#Order levels of month for facetting
-for(i in seq_along(krigemonth.list)) {
-  for(j in seq_along(krigemonth.list[[i]])) { 
-    krigemonth.list[[i]][[j]]$month=factor(krigemonth.list[[i]][[j]]$month,levels=c("Mar","May","July","Sept","Nov")) } }
+#Order levels of years for facetting
+for(i in (krigeyear.list)) {
+  for(j in (krigeyear.list[[i]])) { 
+    krigeyear.list[[i]][[j]]$YEARGRP=factor(krigeyear.list[[i]][[j]]$YEARGRP,levels=c("2001-2007","2007-2017")) } }
 
-#Plot and facet by month (12" x 18")
-lapply(seq_along(krigemonth.list),function(i) {
-  do.call(grid.arrange,c(lapply(seq_along(krigemonth.list[[i]]),function(j) {
+#Plot and facet by grouped year (12" x 18")
+lapply(seq_along(krigeyear.list),function(i) {
+  do.call(grid.arrange,c(lapply(seq_along(krigeyear.list[[i]]),function(j) {
     if(j!=2) {
       ggplot()+
-        geom_raster(data=krigemonth.list[[i]][[j]],aes(x=x1,y=x2,fill=exp(var1.pred)))+
+        geom_raster(data=krigeyear.list[[i]][[j]],aes(x=x1,y=x2,fill=exp(var1.pred)))+
         scale_fill_gradientn(colours=rev(rainbow(3)))+
-        facet_wrap(~month,nrow=1)+
-        coord_equal()+labs(x="",y="",title=names(krigemonth.list[[i]])[j])+
+        facet_wrap(~YEARGRP,nrow=1)+
+        coord_equal()+labs(x="",y="",title=names(krigeyear.list[[i]])[j])+
         theme_bw()+theme(plot.margin=unit(c(0,0,0,0),"cm"),
                    plot.title=element_text(size=18,hjust=0,vjust=1),
                    strip.text=element_text(size=12),
@@ -1806,10 +1761,10 @@ lapply(seq_along(krigemonth.list),function(i) {
                    axis.ticks=element_blank(),legend.title=element_blank()) 
     } else {
       ggplot()+
-        geom_raster(data=krigemonth.list[[i]][[j]],aes(x=x1,y=x2,fill=sin(var1.pred)^2))+
+        geom_raster(data=krigeyear.list[[i]][[j]],aes(x=x1,y=x2,fill=sin(var1.pred)^2))+
         scale_fill_gradientn(colours=rev(rainbow(3)))+
-        facet_wrap(~month,nrow=1)+
-        coord_equal()+labs(x="",y="",title=names(krigemonth.list[[i]])[j])+
+        facet_wrap(~YEARGRP,nrow=1)+
+        coord_equal()+labs(x="",y="",title=names(krigeyear.list[[i]])[j])+
         theme_bw()+theme(plot.margin=unit(c(0,0,0,0),"cm"),
                      plot.title=element_text(size=18,hjust=0,vjust=1),
                      strip.text=element_text(size=12),
@@ -1821,7 +1776,7 @@ lapply(seq_along(krigemonth.list),function(i) {
 
 ```
 
-Build GAM model with temporal, spatial, environmental and management variables 
+## Build GAM model with temporal, spatial, environmental and management variables 
 
 $y_i = \alpha + f_1(X_1i) + f_2(X_2i) + g_1(X_3i) + g_2(X_4i) + \epsilon_i$
 $y_i = \alpha + f_1 (YEAR)+ f_2(PROT) + g_1(LONG, LAT)* YEAR + g_2(STRAT) + \epsilon_i$
@@ -1840,11 +1795,7 @@ Spatial variables:
 
 Environmental variables: 
 - strata (categorical factor)
-- Rugosity (categorical factor)
 - bottom depth (continuous covariate)
-- vertical relief (continuous covariate)
-- % coral cover (continuous covariate)
-- % hard bottom (continuous covariate)
 
 Management variable:
 - PROT: No take marine reserve  (categorical factor)
@@ -1854,9 +1805,9 @@ Conitinuous covariates: modeled using non-parametric smoothing
 
 Categorical factors: models parametrically to determine their mean effect sizes (Zurr et al., 2009)
 
-- fit GAM to each index separately. 
+Fit GAM to each index separately. 
 
-```{r practice GAM}
+```{r GAM}
 
 #Build full model and null model based on (transformed) response variable
 #s() smooth term in gam model 
@@ -1869,7 +1820,6 @@ as.data.frame(all_matrices_data)
 
 #Send all_matrices_data to each core
 clusterExport(cl,varlist=c("all_matrices_data")) #varlist - character vector of names of objects to export
-
 
 partial.deviance.list=parLapply(cl,seq_along(all_matrices_data),function(i) {
   do.call(rbind,lapply(list("abundance_sum","biomass_sum","richness","simpson","shannon"),function(j) {
