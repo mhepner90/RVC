@@ -1642,29 +1642,15 @@ class(alphasp.list)
 sp::proj4string(alphasp.list)="+proj=longlat +ellps=GRS80 +datum=NAD83 +no_defs" 
 
 #Transform the projection into cartesian coordinates
-alphasp.list=lapply(seq_along(alphasp.list),function(i) {
-  spTransform(alphasp.list,CRS("+proj=utm +zone=18 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")) } )
-
-### JONS CODE DIDN'T WORK ON MY DATASET... NOT SURE WHY.... 
-
-#Convert class("dataframe") into class("SpatialPointsDataFrame")
- for(i in seq_along(alphasp.list)) {
-   coordinates(alphasp.list[[i]])=~LON_DEGREES+LAT_DEGREES 
-   } 
-lapply(alphasp.list, class)
-#Error in (function (classes, fdef, mtable): unable to find an inherited method for function ‘coordinates<-’ for signature ‘"numeric"’
-
-##alphasp.list[[i]] is not a dataframe. but all the abun_sum values  
-
-#Project lat long coordinates onto an ellipse
-for(i in seq_along(alphasp.list)) { 
-  sp::proj4string(alphasp.list[[i]])="+proj=longlat +ellps=GRS80 +datum=NAD83 +no_defs" }
-#Error in (function (classes, fdef, mtable)  : unable to find an inherited method for function ‘proj4string<-’ for signature ‘"integer", "character"’
-
-#Transform the projection into cartesian coordinates
-alphasp.list=lapply(seq_along(alphasp.list),function(i) {
-  spTransform(alphasp.list[[i]],CRS("+proj=utm +zone=18 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")) } )
-########################################
+spTransform(alphasp.list,CRS("+proj=utm +zone=18 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0"))  
+#class       : SpatialPointsDataFrame 
+#features    : 4852 
+#extent      : -211587.2, -10735.89, 2719660, 2858288  (xmin, xmax, ymin, ymax)
+#coord. ref. : +proj=utm +zone=18 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0 
+#variables   : 7
+#names       : abundance_sum,         biomass_sum, richness,          simpson,         shannon,         func.div,            evenness 
+#min values  :             1, 0.00847432325884381,        1,                1,               1,                1, 0.00602329496841305 
+#max values  :    100229.008,    4846.09878101597,       73, 21.4394504111935, 31.268608778863, 4.25903920146755,                   1 
 
 #Create a spatial grid onto which interpolated values can be plotted
 
@@ -1689,11 +1675,14 @@ if(!file.exists("krigeall.list_rds")){
   #Perform kriging interpolation for each matrix
   
   #responses are log transformed to better meet assumptions of normality of errors and constant variance. .... except my abun and bio still dont meet assumtions even after transformation
+  
   krigeall.list= parLapply(cl,alphasp.list,function(i) {
     lapply(names(i@data)[1:7],function(j) {
       as.data.frame(autoKrige(formula(paste("log10(",j,")~1")),i,grd)$krige_output) } ) } )
-
-  #Error in checkForRemoteErrors(val) :  8 nodes produced errors; first error: missing values in object
+  #Error: Column indexes must be at most 7 if positive, not 8, 9, 10 etc...
+  
+#alphasp.list@data[1:7]
+#as.data.frame(autoKrige(formula(paste("log10(",alphasp.list@data$abundance_sum,")~1")),alphasp.list,grd)$krige_output)
   
   saveRDS(krigeall.list, "krigeall.list_rds") 
 } 
@@ -1821,18 +1810,22 @@ as.data.frame(all_matrices_data)
 #Send all_matrices_data to each core
 clusterExport(cl,varlist=c("all_matrices_data")) #varlist - character vector of names of objects to export
 
-partial.deviance.list=parLapply(cl,seq_along(all_matrices_data),function(i) {
-  do.call(rbind,lapply(list("abundance_sum","biomass_sum","richness","simpson","shannon"),function(j) {
+partial.deviance.list=parLapply(cl,all_matrices_data,function(i) {
+  do.call(rbind,lapply(list("abundance_sum","biomass_sum","richness","evenness", "simpson","shannon", "functional"),function(j) {
     
     #Subset only columns that are necessary to run the models and omit any NAs so all models are run on the same data
-    data=na.omit(all_matrices_data[[i]][,c("YEAR","LONG_DEGREES","LAT_DEGREES","DEPTH","STRAT","PROT","abundance_sum","biomass_sum","richness","simpson","shannon")])
+    data=na.omit(all_matrices_data[[i]][,c("YEAR","LON_DEGREES","LAT_DEGREES","DEPTH","STRAT","PROT","abundance_sum","biomass_sum","richness","simpson","shannon", "evenness", "func.div")])
     
     #Build full model and null model based on (transformed) response variable
     if(j=="richness") {
-      fullmod = gam(formula(paste(j,"~YEAR+STRAT+PROT+s(LAT_DEGREES, LONG_DEGREES, by=YEAR, bs='ts')+s(DEPTH, by='ts')")), family=poisson, data=data)
+      fullmod = gam(formula(paste(j,"~YEAR+STRAT+PROT+s(LONG_DEGREES,LAT_DEGREES,  by=YEAR, bs='ts')+s(DEPTH, by='ts')")), family=poisson, data=data)
       nullmod = gam(formula(paste(j,"~1")), family=poisson, data=data)
-    } else {
-      fullmod = gam(formula(paste("log(",j,")~YEAR+STRAT+PROT+s(LAT_DEGREES, LONG_DEGREES, by=YEAR, bs='ts')+s(DEPTH, by='ts')")), data=data)
+    
+      } else if(j=="evenness") {
+    fullmod=gam(formula(paste("asin(sqrt(",j,"))~Year+STRAT+PROT+s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')+s(DEPTH,bs='ts')")), data=data)
+    
+    else {
+      fullmod = gam(formula(paste("log(",j,")~YEAR+STRAT+PROT+s(LONG_DEGREES,LAT_DEGREES, by=YEAR, bs='ts')+s(DEPTH, by='ts')")), data=data)
       nullmod = gam(formula(paste("log(",j,")~1")), data=data)
     }
     
