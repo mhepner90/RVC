@@ -81,7 +81,6 @@ colnames(trial) = trial[1,] #make the first row "STRAT" as the header
 trial = trial[-1,] #remove the first row "year"
 spec_by_strata = as.data.frame(trial)
 
-
 iNEXT(spec_by_strata, q = 0, datatype = "abundance")
 # Error in FUN(newX[, i], ...) : invalid data structure
 # In addition: Warning messages:
