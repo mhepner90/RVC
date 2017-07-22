@@ -107,6 +107,7 @@ library(htmlwidgets)
 library(FD)
 #install.packages("iNEXT")
 library(iNEXT) 
+
 RVCdata_FK = read_rds('big_csv/RVCdata_FK.rds')
 
 map = purrr::map # override maps::map
@@ -1684,11 +1685,26 @@ names(alphasp.list)=names(all_matrices_data)
 alphasp.list = alphasp.list[,(3:11)] #4552 obv of 9 variables 
 
 #Convert class("dataframe") into class("SpatialPointsDataFrame")
-for(i in seq_along(alphasp.list)) {
-  coordinates(alphasp.list[[i]])=~LON_DEGREES+LAT_DEGREES 
-  } 
+coordinates(alphasp.list)=~LON_DEGREES+LAT_DEGREES 
+class(alphasp.list)
+
+#Project lat long coordinates onto an ellipse
+sp::proj4string(alphasp.list)="+proj=longlat +ellps=GRS80 +datum=NAD83 +no_defs" 
+
+#Transform the projection into cartesian coordinates
+alphasp.list=lapply(seq_along(alphasp.list),function(i) {
+  spTransform(alphasp.list,CRS("+proj=utm +zone=18 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")) } )
+
+### JONS CODE DIDN'T WORK ON MY DATASET... NOT SURE WHY.... 
+
+#Convert class("dataframe") into class("SpatialPointsDataFrame")
+ for(i in seq_along(alphasp.list)) {
+   coordinates(alphasp.list[[i]])=~LON_DEGREES+LAT_DEGREES 
+   } 
 lapply(alphasp.list, class)
 #Error in (function (classes, fdef, mtable): unable to find an inherited method for function ‘coordinates<-’ for signature ‘"numeric"’
+
+##alphasp.list[[i]] is not a dataframe. but all the abun_sum values  
 
 #Project lat long coordinates onto an ellipse
 for(i in seq_along(alphasp.list)) { 
@@ -1699,32 +1715,41 @@ for(i in seq_along(alphasp.list)) {
 alphasp.list=lapply(seq_along(alphasp.list),function(i) {
   spTransform(alphasp.list[[i]],CRS("+proj=utm +zone=18 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")) } )
 
+
+
 #Create a spatial grid onto which interpolated values can be plotted
 
-#read in shapefile 
-fk.shp = readOGR( dsn = "FKNMS_sample_grid", layer = "FlaKeys_Grid") 
-
-#Generate interpolation grid
-fknms.shp=spTransform(fk.shp,CRS("+proj=utm +zone=18 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0 ")) 
-grd=spsample(fknms.shp,type="regular",n=2500,nsig=2) #n is sample size
-par(mfrow=c(1,1))
-plot(grd)
-
-#Send interpolation grid to each core
-parallel::clusterExport(cl, varlist=c("grd"))
-
-all_matrices_data = as.matrix(all_matrices_data)
-
-#Perform kriging interpolation for each matrix
-#responses are log transformed to better meet assumptions of normality of errors and constant variance.
-krigeall.list=parLapply(cl,alphasp.list,function(i) {
-lapply(names(i@data)[66:71],function(j) {
-as.data.frame(autoKrige(formula(paste("log10(",j,")~1")),i,grd)$krige_output) } ) } )
+if(!file.exists("krigeall.list_rds")){
+  
+  #read in shapefile 
+  fk.shp = readOGR( dsn = "FKNMS_sample_grid", layer = "FlaKeys_Grid") 
+  
+  #Generate interpolation grid
+  fknms.shp=spTransform(fk.shp,CRS("+proj=utm +zone=18 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0 ")) 
+  
+  grd=spsample(fknms.shp,type="regular",n=2500,nsig=2) #n is sample size but of what???
+  par(mfrow=c(1,1))
+  plot(grd)
+  
+  #Send interpolation grid to each core
+  parallel::clusterExport(cl, varlist=c("grd"))
+  
+  #Perform kriging interpolation for each matrix
+  
+  #responses are log transformed to better meet assumptions of normality of errors and constant variance. .... except my abun and bio still dont meet assumtions even after transformation
+  krigeall.list= parLapply(cl,alphasp.list,function(i) {
+    lapply(names(i@data)[1:7],function(j) {
+      as.data.frame(autoKrige(formula(paste("log10(",j,")~1")),i,grd)$krige_output) } ) } )
+  
+  saveRDS(krigeall.list, "krigeall.list_rds") 
+} 
+  { else krigeall.list = read_RDS(krigeall.list)
+}
 
 #Apply names for titling during plotting
 #names(krigeall.list)=c("abund","biomass","pres.abs")
 for(i in seq_along(krigeall.list)) {
-  names(krigeall.list[[i]])=c("abundance_sum", "biomass_sum", "richness", "shannon","simpspn") 
+  names(krigeall.list[[i]])=c("mean_abundance", "mean_biomass", "richness", "simpspn", "shannon", "functional", "evenness") 
   }  
 
 #Plot all components across all years 
@@ -1739,14 +1764,6 @@ lapply(seq_along(krigeall.list),function(i) {
     } ) ) 
   } )
 
-#Now repeat but instead interpolate by grouped years
-krigemonth.list=parLapply(cl,alphasp.list,function(i) {
-  lapply(names(i@data)[66:71],function(j) {
-    lapply(unique((i@data)$STRAT),function(k) {
-      as.data.frame(autoKrige(formula(paste("log(",j,")~1")),subset(i,i@data$STRAT==k),grd)$krige_output)  
-      } ) 
-    } ) 
-  } )
 
 #Apply names for titling during plotting
 for(i in seq_along(krigemonth.list)) {
