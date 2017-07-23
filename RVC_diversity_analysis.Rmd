@@ -495,9 +495,7 @@ if(!file.exists("psu_abun_sum_rds")){
   filter(stringr::str_detect(protected_status, 'all')) # 1,689,982 x 10 (this is half the number of rows as the original as it should be)
 
   write_csv(psu_fk_abun_no_spp_merged, "big_csv/abundance_psu/psu_fk_abundance_no_spp_merged.csv")
-}
-
-else{
+} else{
   psu_abun = read_rds("psu_abun_sum_rds")
 }
 
@@ -525,9 +523,8 @@ if(!file.exists("psu_bio_sum_rds")){
   psu_fk_bio_no_spp_merged = psu_fk_bio_no_spp %>%
     filter(stringr::str_detect(protected_status, 'all')) #1,609,672 x 10 (this is half the number of rows as the original as it should be)
   write_csv(psu_fk_bio_no_spp_merged, "big_csv/biomass_psu/psu_fk_biomass_no_spp_merged.csv")
-}
 
-else{ #read data 
+  } else{ #read data 
   psu_bio = read_rds("psu_bio_sum_rds")
 }
 
@@ -593,7 +590,7 @@ if(!file.exists("psu_div_rds")){
 
   saveRDS(psu_div, "psu_div_rds")
   
-} else{ #read data 
+} else { #read data 
   psu_div = read_rds("psu_div_rds")
 }
 
@@ -681,10 +678,10 @@ if(!file.exists("psu_matrices_data_rds")){
   all_matrices_data = inner_join(all_matrices, sample_data) #5,241 x 24
 
   saveRDS(all_matrices_data, "psu_matrices_data_rds")
-}
-else{
+
+  } else{
   all_matrices_data = read_rds("psu_matrices_data_rds")
-}
+  }
 
 ```
 
@@ -732,6 +729,7 @@ library(grid)
 library(ggplot2)
 library(lattice)
 library(tidyverse)
+
 ```
 
 ## Questions
@@ -1160,12 +1158,9 @@ if(!file.exists("matrices_strat_grouped_rds"){
       evenness_max = max(evenness))
   
   saveRDS(matrices_strat_grouped, "matrices_strat_grouped_rds")
-}
-
-else{
-  matrices_strat_grouped = read_rds("matrices_strat_grouped_rds")
-}
-
+  } else {
+    matrices_strat_grouped = read_rds("matrices_strat_grouped_rds")
+    }
 
 # by STRAT_GROUPED and YEAR
 #mean abundance
@@ -1223,7 +1218,7 @@ ggplot(matrices_strat_grouped,aes(x=YEAR,y=richness_mean, colour=STRAT_GROUPED, 
       panel.grid.minor=element_blank(),
       strip.background=element_blank(),
       strip.text.x=element_text(size=18,hjust=0),
-      plot.caption = element_text(size=10)),
+      plot.caption = element_text(size=10))
 ggsave(file="richness_by_year_strata_subregion.pdf", path="big_csv/plots")
 
 #mean simpson
@@ -1354,7 +1349,7 @@ ggplot(data = matrices_strat_grouped) +
 
 ```{r plots by PROT}
 
-if(!file.exists("matrices_strat_grouped_rds"){
+if(!file.exists("matrices_strat_grouped_rds")){
   
   all_matrices_data = read_rds("psu_matrices_data_rds")
   
@@ -1405,11 +1400,10 @@ if(!file.exists("matrices_strat_grouped_rds"){
       evenness_max = max(evenness))
   
   saveRDS(matrices_ntmr, "matrices_ntmr_rds")
-}
-
-else{
+  
+  }else{
   matrices_ntmr = read_rds("matrices_ntmr_rds")
-}
+  }
 
 # by YEAR and PROT
 #mean abundance
@@ -1601,8 +1595,7 @@ if (!file.exists('fk.shp.fortify_rds')){
 fk.shp = readOGR( dsn = "FKNMS_sample_grid", layer = "FlaKeys_Grid") 
 fk.shp.fortify = fortify(fk.shp) 
 saveRDS(fk.shp.fortify, 'fk.shp.fortify_rds')
-} 
-else{ 
+} else{ 
   fk.shp.fortify = readRDS('fk.shp.fortify_rds')
 }
 
@@ -1695,13 +1688,14 @@ if(!file.exists("krigeall.list_rds")){
   
   
   saveRDS(krigeall.list, "krigeall.list_rds") 
-} 
-  { else krigeall.list = read_RDS(krigeall.list)
-}
+  
+  } {else 
+    krigeall.list = readRDS("krigeall.list_rds") 
+  }
 
 #Apply names for titling during plotting
 for(i in (krigeall.list)) {
-  names(krigeall.list)= c("A) Mean Abundance","B) Mean Biomass","C) Richness", "D) Evenness", "E) Simpson","F) Shannon","G) Functional")) 
+  names(krigeall.list)= c("A) Mean Abundance","B) Mean Biomass","C) Richness", "D) Evenness", "E) Simpson","F) Shannon","G) Functional") 
 }
 
 #Plot all components across all years 
@@ -1710,13 +1704,14 @@ lapply((krigeall.list),function(i) {
     ggplot()+
       geom_raster(data=krigeall.list[[j]],aes(x=x1,y=x2,fill=var1.pred))+
       scale_fill_gradientn(colours=rev(rainbow(3)))+
-      coord_equal()+labs(x="",y="",title=paste(names(krigeall.list))+
+      coord_equal()+
+      labs(x="",y="",title=paste(names(krigeall.list)))+
                          theme_bw()+
                          theme(plot.margin=unit(c(0,0,0,0),"cm"),
                                axis.text.x=element_blank(),axis.text.y=element_blank(),
                                axis.ticks=element_blank(),legend.title=element_blank()) 
-  } ) ) 
-} )
+           } ) ) 
+    } )
 
 #Repeat for grouped years 
   krigeyear.list=parLapply(cl,alphasp.list,function(i) {
@@ -1822,6 +1817,7 @@ Fit GAM to each index separately.
 
 # 1. Read in data and remove years (optional)
 all_matrices_data = read_rds("psu_matrices_data_rds")
+
 as.data.frame(all_matrices_data)
 #names(all_matrices_data)
 
@@ -1842,7 +1838,7 @@ partial.deviance.list=parLapply(cl,all_matrices_data,function(i) {
       } else if(j=="evenness") {
     fullmod=gam(formula(paste("asin(sqrt(",j,"))~Year+STRAT+PROT+s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')+s(DEPTH,bs='ts')")), data=data)
     
-    else {
+   } else {
       fullmod = gam(formula(paste("log(",j,")~YEAR+STRAT+PROT+s(LONG_DEGREES,LAT_DEGREES, by=YEAR, bs='ts')+s(DEPTH, by='ts')")), data=data)
       nullmod = gam(formula(paste("log(",j,")~1")), data=data)
     }
@@ -1851,7 +1847,7 @@ partial.deviance.list=parLapply(cl,all_matrices_data,function(i) {
   #Set up empty vectors for deviances
   time.dev=c();space.dev=c(); env.dev=c(); mngt.dev=c()
 
-#time deviances 
+  #time deviances 
     
     #Sequence 1: time->space->mangement->environment
     time.dev[1]=
