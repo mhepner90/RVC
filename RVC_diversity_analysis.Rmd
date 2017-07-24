@@ -1678,7 +1678,16 @@ if(!file.exists("krigeall.list_rds")){
       as.data.frame(autoKrige(formula(paste("log10(",j,")~1")),i,grd)$krige_output) } ) } )
   #Error: Column indexes must be at most 7 if positive, not 8, 9, 10 etc...
   
-  
+    lapply(names(alphasp.list@data)[1:7],function(j) {
+      as.data.frame(autoKrige(formula(paste("log10(",j,")~1")),alphasp.list,grd)$krige_output) } ) 
+        
+    # Error in autoKrige(formula(paste("log10(", j, ")~1")), alphasp.list, grd) : 
+  # Either input_data or new_data is in LongLat, please reproject.
+  #  input_data:  +proj=longlat +ellps=GRS80 +datum=NAD83 +no_defs +towgs84=0,0,0 
+  #  new_data:    +proj=utm +zone=18 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0 
+    
+#autoKrige(formulas, input_data, new_data)  
+  #prediction_spdf = kr$krige_output 
 #Tried: 
 #as.data.frame(autoKrige(formula(paste("log10(",alphasp.list@data$abundance_sum,")~1")),alphasp.list,grd)$krige_output)
     #got:Error in autoKrige(formula(paste("log10(", alphasp.list@data$abundance_sum,  : 
