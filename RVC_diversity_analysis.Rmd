@@ -1580,7 +1580,7 @@ library(sp) #Calls: coordinates, spsample
 library(tidyverse)
 
 #Create socket cluster of multiple cores 
-cl=makeCluster(detectCores())
+cl=makeCluster(detectCores()) #shouls i make type = "base" or "FORK"??
 #Load automap on all cores (to access function `autoKrige`)
 clusterEvalQ(cl,c(library(automap),library(mgcv),library(plotrix)))
 
@@ -1668,6 +1668,7 @@ if(!file.exists("krigeall.list_rds")){
   
   #Send interpolation grid to each core
   parallel::clusterExport(cl, varlist=c("grd")) #are these being sent correctly to "cl"??
+  #do I want type= "base", "FORK" OR "PSOCK"???
   
   #Perform kriging interpolation for each matrix
   
@@ -1820,6 +1821,7 @@ Fit GAM to each index separately.
 
 ```{r GAM and Partial deviances}
 
+library(mgcv) #gam
 #Build full model and null model based on (transformed) response variable
 #s() smooth term in gam model 
 #bs() a two letter character string indicating the smoothing basis to use (ts plate regression splines)
@@ -1843,14 +1845,14 @@ partial.deviance.list=parLapply(cl,all_matrices_data,function(i) {
     if(j=="richness") {
       fullmod = gam(formula(paste(j,"~YEAR+STRAT+PROT+s(LONG_DEGREES,LAT_DEGREES,  by=YEAR, bs='ts')+s(DEPTH, by='ts')")), family=poisson, data=data)
       nullmod = gam(formula(paste(j,"~1")), family=poisson, data=data)
-    
+      
       } else if(j=="evenness") {
     fullmod=gam(formula(paste("asin(sqrt(",j,"))~Year+STRAT+PROT+s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')+s(DEPTH,bs='ts')")), data=data)
     
    } else {
       fullmod = gam(formula(paste("log(",j,")~YEAR+STRAT+PROT+s(LONG_DEGREES,LAT_DEGREES, by=YEAR, bs='ts')+s(DEPTH, by='ts')")), data=data)
       nullmod = gam(formula(paste("log(",j,")~1")), data=data)
-    }
+   }
     
     
   #Set up empty vectors for deviances
@@ -2397,6 +2399,8 @@ partial.deviance.list=parLapply(cl,all_matrices_data,function(i) {
     Partial.Deviance=c(summary(fullmod)$dev.expl,mean(space.dev),mean(time.dev),mean(env.dev),mean(mngt.dev)),
     Partial.Deviance.SE=c(0,std.error(space.dev),std.error(time.dev),std.error(env.dev),std.error(mngt.dev)))
 } ) ) } )
+
+#Error in checkForRemoteErrors(val) : 4 nodes produced errors; first error: no such index at level 1
 
 #Close the cluster
 stopCluster(cl)
