@@ -606,6 +606,14 @@ if(!file.exists("fd_eveness_rds")){
   
   func.dist = read_rds("functional_diversity/func_dist_rds")
   
+  traits = read.csv('functional_diversity/species_trait_matrix_348_spp.csv')
+  
+  # Set rownames on traits and remove other info
+    rownames(traits) <- traits$SPECIES_CD
+    traits <- traits[, -c(1:4)]
+    # Convert rownames to all caps
+    rownames(traits) <- toupper(rownames(traits))
+  
   #dim(psu_fk_abun) #3643306      10
   
   psu_fk_abun_no_spp = psu_fk_abun %>%
@@ -628,8 +636,10 @@ if(!file.exists("fd_eveness_rds")){
   #dim(abundmat) #5,241    348
   
   # Drop communities with no species (roughly 500 sites)
-  abundmat <- abundmat[!rowSums(abundmat) == 0, ] 
+  abundmat <- abundmat[!rowSums(abundmat) == 0,] 
   #dim(abundmat) #5,241     348
+  abundmat <- abundmat[!rowSums(abundmat) == 1,]
+  #dim(abundmat) #5240  348
   
   #Calculate relative values for community matrix
   rel.mat=abundmat/apply(abundmat,1,sum)
@@ -647,7 +657,7 @@ if(!file.exists("fd_eveness_rds")){
   #Ensure that all evenness calculations are not >1 (bug)
   func.div=1/(1-apply(rel.mat,1,function(x) t(x) %*% as.matrix(func.dist) %*% x))
   
-  #Bind all to the original dataframe
+  #Bind all to the original dataframe (need to remove psu with 1 species detected)
   list = cbind(sample_data,evenness,species.div,func.div)
   
   fd_evenness = list %>%
