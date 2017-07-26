@@ -1672,17 +1672,26 @@ if(!file.exists("matrices_strat_grouped_with_subregion_rds")){
     matrices_strat_grouped_with_subregion = read_rds("matrices_strat_grouped_with_subregion_rds") # 184 x 45
     }
 
+# by subregion and years (plot for each strat_grouped category)
+# automating plot-making with functions
+indices = matrices_strat_grouped_with_subregion, function(i) {
+lapply(names(i@data)[1:7],function(j) {
+ggplot
+indices = all_matrices, function(i) {
+lapply(names(i@data)[1:7],function(j) { ggplot()
+labs(x="",y=""
+title=paste(names
 
-# by subregion and years (strata separated)
+
+
+
 #abundance
-ab_sy_HRRF = matrices_strat_grouped_with_subregion %>% ggplot(matrices_strat_grouped_with_subregion,aes(x=YEAR,y=abundance_mean, colour=SUBREGION_DOMAIN, group=SUBREGION_DOMAIN))+ 
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=abundance_mean+abundance_se,ymin=abundance_mean-abundance_se),width=0.1)
-
-geom_line(aes(group=STRAT_GROUPED),lwd=1) +
-+
-  labs(title= "A) Abundance", x="Year", y="Mean abundance ()", colour = "Strata")+
-  scale_colour_manual(labels=c("High reef", "Linear reef", "Patch reef"), values= c("red", "green", "blue"))+
+ab_sy_HR = matrices_strat_grouped_with_subregion %>% filter(STRAT_GROUPED=="HIGH_RELIEF" & SUBREGION_DOMAIN!="BiscBay") %>% 
+  ggplot(.,aes(x=YEAR,y=abundance_mean, colour=SUBREGION_DOMAIN, group=SUBREGION_DOMAIN))+   geom_point(size=3) +
+  geom_errorbar(aes(ymax=abundance_mean+abundance_se,ymin=abundance_mean-abundance_se),width=0.1)+
+  geom_line(aes(group=SUBREGION_DOMAIN),lwd=1)+
+  labs(title= "A) Abundance", x="Year", y="Mean abundance ()", colour = "Subregion")+
+  scale_colour_manual(labels=c("LK", "MK", "UK"), values= c("red", "green", "blue"))+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
   theme_bw()+
   theme(
@@ -1692,192 +1701,145 @@ geom_line(aes(group=STRAT_GROUPED),lwd=1) +
       axis.title.x=element_text(size=12),
       axis.title.y=element_text(size=12),
       title=element_text(size=12))
-ggsave(file="abundance_by_subregion_and_strata_grouped.pdf", path="big_csv/plots")
+ggsave(file="abundance_by_subregion_and_year_High_Relief.pdf", path="big_csv/plots")
 
-
-# by STRAT_GROUPED and YEAR
-#mean abundance
-ggplot(matrices_strat_grouped,aes(x=YEAR,y=abundance_mean, colour=STRAT_GROUPED, group=STRAT_GROUPED))+ #shape=STRAT
-  geom_line(aes(group=STRAT_GROUPED),lwd=1) +
-  geom_point(size=3) +
+ab_sy_LR = matrices_strat_grouped_with_subregion %>% filter(STRAT_GROUPED=="LINEAR_REEF" & SUBREGION_DOMAIN!="BiscBay") %>% 
+  ggplot(.,aes(x=YEAR,y=abundance_mean, colour=SUBREGION_DOMAIN, group=SUBREGION_DOMAIN))+   geom_point(size=3) +
   geom_errorbar(aes(ymax=abundance_mean+abundance_se,ymin=abundance_mean-abundance_se),width=0.1)+
-  labs(title= "A) Mean Abundance", x="Year", y="Abundance of species", colour = "Strata")+
-  scale_colour_manual(labels=c("High reef", "Linear reef", "Patch reef"), values= c("red", "green", "blue"))+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016))
-
-+
-  theme_bw(base_size=16)+
+  geom_line(aes(group=SUBREGION_DOMAIN),lwd=1)+
+  labs(title= "A) Abundance", x="Year", y="Mean abundance ()", colour = "Subregion")+
+  scale_colour_manual(labels=c("LK", "MK", "UK"), values= c("red", "green", "blue"))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  theme_bw()+
   theme(
-      plot.margin=unit(c(1,1,1,1),"cm"),
-      legend.position="right",
+      legend.position="none",
       panel.grid.major=element_blank(),
       panel.grid.minor=element_blank(),
-      strip.background=element_blank(),
-      strip.text.x=element_text(size=18,hjust=0),
-      plot.caption = element_text(size=10)))
-ggsave(file=".pdf", path="big_csv/plots")
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+ggsave(file="abundance_by_subregion_and_year_Linear_Reef.pdf", path="big_csv/plots")
 
-
-#mean biomass
-ggplot(matrices_strat_grouped,aes(x=YEAR,y=biomass_mean, colour=STRAT_GROUPED, group=STRAT_GROUPED))+ #shape=STRAT
-  geom_line(aes(group=STRAT_GROUPED),lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2)+
-  labs(title= "B) Mean Biomass", x="Year", y="Biomass of species", colour = "Strata")+
-  scale_colour_manual(labels=c("High reef", "Linear reef", "Patch reef"), values= c("red", "green", "blue"))+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016))+
-  theme_bw(base_size=16)+
+ab_sy_PR = matrices_strat_grouped_with_subregion %>% filter(STRAT_GROUPED=="PATCH_REEF" & SUBREGION_DOMAIN!="BiscBay") %>% 
+  ggplot(.,aes(x=YEAR,y=abundance_mean, colour=SUBREGION_DOMAIN, group=SUBREGION_DOMAIN))+   geom_point(size=3) +
+  geom_errorbar(aes(ymax=abundance_mean+abundance_se,ymin=abundance_mean-abundance_se),width=0.1)+
+  geom_line(aes(group=SUBREGION_DOMAIN),lwd=1)+
+  labs(title= "A) Abundance", x="Year", y="Mean abundance ()", colour = "Subregion")+
+  scale_colour_manual(labels=c("LK", "MK", "UK"), values= c("red", "green", "blue"))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  theme_bw()+
   theme(
-      plot.margin=unit(c(1,1,1,1),"cm"),
-      legend.position="right",
+      legend.position="none",
       panel.grid.major=element_blank(),
       panel.grid.minor=element_blank(),
-      strip.background=element_blank(),
-      strip.text.x=element_text(size=18,hjust=0),
-      plot.caption = element_text(size=10))
-ggsave(file="biomass_by_year_strata_subregion.pdf", path="big_csv/plots")
-#ggsave(file="", path="big_csv/plots")
-
-#mean richness
-ggplot(matrices_strat_grouped,aes(x=YEAR,y=richness_mean, colour=STRAT_GROUPED, group=STRAT_GROUPED))+ #shape=STRAT
-  geom_line(aes(group=STRAT_GROUPED),lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2)+
-  labs(title= "A) Richness", x="Year", y="Effective number of species", colour = "Strata")+
-  scale_colour_manual(labels=c("High reef", "Linear reef", "Patch reef"), values= c("red", "green", "blue"))+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016))+
-  theme_bw(base_size=16)+
-  theme(
-      plot.margin=unit(c(1,1,1,1),"cm"),
-      legend.position="right",
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      strip.background=element_blank(),
-      strip.text.x=element_text(size=18,hjust=0),
-      plot.caption = element_text(size=10))
-ggsave(file="richness_by_year_strata_subregion.pdf", path="big_csv/plots")
-
-#mean simpson
-ggplot(matrices_strat_grouped,aes(x=YEAR,y=simpson_mean, colour=STRAT_GROUPED, group=STRAT_GROUPED))+ #shape=STRAT
-  geom_line(aes(group=STRAT_GROUPED),lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymin=simpson_mean-simpson_se, ymax=simpson_mean+simpson_se), width=.2)+
-  labs(title= "A) Simpson", x="Year", y="Effective number of species", colour = "Strata")+
-  scale_colour_manual(labels=c("High reef", "Linear reef", "Patch reef"), values= c("red", "green", "blue"))+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016))+
-  theme_bw(base_size=16)+
-  theme(
-      plot.margin=unit(c(1,1,1,1),"cm"),
-      legend.position="right",
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      strip.background=element_blank(),
-      strip.text.x=element_text(size=18,hjust=0),
-      plot.caption = element_text(size=10))
- 
-#mean shannon
-ggplot(matrices_strat_grouped,aes(x=YEAR,y=shannon_mean, colour=STRAT_GROUPED, group=STRAT_GROUPED))+ #shape=STRAT
-  geom_line(aes(group=STRAT_GROUPED),lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymin=shannon_mean-shannon_se, ymax=shannon_mean+shannon_se), width=.2)+
-  labs(title= "A) Simpson", x="Year", y="Effective number of species", colour = "Strata")+
-  scale_colour_manual(labels=c("High reef", "Linear reef", "Patch reef"), values= c("red", "green", "blue"))+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016))+
-  theme_bw(base_size=16)+
-  theme(
-      plot.margin=unit(c(1,1,1,1),"cm"),
-      legend.position="right",
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      strip.background=element_blank(),
-      strip.text.x=element_text(size=18,hjust=0),
-      plot.caption = element_text(size=10))
-
-# by STRAT
-#abundance 
-ggplot(matrices_strat_grouped, aes(x=STRAT_GROUPED, y=abundance_mean)) +
-  geom_bar(position=position_dodge(), stat="identity") +
-  geom_errorbar(aes(ymin=abundance_mean-abundance_se, ymax=abundance_mean+abundance_se), width=.2, position=position_dodge(.9)) + 
-  theme_classic() + 
-  theme(axis.text.x = element_text(angle=90)) + 
-  facet_wrap(~YEAR, scales='free_y')
-#ggsave(file=".pdf", path="big_csv/plots")
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+ggsave(file="abundance_by_subregion_and_year_Patch_Reef.pdf", path="big_csv/plots")
 
 #biomass
-ggplot(matrices_strat_grouped, aes(x=STRAT_GROUPED, y=biomass_mean)) + 
-  geom_bar(position=position_dodge(), stat="identity") + 
-  geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2, position=position_dodge(.9)) + 
-  theme_classic() + 
-  theme(axis.text.x = element_text(angle=90)) + 
-  facet_wrap(~YEAR, scales='free_y')
-#ggsave(file=".pdf", path="big_csv/plots")
+bio_sy_HR = matrices_strat_grouped_with_subregion %>% filter(STRAT_GROUPED=="HIGH_RELIEF" & SUBREGION_DOMAIN!="BiscBay") %>% 
+  ggplot(.,aes(x=YEAR,y=biomass_mean, colour=SUBREGION_DOMAIN, group=SUBREGION_DOMAIN))+   geom_point(size=3) +
+  geom_errorbar(aes(ymax=biomass_mean+biomass_se,ymin=biomass_mean-biomass_se),width=0.1)+
+  geom_line(aes(group=SUBREGION_DOMAIN),lwd=1)+
+  labs(title= "A) Biomass", x="Year", y="Mean biomass ()", colour = "Subregion")+
+  scale_colour_manual(labels=c("LK", "MK", "UK"), values= c("red", "green", "blue"))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  theme_bw()+
+  theme(
+      legend.position="none",
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+ggsave(file="biomass_by_subregion_and_year_High_Relief.pdf", path="big_csv/plots")
 
-#mean richness 
-ggplot(matrices_strat_grouped, aes(x=STRAT_GROUPED, y=richness_mean)) + 
-  geom_bar(position=position_dodge(), stat="identity") + 
-  geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2, position=position_dodge(.9)) + 
-  theme_classic() + 
-  theme(axis.text.x = element_text(angle=90)) + 
-  facet_wrap(~YEAR, scales='free_y')
-#ggsave(file="fk_MeanRichness_ByStratumForEachYear.pdf", path="big_csv/plots")
+bio_sy_LR = matrices_strat_grouped_with_subregion %>% filter(STRAT_GROUPED=="LINEAR_REEF" & SUBREGION_DOMAIN!="BiscBay") %>% 
+  ggplot(.,aes(x=YEAR,y=biomass_mean, colour=SUBREGION_DOMAIN, group=SUBREGION_DOMAIN))+   geom_point(size=3) +
+  geom_errorbar(aes(ymax=biomass_mean+biomass_se,ymin=biomass_mean-biomass_se),width=0.1)+
+  geom_line(aes(group=SUBREGION_DOMAIN),lwd=1)+
+  labs(title= "A) Biomass", x="Year", y="Mean biomass ()", colour = "Subregion")+
+  scale_colour_manual(labels=c("LK", "MK", "UK"), values= c("red", "green", "blue"))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  theme_bw()+
+  theme(
+      legend.position="none",
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+ggsave(file="biomass_by_subregion_and_year_Linear_Reef.pdf", path="big_csv/plots")
 
-#mean simpson 
-ggplot(matrices_strat_grouped, aes(x=STRAT_GROUPED, y=simpson_mean)) +
-  geom_bar(position=position_dodge(), stat="identity") +
-  geom_errorbar(aes(ymin=simpson_mean-simpson_se, ymax=simpson_mean+simpson_se), width=.2, position=position_dodge(.9)) + 
-  theme_classic() +
-  theme(axis.text.x = element_text(angle=90)) + 
-  facet_wrap(~YEAR, scales='free_y')
-#ggsave(file=".pdf", path="big_csv/plots")
+bio_sy_PR = matrices_strat_grouped_with_subregion %>% filter(STRAT_GROUPED=="PATCH_REEF" & SUBREGION_DOMAIN!="BiscBay") %>% 
+  ggplot(.,aes(x=YEAR,y=biomass_mean, colour=SUBREGION_DOMAIN, group=SUBREGION_DOMAIN))+   geom_point(size=3) +
+  geom_errorbar(aes(ymax=biomass_mean+biomass_se,ymin=biomass_mean-biomass_se),width=0.1)+
+  geom_line(aes(group=SUBREGION_DOMAIN),lwd=1)+
+  labs(title= "A) Biomass", x="Year", y="Mean biomass ()", colour = "Subregion")+
+  scale_colour_manual(labels=c("LK", "MK", "UK"), values= c("red", "green", "blue"))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  theme_bw()+
+  theme(
+      legend.position="none",
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+ggsave(file="biomass_by_subregion_and_year_Patch_Reef.pdf", path="big_csv/plots")
 
-#mean shannon 
-ggplot(matrices_strat_grouped, aes(x=STRAT_GROUPED, y=shannon_mean)) +
-  geom_bar(position=position_dodge(), stat="identity") +
-  geom_errorbar(aes(ymin=shannon_mean-shannon_se, ymax=shannon_mean+shannon_se), width=.2, position=position_dodge(.9)) + 
-  theme_classic() +
-  theme(axis.text.x = element_text(angle=90)) + 
-  facet_wrap(~YEAR, scales='free_y')
-#ggsave(file=".pdf", path="big_csv/plots")
+#richness
+rich_sy_HR = matrices_strat_grouped_with_subregion %>% filter(STRAT_GROUPED=="HIGH_RELIEF" & SUBREGION_DOMAIN!="BiscBay") %>% 
+  ggplot(.,aes(x=YEAR,y=richness_mean, colour=SUBREGION_DOMAIN, group=SUBREGION_DOMAIN))+   geom_point(size=3) +
+  geom_errorbar(aes(ymax=richness_mean+richness_se,ymin=richness_mean-richness_se),width=0.1)+
+  geom_line(aes(group=SUBREGION_DOMAIN),lwd=1)+
+  labs(title= "A) Richness", x="Year", y="Mean number of effective species", colour = "Subregion")+
+  scale_colour_manual(labels=c("LK", "MK", "UK"), values= c("red", "green", "blue"))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  theme_bw()+
+  theme(
+      legend.position="none",
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+ggsave(file="richness_by_subregion_and_year_High_Relief.pdf", path="big_csv/plots")
 
-# by YEAR
-#mean abundance 
-ggplot(matrices_strat_grouped, aes(x=YEAR, y=abundance_mean, group=YEAR)) + 
-  geom_bar(position=position_dodge(), stat="identity") + 
-  geom_errorbar(aes(ymin=abundance_mean-abundance_se, ymax=abundance_mean+abundance_se), width=.2, position=position_dodge(.9)) + 
-  theme_classic() + 
-  theme(axis.text.x = element_text(angle=90)) + 
-  facet_wrap(~STRAT, scales='free_y')
-#ggsave(file=".pdf", path="big_csv/plots")
+rich_sy_LR = matrices_strat_grouped_with_subregion %>% filter(STRAT_GROUPED=="LINEAR_REEF" & SUBREGION_DOMAIN!="BiscBay") %>% 
+  ggplot(.,aes(x=YEAR,y=richness_mean, colour=SUBREGION_DOMAIN, group=SUBREGION_DOMAIN))+   geom_point(size=3) +
+  geom_errorbar(aes(ymax=richness_mean+richness_se,ymin=richness_mean-richness_se),width=0.1)+
+  geom_line(aes(group=SUBREGION_DOMAIN),lwd=1)+
+  labs(title= "A) Richness", x="Year", y="Mean number of effective species", colour = "Subregion")+
+  scale_colour_manual(labels=c("LK", "MK", "UK"), values= c("red", "green", "blue"))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  theme_bw()+
+  theme(
+      legend.position="none",
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+ggsave(file="richness_by_subregion_and_year_Linear_Reef.pdf", path="big_csv/plots")
 
-#mean biomass 
-ggplot(matrices_strat_grouped, aes(x=YEAR, y=biomass_mean, group=YEAR)) + 
-  geom_bar(position=position_dodge(), stat="identity") + 
-  geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2, position=position_dodge(.9)) +
-  theme_classic() + 
-  theme(axis.text.x = element_text(angle=90)) +
-  facet_wrap(~STRAT, scales='free_y')
-#ggsave(file=".pdf", path="big_csv/plots")
-
-#mean richness
-ggplot(matrices_strat_grouped, aes(x=YEAR, y=richness_mean, group=YEAR)) +
-  geom_bar(position=position_dodge(), stat="identity") +
-  geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2, position=position_dodge(.9)) + 
-  theme_classic() + 
-  theme(axis.text.x = element_text(angle=90)) + 
-  facet_wrap(~STRAT_GROUPED, scales='free_y')
-#ggsave(file=".pdf", path="big_csv/plots")
-
-#mean simpson
-ggplot(data = matrices_strat_grouped) + 
-  geom_boxplot(mapping = aes(x = YEAR, y = simpson_mean, group = YEAR)) +
-  facet_wrap(~STRAT_GROUPED, scales="free_y")
-#ggsave(file=".pdf", path="big_csv/plots")
-
-#mean shannon 
-ggplot(data = matrices_strat_grouped) + 
-  geom_boxplot(mapping = aes(x = YEAR, y = shannon_mean, group = YEAR)) +
-  facet_wrap(~STRAT_GROUPED, scales="free_y")
-#ggsave(file=".pdf", path="big_csv/plots")
+rich_sy_PR = matrices_strat_grouped_with_subregion %>% filter(STRAT_GROUPED=="PATCH_REEF" & SUBREGION_DOMAIN!="BiscBay") %>% 
+  ggplot(.,aes(x=YEAR,y=richness_mean, colour=SUBREGION_DOMAIN, group=SUBREGION_DOMAIN))+   geom_point(size=3) +
+  geom_errorbar(aes(ymax=richness_mean+richness_se,ymin=richness_mean-richness_se),width=0.1)+
+  geom_line(aes(group=SUBREGION_DOMAIN),lwd=1)+
+  labs(title= "A) Richness", x="Year", y="Mean number of effective species", colour = "Subregion")+
+  scale_colour_manual(labels=c("LK", "MK", "UK"), values= c("red", "green", "blue"))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  theme_bw()+
+  theme(
+      legend.position="none",
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+ggsave(file="richness_by_subregion_and_year_Patch_Reef.pdf", path="big_csv/plots")
 
 ```
 
