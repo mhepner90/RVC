@@ -106,7 +106,7 @@ library(htmlwidgets)
 #install.packages("FD")
 library(FD)
 #install.packages("iNEXT")
-library(iNEXT) 
+library(cowplot) #get_legend 
 
 #RVCdata_FK = read_rds('big_csv/RVCdata_FK.rds')
 
