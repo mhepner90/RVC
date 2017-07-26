@@ -1628,8 +1628,11 @@ Subregions: UK, MK, LK
 
 if(!file.exists("matrices_strat_grouped_with_subregion_rds")){
   
-  all_matrices_data = read_rds("psu_matrices_data_rds") # 5241 x 24
+  all_matrices_data = read_rds("psu_matrices_data_rds") # 5239 x 23
   subregions = as.tibble(read_csv("big_csv/subregion_domains/subregion_domains_by_psu.csv")) # 5241 x 3
+  
+    #remove PSU-'s with 1 species [2006,602U INPR] [2016,  1010U, INPR]
+ subregions = subregions[!(subregions$YEAR == "2006" & subregions$PRIMARY_SAMPLE_UNIT == "602U" | subregions$YEAR == "2016" & subregions$PRIMARY_SAMPLE_UNIT == "1010U"),] #5239 x 3
   
   all_matrices_data_with_subregion = inner_join(all_matrices_data, subregions) #5,241 x 25                  
   saveRDS(all_matrices_data_with_subregion, "psu_matrices_data_with_subregion_rds")
@@ -1871,8 +1874,11 @@ Subregions: UK, MK, LK
 
 if(!file.exists("matrices_strat_and_year_grouped_with_subregion_rds")){
   
-  all_matrices_data = read_rds("psu_matrices_data_rds") # 5241 x 24
+  all_matrices_data = read_rds("psu_matrices_data_rds") # 5239 x 23
   subregions = as.tibble(read_csv("big_csv/subregion_domains/subregion_domains_by_psu.csv")) # 5241 x 3
+  
+  #remove PSU-'s with 1 species [2006,602U INPR] [2016,  1010U, INPR]
+ subregions = subregions[!(subregions$YEAR == "2006" & subregions$PRIMARY_SAMPLE_UNIT == "602U" | subregions$YEAR == "2016" & subregions$PRIMARY_SAMPLE_UNIT == "1010U"),] #5239 x 3
   
   all_matrices_data_with_subregion = inner_join(all_matrices_data, subregions) #5,241 x 25                  
   saveRDS(all_matrices_data_with_subregion, "psu_matrices_data_with_subregion_rds")
