@@ -31,15 +31,16 @@ for (f in list.files('big_csv/sample_data/FK', pattern="\\.csv", full.names=T)){
 
 d_fk_distinct <- d_fk %>% group_by(PRIMARY_SAMPLE_UNIT,YEAR) %>% distinct(.keep_all=TRUE)
 
-write_csv(d_fk_distinct, 'big_csv/sample_data/FK/FK_sample_data_all_years.csv') 
+write_csv(d_fk_distinct, 'big_csv/sample_data/FK/sample_data_all_years.csv') 
 
 ```
 
 ## Apply subregion domain assignment from ArcGIS to all sample data
+
 ```{r join table with subregion domain assignment for each PSU with all sample data}
 
 #read in subregion domain assignments made in ArcGIS
-subregions <- read_csv('big_csv/subregion_domains/subregion_domains_by_psu.csv') # 5241 x 7
+subregions <- read_csv('big_csv/subregion_domains/subregion_domains_by_psu.csv') # 5241 x 3
 subregions$Unique_ID <- paste(subregions$PRIMARY_SAMPLE_UNIT, subregions$YEAR, sep='_')  
 subregions <- subregions[,3:4]
 
