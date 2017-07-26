@@ -108,7 +108,7 @@ library(FD)
 #install.packages("iNEXT")
 library(iNEXT) 
 
-RVCdata_FK = read_rds('big_csv/RVCdata_FK.rds')
+#RVCdata_FK = read_rds('big_csv/RVCdata_FK.rds')
 
 map = purrr::map # override maps::map
 select = dplyr::select #override MASS::select 
@@ -476,25 +476,30 @@ d3tree2(
 ```{r psu abundance}
 
 if(!file.exists("psu_abun_sum_rds")){
+  #read in data 
   psu_fk_abun <- read_csv("big_csv/abundance_psu/psu_fk_abun.csv",
                           col_types = cols(protected_status = col_character()))
   #dim(psu_fk_abun) #3,643,306 x 10
 
+  #remove species not identified in species level and protected status all 
   psu_fk_abun_no_spp = psu_fk_abun %>%
-    filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) 
-  #dim(psu_fk_abun_no_spp) #3,379,964 x 10
+    filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$'))  %>%
+    filter(stringr::str_detect(protected_status, 'all')) 
+  #dim(psu_fk_abun_no_spp) #1,689,982 x 10
   
+  #sum the abundance values and remove any PSU's with no species
   psu_abun_sum <- psu_fk_abun_no_spp %>%
     group_by(YEAR, PRIMARY_SAMPLE_UNIT, STRAT) %>%
-    summarize(abundance_sum = sum(abundance)) 
-  #dim(psu_abun_sum) # 5241 x 4 
-  
-  saveRDS(psu_abun_sum, "psu_abun_sum_rds")
-  
-  psu_fk_abun_no_spp_merged = psu_fk_abun_no_spp %>%
-  filter(stringr::str_detect(protected_status, 'all')) # 1,689,982 x 10 (this is half the number of rows as the original as it should be)
+    summarize(abundance_sum = sum(abundance)) %>%
+    filter(!abundance_sum == "0")
+    #dim(psu_abun_sum) #5241*4
+    
+  #remove PSU-'s with 1 species [2006,602U INPR] [2016,  1010U, INPR]
+  psu_abun_sum = psu_abun_sum[!(psu_abun_sum$YEAR == "2006" & psu_abun_sum$PRIMARY_SAMPLE_UNIT == "602U" | psu_abun_sum$YEAR == "2016" & psu_abun_sum$PRIMARY_SAMPLE_UNIT == "1010U"),] 
+  #dim(psu_abun_sum) # 5239 x 4 
 
-  write_csv(psu_fk_abun_no_spp_merged, "big_csv/abundance_psu/psu_fk_abundance_no_spp_merged.csv")
+  saveRDS(psu_abun_sum, "psu_abun_sum_rds")
+
 } else{
   psu_abun = read_rds("psu_abun_sum_rds")
 }
@@ -504,26 +509,31 @@ if(!file.exists("psu_abun_sum_rds")){
 ```{r psu biomass}
 
 if(!file.exists("psu_bio_sum_rds")){
+ 
+  #read in data 
   psu_fk_bio <- read_csv('big_csv/biomass_psu/psu_fk_biomass.csv', 
                          col_types = cols( protected_status = col_character())) 
-  #dim(psu_fk_bio) 3,429,476*10
+    #dim(psu_fk_bio) 3,429,476*10
 
-  #remove spe.  
+  #remove species not identified in species level and protected status all   
   psu_fk_bio_no_spp = psu_fk_bio %>%
-    filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species and 
-  #dim(psu_fk_bio_no_spp) 3,219,344*10
+    filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) %>% #348 species  
+    filter(stringr::str_detect(protected_status, 'all')) 
+    #dim(psu_fk_bio_no_spp) 1,609,672 x 10
   
-  #summarize 
+  #sum the biomass values and remove any PSU's with no species 
   psu_bio_sum <- psu_fk_bio_no_spp %>%
     group_by(YEAR, PRIMARY_SAMPLE_UNIT, STRAT, PROT) %>%
-    summarize(biomass_sum = sum(biomass)) 
-  #dim(psu_bio_sum)  5,241    5
+    summarize(biomass_sum = sum(biomass)) %>%
+    filter(!biomass_sum == "0")
+    #dim(psu_bio_sum) #5241    5
+  
+  #remove PSU's with 1 species [2006,602U INPR] [2016,  1010U, INPR]
+  psu_bio_sum = psu_bio_sum[!(psu_bio_sum$YEAR == "2006" & psu_bio_sum$PRIMARY_SAMPLE_UNIT == "602U" | psu_bio_sum$YEAR == "2016" & psu_bio_sum$PRIMARY_SAMPLE_UNIT == "1010U"),]
+  #dim(psu_bio_sum) #5239    5
+  
    saveRDS(psu_bio_sum, "psu_bio_sum_rds")
-
-  psu_fk_bio_no_spp_merged = psu_fk_bio_no_spp %>%
-    filter(stringr::str_detect(protected_status, 'all')) #1,609,672 x 10 (this is half the number of rows as the original as it should be)
-  write_csv(psu_fk_bio_no_spp_merged, "big_csv/biomass_psu/psu_fk_biomass_no_spp_merged.csv")
-
+   
   } else{ #read data 
   psu_bio = read_rds("psu_bio_sum_rds")
 }
@@ -535,11 +545,14 @@ if(!file.exists("psu_bio_sum_rds")){
 if(!file.exists("psu_div_rds")){
   
   #read in psu abundance data 
-  psu_fk_abun <- read_csv("big_csv/abundance_psu/psu_fk_abun.csv", col_types = cols(protected_status = col_character())) #3,643,306*10
+  psu_fk_abun <- read_csv("big_csv/abundance_psu/psu_fk_abun.csv", col_types = cols(protected_status = col_character())) 
+  #dim(psu_fk_abun) #3,643,306*10
   
-  #remove species not identified to species 
+  ##remove species not identified in species level and protected status all
   psu_fk_abun_no_spp = psu_fk_abun %>%
-    filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #3,379,964*10 
+    filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) %>%
+    filter(stringr::str_detect(protected_status, 'all')) 
+    #dim(psu_fk_abun_no_spp) #1,689,982      10
   
   #read in trait matrix 
   trait_matrix = read_csv('functional_diversity/species_trait_matrix_348_spp.csv')
@@ -552,10 +565,9 @@ if(!file.exists("psu_div_rds")){
     arrange(SPECIES_CD)
   
   #compute diversity indices by PSU  
-  psu_diversity_no_spp_merged = psu_fk_abun_no_spp %>% #tibble: 3,379,964 x 10 %>%
-    filter(protected_status != "all") %>% #tibble: 1,689,982 x 10
+  psu_diversity = psu_fk_abun_no_spp %>%  
     select(YEAR, PRIMARY_SAMPLE_UNIT,STRAT,PROT,SPECIES_CD,abundance) %>% #tibble: 1,689,982 x 6
-    group_by(YEAR, PRIMARY_SAMPLE_UNIT) %>% #4,839 groups
+    group_by(YEAR, PRIMARY_SAMPLE_UNIT, STRAT, PROT) %>% 
     nest(-YEAR) %>%
     mutate(
       data_wide = map(data, function(x) 
@@ -565,31 +577,22 @@ if(!file.exists("psu_div_rds")){
       data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abundance, fill =0)), 
       richness = map( #species richness
         data_wide, 
-        function(x) specnumber(x %>% select(-STRAT, -PROT))),
+        function(x) specnumber(x)),
       simpson = map( #simpson diversity as effective number of species 
         data_wide,
-        function(x) 1/(1 - diversity(x %>% select(-STRAT, -PROT), index = 'simpson'))),
+        function(x) 1/(1 - diversity(x, index = 'simpson'))),
       shannon = map( #shannon diversity as effective number of species 
         data_wide, 
-        function(x) exp(diversity(x %>% select(-STRAT, -PROT), index = 'shannon')))) %>% 
-    unnest(richness,simpson, shannon)
+        function(x) exp(diversity(x,  index = 'shannon')))) %>% 
+    unnest(richness, simpson, shannon)
+  #dim(psu_diversity) #5,241 x 7
   
-  #get strata and prot information and remove duplicates
-  psu_diversity_no_spp_merged_strat = psu_diversity_no_spp_merged %>%
-    unnest(data) #tibble: 1,689,982 x 9 
+    #remove PSU-'s with 1 species [2006,602U INPR] [2016,  1010U, INPR]
+  psu_diversity = psu_diversity[!(psu_diversity$YEAR == "2006" & psu_diversity$PRIMARY_SAMPLE_UNIT == "602U" | psu_diversity$YEAR == "2016" & psu_diversity$PRIMARY_SAMPLE_UNIT == "1010U"),] 
+  #dim(psu_diversity) #5,239 x 9
   
-  #save dataframe as csv
-  write_csv(psu_diversity_no_spp_merged_strat, "big_csv/diversity_without_spe/psu_diversity_no_spp_merged.csv") 
-  
-  psu_div = psu_diversity_no_spp_merged_strat %>% 
-    dplyr::group_by(YEAR, PRIMARY_SAMPLE_UNIT, STRAT, PROT) %>% #5,241*7 #5241 total PSU's over 15 years 
-    dplyr::summarize(
-      richness = first(richness),
-      simpson = first(simpson),
-      shannon = first(shannon))
+  saveRDS(psu_diversity, "psu_div_rds")
 
-  saveRDS(psu_div, "psu_div_rds")
-  
 } else { #read data 
   psu_div = read_rds("psu_div_rds")
 }
@@ -600,14 +603,29 @@ if(!file.exists("psu_div_rds")){
 
 if(!file.exists("fd_eveness_rds")){
   
-  sample_data = as.tibble(read_csv("big_csv/sample_data/FK/sample_data_all_years.csv"))
-  
-  psu_fk_abun <- read_csv("big_csv/abundance_psu/psu_fk_abun.csv", col_types = cols(protected_status = col_character())) #3,643,306*10
-  
   func.dist = read_rds("functional_diversity/func_dist_rds")
   
-  traits = read.csv('functional_diversity/species_trait_matrix_348_spp.csv')
+  psu_fk_abun <- read_csv("big_csv/abundance_psu/psu_fk_abun.csv", col_types = cols(protected_status = col_character())) #3,643,306*10
+    ##remove species not identified in species level and protected status all
   
+  psu_fk_abun_no_spp = psu_fk_abun %>%
+    filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) %>%
+    filter(stringr::str_detect(protected_status, 'all')) 
+    #dim(psu_fk_abun_no_spp) #1,689,982      10
+  
+  #sample_data = as.tibble(read_csv("big_csv/sample_data/FK/sample_data_all_years.csv"))
+  #read in trait matrix 
+  #trait_matrix = read_csv('functional_diversity/species_trait_matrix_348_spp.csv')
+  
+  #trait matrix needs to be alphabetically for FD code 
+  trait_matrix = trait_matrix %>%
+    as.tibble() %>%
+    mutate(
+      SPECIES_CD = toupper(as.character(SPECIES_CD))) %>% 
+    arrange(SPECIES_CD)
+  
+  traits = read.csv('functional_diversity/species_trait_matrix_348_spp.csv')
+
   # Set rownames on traits and remove other info
     rownames(traits) <- traits$SPECIES_CD
     traits <- traits[, -c(1:4)]
