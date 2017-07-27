@@ -1635,6 +1635,7 @@ if(!file.exists("matrices_strat_grouped_with_subregion_rds")){
  subregions = subregions[!(subregions$YEAR == "2006" & subregions$PRIMARY_SAMPLE_UNIT == "602U" | subregions$YEAR == "2016" & subregions$PRIMARY_SAMPLE_UNIT == "1010U"),] #5239 x 3
   
   all_matrices_data_with_subregion = inner_join(all_matrices_data, subregions) #5,241 x 25                  
+  
   saveRDS(all_matrices_data_with_subregion, "psu_matrices_data_with_subregion_rds")
   
   matrices_strat_grouped_with_subregion = all_matrices_data_with_subregion %>% 
@@ -1692,19 +1693,6 @@ if(!file.exists("matrices_strat_grouped_with_subregion_rds")){
   } else {
     matrices_strat_grouped_with_subregion = read_rds("matrices_strat_grouped_with_subregion_rds") # 184 x 45
     }
-
-# by subregion and years (plot for each strat_grouped category)
-# automating plot-making with functions
-indices = matrices_strat_grouped_with_subregion, function(i) {
-lapply(names(i@data)[1:7],function(j) {
-ggplot
-indices = all_matrices, function(i) {
-lapply(names(i@data)[1:7],function(j) { ggplot()
-labs(x="",y=""
-title=paste(names
-
-
-
 
 #abundance
 ab_sy_HR = matrices_strat_grouped_with_subregion %>% filter(STRAT_GROUPED=="HIGH_RELIEF" & SUBREGION_DOMAIN!="BiscBay") %>% 
@@ -1864,6 +1852,53 @@ ggsave(file="richness_by_subregion_and_year_Patch_Reef.pdf", path="big_csv/plots
 
 ```
 
+- tried using lapply, seq_along, and for( i in blank) but couldn't get it to work. Then tried melt and came close to what we want, but still need to facet by grouped strata. 
+
+```{r plot test with melt}
+
+all_matrices_data_with_subregion = readRDS("psu_matrices_data_with_subregion_rds")
+
+df = all_matrices_data_with_subregion %>% 
+  mutate(
+    STRAT_GROUPED = 
+      ifelse(grepl("FMLR|FSLR|FDLR", STRAT), 'LINEAR_REEF', 
+             ifelse(grepl("OFPR|MCPR|INPR", STRAT), 'PATCH_REEF',
+                    ifelse(grepl('HRRF', STRAT), 'HIGH_RELIEF', "IDK")))) %>%
+  group_by(SUBREGION_DOMAIN, STRAT_GROUPED, YEAR) %>%
+  filter(SUBREGION_DOMAIN !="BiscBay")
+
+#Melt dataframe so diversity indices are in a single column
+  x = reshape2::melt(df, id.vars = c("YEAR", "SUBREGION_DOMAIN", "STRAT_GROUPED"), measure.vars=c("abundance_sum", "biomass_sum", "evenness","richness","simpson","shannon","func.div"))
+
+#Summarize means and SEs by year, subregion, and variable
+  x=plyr::ddply(x, c("YEAR", "SUBREGION_DOMAIN", "STRAT_GROUPED", "variable"), summarize, value.mean=mean(value), value.se=plotrix::std.error(value))
+
+#Rename levels for figure plotting
+  levels(x$variable)=c("A) Mean Abundance", "B) Mean Biomass", "C) Evenness", "D) Richness", "E) Simpson", "F) Shannon", "G) Functional")
+
+#Rename regions for figure plotting
+x$SUBREGION_DOMAIN=factor(x$SUBREGION_DOMAIN)
+levels(x$SUBREGION_DOMAIN)=c("Upper Keys", "Middle Keys", "Lower Keys")
+
+#Plot line graph
+p = ggplot(x,aes(x=YEAR, y=value.mean, col=SUBREGION_DOMAIN, group=SUBREGION_DOMAIN))+
+  geom_point(size=3)+
+  geom_errorbar(aes(ymax=value.se+value.se,ymin=value.se-value.se),width=0.1)+
+  facet_wrap(STRAT_GROUPED~variable,scales="free")+
+  #facet_wrap(~variable,scales="free")+
+  #facet_wrap(STRAT_GROUPED~variable,scales="free")+
+  labs(title= "", x="Year", y="", colour = "Subregion")+
+  #scale_colour_manual(labels=c("High reef", "Linear reef", "Patch reef"), values= c("red", "green", "blue"))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016))
+  #theme(
+      #plot.margin=unit(c(1,1,1,1),"cm"),
+      #legend.position="right",
+      #panel.grid.major=element_blank(),
+      #panel.grid.minor=element_blank(),
+      #strip.background=element_blank())
+
+```
+
 ## Plots of diversity indices by grouped strata and years across subregions  
 
 Group strata by: patch reef, forereef, and high relief
@@ -1970,9 +2005,7 @@ ggplot(matrices_strat_grouped,aes(x=YEAR,y=abundance_mean, colour=STRAT_GROUPED,
   geom_errorbar(aes(ymax=abundance_mean+abundance_se,ymin=abundance_mean-abundance_se),width=0.1)+
   labs(title= "A) Mean Abundance", x="Year", y="Abundance of species", colour = "Strata")+
   scale_colour_manual(labels=c("High reef", "Linear reef", "Patch reef"), values= c("red", "green", "blue"))+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016))
-
-+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016))+
   theme_bw(base_size=16)+
   theme(
       plot.margin=unit(c(1,1,1,1),"cm"),
