@@ -181,6 +181,8 @@ sacobis4=sacobis2[-c(1:2)]
 sacobis4
 newobis4
 
+#method=coleman finds expected SAC
+
 #If years are considered samples
 SAC<-specaccum(newobis4, method = "random", permutations = 100,
           conditioned =TRUE, gamma = "jack1")
