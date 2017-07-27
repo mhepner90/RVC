@@ -1537,7 +1537,8 @@ crichness<-read.csv("C:/Users/luke.mceachron/Documents/Git/RVC/OtherGroups/CREMP
 head(sc_pcov_spp)
 names(crichness)
 
-  #Estimate Coral shannon/simpson diversity using Average site level percent cover. Richness is estimated from the full domain of CREMP samples, rather than average site level richness.
+#Estimate Coral shannon/simpson diversity using Average site level percent cover. Richness is estimated from the full domain of CREMP samples, rather than average site level richness.
+
 library(vegan)
 
 sc_pcov_spp       = read.csv("C:/Users/luke.mceachron/Documents/Git/RVC/OtherGroups/CREMP_Pcover_spp_tpose.csv")
