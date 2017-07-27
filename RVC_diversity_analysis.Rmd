@@ -1034,7 +1034,7 @@ ab_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=abundance_mean, colour=STRAT
   geom_line(aes(group=STRAT),lwd=1) +
   geom_point(size=3) +
   geom_errorbar(aes(ymax=abundance_mean+abundance_se,ymin=abundance_mean-abundance_se),width=0.1)+
-  labs(title= "B) Abundance", x="Year", y="Mean abundance ()", colour = "Strata")+
+  labs(title= "A) Abundance", x="Year", y="Mean abundance", colour = "Strata")+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
   theme_bw()+
   theme(
@@ -1044,6 +1044,7 @@ ab_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=abundance_mean, colour=STRAT
       axis.title.x=element_text(size=12),
       axis.title.y=element_text(size=12),
       title=element_text(size=12))
+#y=expression(paste("Mean abundance (ind/40,000 km"^"2)")) #in case we need to use superscript in axis label, here is code. it was hard to figure out so I'm leaving it here
 #ggsave(file="abundance_by_year_and_strata.pdf", path="big_csv/plots")
 
 #biomass
@@ -1051,7 +1052,7 @@ bio_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=biomass_mean, colour=STRAT,
   geom_line(aes(group=STRAT),lwd=1) +
   geom_point(size=3) +
   geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2) +
-  labs(title= "D) Biomass", x="Year", y="Mean biomass ()", colour = "Strata")+
+  labs(title= "B) Biomass", x="Year", y="Mean biomass", colour = "Strata")+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
   theme_bw()+
   theme(
@@ -1063,29 +1064,12 @@ bio_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=biomass_mean, colour=STRAT,
       title=element_text(size=12))
 #ggsave(file="biomass_by_year_and_strata.pdf", path="big_csv/plots")
 
-#richness
-rich_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=richness_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
-  geom_line(aes(group=STRAT),lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2)+
-  labs(title= "A) Richness", x="Year", colour = "Strata")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  theme_bw()+
-  theme(
-      legend.position="none",
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_blank(),
-      title=element_text(size=12))
-#ggsave(file="richness_by_year_and_strata.pdf", path="big_csv/plots")
-
 # evenness
 eve_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=evenness_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
   geom_line(aes(group=STRAT),lwd=1) +
   geom_point(size=3) +
   geom_errorbar(aes(ymax=evenness_mean+evenness_se,ymin=evenness_mean-evenness_se),width=0.1)+
-  labs(title= "F) Evenness", x="Year", y="Mean relative evenness",colour = "Strata")+
+  labs(title= "C) Evenness", x="Year", y="Mean relative evenness",colour = "Strata")+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
   theme_bw()+
   theme(
@@ -1097,12 +1081,12 @@ eve_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=evenness_mean, colour=STRAT
       title=element_text(size=12))
 #ggsave(file="evenness_by_year_and_strata.pdf", path="big_csv/plots")
 
-#simpson
-sim_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=simpson_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
+#richness
+rich_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=richness_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
   geom_line(aes(group=STRAT),lwd=1) +
   geom_point(size=3) +
-  geom_errorbar(aes(ymin=simpson_mean-simpson_se, ymax=simpson_mean+simpson_se), width=.2)+
-  labs(title= "E) Simpson", x="Year", colour = "Strata")+
+  geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2)+
+  labs(title= "D) Richness", x="Year", y="Mean ENS", colour = "Strata")+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
   theme_bw()+
   theme(
@@ -1110,7 +1094,24 @@ sim_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=simpson_mean, colour=STRAT,
       panel.grid.major=element_blank(),
       panel.grid.minor=element_blank(),
       axis.title.x=element_text(size=12),
-      axis.title.y=element_blank(),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+#ggsave(file="richness_by_year_and_strata.pdf", path="big_csv/plots")
+
+#simpson
+sim_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=simpson_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
+  geom_line(aes(group=STRAT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymin=simpson_mean-simpson_se, ymax=simpson_mean+simpson_se), width=.2)+
+  labs(title= "E) Simpson", x="Year", y="Mean ENS", colour = "Strata")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  theme_bw()+
+  theme(
+      legend.position="none",
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
       title=element_text(size=12))
 #ggsave(file="simpson_diversity_by_year_and_strata.pdf", path="big_csv/plots")
 
@@ -1119,7 +1120,7 @@ shan_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=shannon_mean, colour=STRAT
   geom_line(aes(group=STRAT),lwd=1) +
   geom_point(size=3) +
   geom_errorbar(aes(ymax=shannon_mean+shannon_se,ymin=shannon_mean-shannon_se),width=0.1)+
-  labs(title= "C) Shannon", x="Year", colour = "Strata")+
+  labs(title= "F) Shannon", x="Year", y="Mean ENS", colour = "Strata")+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
   theme_bw()+
   theme(
@@ -1127,7 +1128,7 @@ shan_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=shannon_mean, colour=STRAT
       panel.grid.major=element_blank(),
       panel.grid.minor=element_blank(),
       axis.title.x=element_text(size=12),
-      axis.title.y=element_blank(),
+      axis.title.y=element_text(size=12),
       title=element_text(size=12))
 #ggsave(file="shannon_diversity_by_year_and_strata.pdf", path="big_csv/plots")
 
@@ -1136,7 +1137,7 @@ func_ys= ggplot(stats_all_matrices_data,aes(x=YEAR,y=func.div_mean, colour=STRAT
   geom_line(aes(group=STRAT),lwd=1) +
   geom_point(size=3) +
   geom_errorbar(aes(ymax=func.div_mean+func.div_se,ymin=func.div_mean-func.div_se),width=0.1)+
-  labs(title= "G) Functional", x="Year", colour = "Strata")+
+  labs(title= "G) Functional", x="Year", y="Mean ENS", colour = "Strata")+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
   theme_bw()+
   theme(
@@ -1144,35 +1145,44 @@ func_ys= ggplot(stats_all_matrices_data,aes(x=YEAR,y=func.div_mean, colour=STRAT
       panel.grid.major=element_blank(),
       panel.grid.minor=element_blank(),
       axis.title.x=element_text(size=12),
-      axis.title.y=element_blank(),
+      axis.title.y=element_text(size=12),
       title=element_text(size=12))
 #ggsave(file="functional_diversity_by_year_and_strata.pdf", path="big_csv/plots")
 
 #save legend
-for_legend = ggplot(stats_all_matrices_data,aes(x=YEAR,y=abundance_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
+for_legend_vert = ggplot(stats_all_matrices_data,aes(x=YEAR,y=abundance_mean, colour=STRAT, group=STRAT))+
   geom_line(aes(group=STRAT),lwd=1) +
   geom_point(size=3) +
-  geom_errorbar(aes(ymax=abundance_mean+abundance_se,ymin=abundance_mean-abundance_se),width=0.1)+
-  labs(title= "B) Abundance", x="Year", y="Mean abundance", colour = "Strata")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  theme_bw()+
+  labs(colour = "Strata")+
   theme(
       legend.position="right", #"none", "right",c(0.8,0.68),
       legend.text=element_text(size=11),
-      legend.key.size=unit(5,"mm"),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      strip.background=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-legend <- get_legend(for_legend)
+      legend.key.size=unit(5,"mm"))
+legend_vert <- get_legend(for_legend_vert)
+
+for_legend_horiz = ggplot(stats_all_matrices_data,aes(x=YEAR,y=abundance_mean, colour=STRAT, group=STRAT))+
+  geom_line(aes(group=STRAT),lwd=1) +
+  geom_point(size=3) +
+  labs(colour = "Strata")+
+  theme(
+      legend.position="bottom", #"none", "right",c(0.8,0.68),
+      legend.text=element_text(size=11),
+      legend.key.size=unit(5,"mm"))
+legend_horiz <- get_legend(for_legend_horiz)
 
 #combine multiple plots
-g <- grid.arrange(rich_ys,ab_ys,shan_ys,bio_ys,sim_ys,eve_ys,func_ys,legend,ncol=2,left=textGrob("Mean number of effective speices",gp=gpar(fontsize=12),rot=90))
-ggsave(file="combined_plots_by_year_and_strata.pdf", g, width=7, height=10, path="big_csv/plots")
+#all plots on one page
+g_ys <- grid.arrange(ab_ys,bio_ys,eve_ys,rich_ys,sim_ys,shan_ys,func_ys,legend_vert,ncol=2)
+ggsave(file="all_indices_by_year_and_strata.pdf", g_ys, width=7, height=10, path="big_csv/plots")
 
+#plots on two pages - letters in plot titles will need to be changed so they make sense on two pages (i.e., A-C and A-D)
+g1 <- grid.arrange(ab_ys,bio_ys,eve_ys,legend_vert,ncol=2)
+ggsave(file="ab_bio_eve_by_year_and_strata.pdf", g1, width=7, height=5, path="big_csv/plots")
 
+g2 <- grid.arrange(arrangeGrob(rich_ys,sim_ys,ncol=2),arrangeGrob(shan_ys,func_ys,ncol=2),legend_horiz,nrow=3,heights=c(2,2,.4))
+ggsave(file="rich_shan_sim_func_by_year_and_strata.pdf", g2, width=7, height=6, path="big_csv/plots")
+
+#left=textGrob("Mean number of effective species", gp=gpar(fontsize=12), rot=90), bottom=textGrob("Year",gp=gpar(fontsize=12))) #code to insert global x and y axis labels
 
 ### ***Don't need to combine plots by STRAT and by YEAR just YEAR & STRAT for now***
 
@@ -1380,7 +1390,7 @@ ab_gs= ggplot(matrices_strat_grouped,aes(x=YEAR,y=abundance_mean, colour=STRAT_G
   geom_line(aes(group=STRAT_GROUPED),lwd=1) +
   geom_point(size=3) +
  geom_errorbar(aes(ymax=abundance_mean+abundance_se,ymin=abundance_mean-abundance_se),width=0.1)+
-  labs(title= "A) Abundance", x="Year", y="Mean abundance ()", colour = "Strata")+
+  labs(title= "A) Abundance", x="Year", y="Mean abundance", colour = "Strata")+
   scale_colour_manual(labels=c("High reef", "Linear reef", "Patch reef"), values= c("red", "green", "blue"))+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
   theme_bw()+
@@ -1398,7 +1408,7 @@ bio_gs= ggplot(matrices_strat_grouped,aes(x=YEAR,y=biomass_mean, colour=STRAT_GR
   geom_line(aes(group=STRAT_GROUPED),lwd=1) +
   geom_point(size=3) +
  geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.1)+
-  labs(title= "A) Biomass", x="Year", y="Mean biomass ()", colour = "Strata")+
+  labs(title= "B) Biomass", x="Year", y="Mean biomass", colour = "Strata")+
   scale_colour_manual(labels=c("High reef", "Linear reef", "Patch reef"), values= c("red", "green", "blue"))+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
   theme_bw()+
@@ -1411,30 +1421,12 @@ bio_gs= ggplot(matrices_strat_grouped,aes(x=YEAR,y=biomass_mean, colour=STRAT_GR
       title=element_text(size=12))
 #ggsave(file="biomass_by_year_and_strata_grouped.pdf", path="big_csv/plots")
 
-#richness
-rich_gs= ggplot(matrices_strat_grouped,aes(x=YEAR,y=richness_mean, colour=STRAT_GROUPED, group=STRAT_GROUPED))+ #shape=STRAT
-  geom_line(aes(group=STRAT_GROUPED),lwd=1) +
-  geom_point(size=3) +
- geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.1)+
-  labs(title= "A) Richness", x="Year", colour = "Strata")+
-  scale_colour_manual(labels=c("High reef", "Linear reef", "Patch reef"), values= c("red", "green", "blue"))+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  theme_bw()+
-  theme(
-      legend.position="none",
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_blank(),
-      title=element_text(size=12))
-#ggsave(file="richness_by_year_and_strata_grouped.pdf", path="big_csv/plots")
-
 #evenness
 eve_gs = ggplot(matrices_strat_grouped,aes(x=YEAR,y=evenness_mean, colour=STRAT_GROUPED, group=STRAT_GROUPED))+ #shape=STRAT
   geom_line(aes(group=STRAT_GROUPED),lwd=1) +
   geom_point(size=3) +
   geom_errorbar(aes(ymax=evenness_mean+evenness_se,ymin=evenness_mean-evenness_se),width=0.1)+
-  labs(title= "F) Evenness", x="Year", y="Mean relative evenness",colour = "Strata")+
+  labs(title= "C) Evenness", x="Year", y="Mean relative evenness",colour = "Strata")+
   scale_colour_manual(labels=c("High reef", "Linear reef", "Patch reef"), values= c("red", "green", "blue"))+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
   theme_bw()+
@@ -1447,12 +1439,12 @@ eve_gs = ggplot(matrices_strat_grouped,aes(x=YEAR,y=evenness_mean, colour=STRAT_
       title=element_text(size=12))
 #ggsave(file="evenness_by_year_and_strata_grouped.pdf", path="big_csv/plots")
 
-#simpson
-sim_gs= ggplot(matrices_strat_grouped,aes(x=YEAR,y=simpson_mean, colour=STRAT_GROUPED, group=STRAT_GROUPED))+ #shape=STRAT
+#richness
+rich_gs= ggplot(matrices_strat_grouped,aes(x=YEAR,y=richness_mean, colour=STRAT_GROUPED, group=STRAT_GROUPED))+ #shape=STRAT
   geom_line(aes(group=STRAT_GROUPED),lwd=1) +
   geom_point(size=3) +
-  geom_errorbar(aes(ymin=simpson_mean-simpson_se, ymax=simpson_mean+simpson_se), width=.1)+
-  labs(title= "A) Simpson", x="Year", colour = "Strata")+
+ geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.1)+
+  labs(title= "D) Richness", x="Year", y="Mean ENS", colour = "Strata")+
   scale_colour_manual(labels=c("High reef", "Linear reef", "Patch reef"), values= c("red", "green", "blue"))+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
   theme_bw()+
@@ -1461,7 +1453,25 @@ sim_gs= ggplot(matrices_strat_grouped,aes(x=YEAR,y=simpson_mean, colour=STRAT_GR
       panel.grid.major=element_blank(),
       panel.grid.minor=element_blank(),
       axis.title.x=element_text(size=12),
-      axis.title.y=element_blank(),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+#ggsave(file="richness_by_year_and_strata_grouped.pdf", path="big_csv/plots")
+
+#simpson
+sim_gs= ggplot(matrices_strat_grouped,aes(x=YEAR,y=simpson_mean, colour=STRAT_GROUPED, group=STRAT_GROUPED))+ #shape=STRAT
+  geom_line(aes(group=STRAT_GROUPED),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymin=simpson_mean-simpson_se, ymax=simpson_mean+simpson_se), width=.1)+
+  labs(title= "E) Simpson", x="Year", y="Mean ENS", colour = "Strata")+
+  scale_colour_manual(labels=c("High reef", "Linear reef", "Patch reef"), values= c("red", "green", "blue"))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  theme_bw()+
+  theme(
+      legend.position="none",
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
       title=element_text(size=12))
 #ggsave(file="simpson_by_year_and_strata_grouped.pdf", path="big_csv/plots")
 
@@ -1470,7 +1480,7 @@ shan_gs= ggplot(matrices_strat_grouped,aes(x=YEAR,y=shannon_mean, colour=STRAT_G
   geom_line(aes(group=STRAT_GROUPED),lwd=1) +
   geom_point(size=3) +
   geom_errorbar(aes(ymin=shannon_mean-shannon_se, ymax=shannon_mean+shannon_se), width=.1)+
-  labs(title= "A) Abundance", x="Year", colour = "Strata")+
+  labs(title= "F) Shannon", x="Year", y="Mean ENS", colour = "Strata")+
   scale_colour_manual(labels=c("High reef", "Linear reef", "Patch reef"), values= c("red", "green", "blue"))+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
   theme_bw()+
@@ -1479,7 +1489,7 @@ shan_gs= ggplot(matrices_strat_grouped,aes(x=YEAR,y=shannon_mean, colour=STRAT_G
       panel.grid.major=element_blank(),
       panel.grid.minor=element_blank(),
       axis.title.x=element_text(size=12),
-      axis.title.y=element_blank(),
+      axis.title.y=element_text(size=12),
       title=element_text(size=12))
 #ggsave(file="shannon_by_year_and_strata_grouped.pdf", path="big_csv/plots")
 
@@ -1488,7 +1498,7 @@ func_gs= ggplot(matrices_strat_grouped,aes(x=YEAR,y=func.div_mean, colour=STRAT_
   geom_line(aes(group=STRAT_GROUPED),lwd=1) +
   geom_point(size=3) +
   geom_errorbar(aes(ymax=func.div_mean+func.div_se,ymin=func.div_mean-func.div_se),width=0.1)+
-  labs(title= "G) Functional", x="Year", colour = "Strata")+
+  labs(title= "G) Functional", x="Year", y="Mean ENS", colour = "Strata")+
   scale_colour_manual(labels=c("High reef", "Linear reef", "Patch reef"), values= c("red", "green", "blue"))+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
   theme_bw()+
@@ -1497,34 +1507,44 @@ func_gs= ggplot(matrices_strat_grouped,aes(x=YEAR,y=func.div_mean, colour=STRAT_
       panel.grid.major=element_blank(),
       panel.grid.minor=element_blank(),
       axis.title.x=element_text(size=12),
-      axis.title.y=element_blank(),
+      axis.title.y=element_text(size=12),
       title=element_text(size=12))
 #ggsave(file="functional_diversity_by_year_and_strata_grouped.pdf", path="big_csv/plots")
 
 #save legend
-for_legend_gs = ggplot(matrices_strat_grouped,aes(x=YEAR,y=abundance_mean, colour=STRAT_GROUPED, group=STRAT_GROUPED))+ #shape=STRAT
+for_legend_gs_vert = ggplot(matrices_strat_grouped,aes(x=YEAR,y=abundance_mean, colour=STRAT_GROUPED, group=STRAT_GROUPED))+ 
   geom_line(aes(group=STRAT_GROUPED),lwd=1) +
   geom_point(size=3) +
-  geom_errorbar(aes(ymax=abundance_mean+abundance_se,ymin=abundance_mean-abundance_se),width=0.1)+
-  labs(title= "B) Abundance", x="Year", y="Mean abundance", colour = "Strata")+
+  labs(colour = "Strata")+
   scale_colour_manual(labels=c("High reef", "Linear reef", "Patch reef"), values= c("red", "green", "blue"))+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  theme_bw()+
-  theme(
+    theme(
       legend.position="right", #"none", "right",c(0.8,0.68),
       legend.text=element_text(size=11),
-      legend.key.size=unit(5,"mm"),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-legend_gs <- get_legend(for_legend_gs)
+      legend.key.size=unit(5,"mm"))
+legend_gs_vert <- get_legend(for_legend_gs_vert)
+
+for_legend_gs_horiz = ggplot(matrices_strat_grouped,aes(x=YEAR,y=abundance_mean, colour=STRAT_GROUPED, group=STRAT_GROUPED))+ 
+  geom_line(aes(group=STRAT_GROUPED),lwd=1) +
+  geom_point(size=3) +
+  labs(colour = "Strata")+
+  scale_colour_manual(labels=c("High reef", "Linear reef", "Patch reef"), values= c("red", "green", "blue"))+
+    theme(
+      legend.position="bottom", #"none", "right",c(0.8,0.68),
+      legend.text=element_text(size=11),
+      legend.key.size=unit(5,"mm"))
+legend_gs_horiz <- get_legend(for_legend_gs_horiz)
 
 #combine multiple plots
-g <- grid.arrange(rich_gs,ab_gs,shan_gs,bio_gs,sim_gs,eve_gs,func_gs,legend_gs,ncol=2,left=textGrob("Mean number of effective speices",gp=gpar(fontsize=12),rot=90))
-ggsave(file="combined_plots_by_year_and_strata_grouped.pdf", g, width=7, height=10, path="big_csv/plots")
+#all plots on one page
+g_gs <- grid.arrange(ab_gs,bio_gs,eve_gs,rich_gs,sim_gs,shan_gs,func_gs,legend_gs_vert,ncol=2)
+ggsave(file="all_indices_by_year_and_strata_grouped.pdf", g_gs, width=7, height=10, path="big_csv/plots")
 
+#plots on two pages - letters in plot titles will need to be changed so they make sense on two pages (i.e., A-C and A-D)
+g3 <- grid.arrange(ab_gs,bio_gs,eve_gs,legend_gs_vert,ncol=2)
+ggsave(file="ab_bio_eve_by_year_and_strata_grouped.pdf", g3, width=7, height=5, path="big_csv/plots")
+
+g4 <- grid.arrange(arrangeGrob(rich_gs,sim_gs,ncol=2),arrangeGrob(shan_gs,func_gs,ncol=2),legend_gs_horiz,nrow=3,heights=c(2,2,.4))
+ggsave(file="rich_shan_sim_func_by_year_and_strata_grouped.pdf", g4, width=7, height=6, path="big_csv/plots")
 
 
 ### ***Don't need to combine plots by STRAT and by YEAR just YEAR & STRAT for now***
@@ -1865,32 +1885,34 @@ df = all_matrices_data_with_subregion %>%
              ifelse(grepl("OFPR|MCPR|INPR", STRAT), 'PATCH_REEF',
                     ifelse(grepl('HRRF', STRAT), 'HIGH_RELIEF', "IDK")))) %>%
   group_by(SUBREGION_DOMAIN, STRAT_GROUPED, YEAR) %>%
-  filter(SUBREGION_DOMAIN !="BiscBay")
+  filter(SUBREGION_DOMAIN !="BiscBay") # 4432 x 25
 
 #Melt dataframe so diversity indices are in a single column
-  x = reshape2::melt(df, id.vars = c("YEAR", "SUBREGION_DOMAIN", "STRAT_GROUPED"), measure.vars=c("abundance_sum", "biomass_sum", "evenness","richness","simpson","shannon","func.div"))
+  x = reshape2::melt(df, id.vars = c("YEAR", "SUBREGION_DOMAIN", "STRAT_GROUPED"), measure.vars=c("abundance_sum", "biomass_sum", "evenness","richness","simpson","shannon","func.div")) # 31024 x 5
 
 #Summarize means and SEs by year, subregion, and variable
   x=plyr::ddply(x, c("YEAR", "SUBREGION_DOMAIN", "STRAT_GROUPED", "variable"), summarize, value.mean=mean(value), value.se=plotrix::std.error(value))
 
 #Rename levels for figure plotting
-  levels(x$variable)=c("A) Mean Abundance", "B) Mean Biomass", "C) Evenness", "D) Richness", "E) Simpson", "F) Shannon", "G) Functional")
+  levels(x$variable)=c("A) Abundance", "B) Biomass", "C) Evenness", "D) Richness", "E) Simpson", "F) Shannon", "G) Functional")
 
 #Rename regions for figure plotting
 x$SUBREGION_DOMAIN=factor(x$SUBREGION_DOMAIN)
 levels(x$SUBREGION_DOMAIN)=c("Upper Keys", "Middle Keys", "Lower Keys")
 
 #Plot line graph
-p = ggplot(x,aes(x=YEAR, y=value.mean, col=SUBREGION_DOMAIN, group=SUBREGION_DOMAIN))+
+HR = x %>% filter(STRAT_GROUPED=="HIGH_RELIEF") %>% ggplot(.,aes(x=YEAR, y=value.mean, col=SUBREGION_DOMAIN, group=SUBREGION_DOMAIN))+
   geom_point(size=3)+
-  geom_errorbar(aes(ymax=value.se+value.se,ymin=value.se-value.se),width=0.1)+
-  facet_wrap(STRAT_GROUPED~variable,scales="free")+
+  geom_errorbar(aes(ymax=value.mean+value.se,ymin=value.mean-value.se),width=0.1)+
+  facet_wrap(~variable,scales="free",ncol=2)+
   #facet_wrap(~variable,scales="free")+
   #facet_wrap(STRAT_GROUPED~variable,scales="free")+
   labs(title= "", x="Year", y="", colour = "Subregion")+
-  #scale_colour_manual(labels=c("High reef", "Linear reef", "Patch reef"), values= c("red", "green", "blue"))+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016))
-  #theme(
+  scale_colour_manual(labels=c("Upper Keys", "Middle Keys", "Lower Keys"), values= c("red", "green", "blue"))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  theme(
+      strip.text=element_text(hjust = 0),
+      strip.background = element_blank())
       #plot.margin=unit(c(1,1,1,1),"cm"),
       #legend.position="right",
       #panel.grid.major=element_blank(),
