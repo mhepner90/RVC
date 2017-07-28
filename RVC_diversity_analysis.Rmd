@@ -1886,21 +1886,17 @@ levels(x$SUBREGION_DOMAIN)=c("Upper Keys", "Middle Keys", "Lower Keys")
 HR = x %>% filter(STRAT_GROUPED=="HIGH_RELIEF") %>% ggplot(.,aes(x=YEAR, y=value.mean, col=SUBREGION_DOMAIN, group=SUBREGION_DOMAIN))+
   geom_point(size=3)+
   geom_errorbar(aes(ymax=value.mean+value.se,ymin=value.mean-value.se),width=0.1)+
+   geom_line(aes(group=SUBREGION_DOMAIN),lwd=1)+
   facet_wrap(~variable,scales="free",ncol=2)+
-  #facet_wrap(~variable,scales="free")+
-  #facet_wrap(STRAT_GROUPED~variable,scales="free")+
   labs(title= "", x="Year", y="", colour = "Subregion")+
   scale_colour_manual(labels=c("Upper Keys", "Middle Keys", "Lower Keys"), values= c("red", "green", "blue"))+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
   theme(
       strip.text=element_text(hjust = 0),
-      strip.background = element_blank())
-      #plot.margin=unit(c(1,1,1,1),"cm"),
-      #legend.position="right",
-      #panel.grid.major=element_blank(),
-      #panel.grid.minor=element_blank(),
-      #strip.background=element_blank())
-
+      strip.background = element_blank(),
+      panel.spacing.x=unit(3, "lines"),
+      legend.position=c(0.75,0.1))
+ 
 ```
 
 ## Plots of diversity indices by grouped strata and years across subregions  
