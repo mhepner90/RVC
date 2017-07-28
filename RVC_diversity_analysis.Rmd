@@ -137,10 +137,8 @@ library(FD)
 #biocLite("ggtree", type = "source")
 library(tidyverse)
 
-func_dist_rds <- "functional_diversity/func.dist.rds"
-
-if (!file.exists(func_dist_rds)){
-  
+if (!file.exists("functional_diversity/func_dist_rds")){
+ 
   trait_matrix = read_csv('functional_diversity/species_trait_matrix_348_spp.csv')
   
   trait_matrix = trait_matrix %>%
@@ -220,11 +218,24 @@ else { #read data
 } 
 
 #Plot the best tree - average 
-pdf("functional_dendrogram.pdf", width = 30, height = 70)
+pdf("functional_dendrogram.pdf", width = 7, height = 80) #width = 7, height = 70
 par(mfrow=c(1,1))         #nc-by-nr array 
 par(mar=c(2,1,0,2))       #number of lines of margins for bottom, left, top, right 
-par(pin=c(25,58))         #plot dimensions 
-plot(func.dist, horiz=TRUE, main = "Functional Dendrogram", cex = 1, cex.main = 2, cex.lab = 0.5)
+par(pin=c(5,70))         #plot dimensions (width, height)
+plot(func.dist, horiz=TRUE, main = "Functional Dendrogram", cex = 1, cex.main = 1.5, cex.lab = 1)
+dev.off()
+
+#Plot the best tree - average 
+#removes 260/348 species 
+pdf("functional_dendrogram.pdf", width = 7, height = 10)
+sup = drop.tip(func.dist, sample(func.dist$tip.label)[1:260])
+par(mfrow=c(1,1)) 
+plot(sup, horiz=TRUE, main = "Functional Dendrogram", cex = 0.5, label.offset=0.025, edge.width = 1, cex.main = 2)
+dev.off()
+
+pdf("functional_dendrogram.pdf", width = 7, height = 70)
+par(mfrow=c(1,1)) 
+plot(func.dist, horiz=TRUE, main = "Functional Dendrogram", cex = 0.5, label.offset=0.025, edge.width = 1, cex.main = 2) #cex.lab = 0.5
 dev.off()
 
 #Phylogenetic tree with 348 tips and 347 internal nodes. 
