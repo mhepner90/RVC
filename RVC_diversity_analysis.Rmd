@@ -3329,22 +3329,21 @@ partial.deviance.list=parLapply(cl,all_matrices_data,function(i) {
     Partial.Deviance.SE=c(0,std.error(space.dev),std.error(time.dev),std.error(env.dev),std.error(mngt.dev)))
 } ) ) } )
 
-#Error in checkForRemoteErrors(val) : 4 nodes produced errors; first error: no such index at level 1
-
 #Close the cluster
 stopCluster(cl)
 
 #Name objects in list
 names(partial.deviance.list)=c("abund","biomass","pres.abs")
+
 #Rename diversity levels for better plotting
 for(i in seq_along(partial.deviance.list)) {
   partial.deviance.list[[i]]=transform(partial.deviance.list[[i]],Diversity=recode(Diversity,
-    "'richness'='Richness';'evenness'='Evenness';'species.div'='Gini-Simpson';
-     'func.div'='Functional';'phylo.div'='Phylogenetic';'taxo.div'='Taxonomic'")) }
+    "'abundance_sum'='Abundance'; 'biomass_sum'='Biomass'; 'richness'='Richness'; 'evenness'='Evenness'; 'simpson'='Simpson'; 'shannon'='Shannon'; 'func.div'='Functional'")) }
+
 #Reorder diversity levels for better plotting
 for(i in seq_along(partial.deviance.list)) {
   partial.deviance.list[[i]][,"Diversity"]=factor(partial.deviance.list[[i]][,"Diversity"],
-    levels=c("Richness","Evenness","Gini-Simpson","Functional","Phylogenetic","Taxonomic")) }
+    levels=c("Abundance", "Biomass", "Evenness","Richness","Simpson", "Shannon", "Functional")) }
 
 #Create barplot (8" x 6")
 lapply(seq_along(partial.deviance.list),function(i) {
@@ -3359,5 +3358,6 @@ lapply(seq_along(partial.deviance.list),function(i) {
     theme_bw(base_size=18)+theme(
       panel.grid.major=element_blank(),panel.grid.minor=element_blank(),
       legend.position="bottom",legend.title=element_blank()) } )
+
 ```
 
