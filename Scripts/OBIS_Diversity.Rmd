@@ -1,0 +1,208 @@
+---
+title: "OBIS_diversity"
+author: "Luke McEachron"
+date: "July 27, 2017"
+output: html_document
+---
+
+#Goal 1) Compute MBON diversity measures from any OBIS database.
+#Goal 2) Compute Species Accumulation Curves from any occurrence data.
+
+
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = T)
+#ln -s ~/Dropbox/big_csv big_csv - write in terminal window to link to 'big_csv' folder
+#rm(list = ls())
+
+#install.packages('devtools')
+
+#install.packages("tidyverse")
+library(tidyverse)
+#install.packages("vegan")
+library(vegan) # biodiveristy functions for richness, simpson, and shannon 
+#install.packages("dygraphs")
+library(dygraphs)
+#install.packages("foreign")
+library(foreign)
+#install.packages("dplyr")
+library(dplyr)
+#install.packages("devtools")
+#devtools::install_github("iobis/robis")
+library(robis)
+#install.packages("reshape")
+library(reshape)
+
+map = purrr::map # override maps::map
+select = dplyr::select #override MASS::select 
+group_by =  dplyr::group_by #override plotly::group_by
+summarise = dplyr::summarise #override plotly::summarise
+
+```
+
+## Diversity Measures
+
+```{r Diversity Measures}
+
+# To estimate general diversity measures across a full sampling domain by year, data should be formatted with year and species name columns, with rows corresponding to counts of a given species in a given year.
+
+#Read in pre-formated data
+
+spp_data= read.csv("C:/directory/occurrencedatafilename.csv")
+
+# make sure the data are ordered by year, then remove the year column (In this case, the first column is the year)
+
+spp_data=spp_data[-c(1)]
+
+#Estimate diversity measures
+
+for (i in 1:nrow(spp_data)) {
+  Richness<-(specnumber(spp_data))
+  Shannon<-(diversity(spp_data,index="shannon"))
+  Shannon_Effective_Number<-(exp(diversity(spp_data,index="shannon")))
+  Simpson<-(diversity(spp_data,index="simpson"))
+  Simpson_Effective_Number<-(1/(1-(diversity(spp_data,index="simpson"))))
+  AllVals<-cbind(Richness,Shannon,Shannon_Effective_Number,Simpson,Simpson_Effective_Number)
+  }
+
+#make a list of all of the years/rows in your data
+
+years<-rbind(1996,1997,1998,1999,2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015)
+
+#add a column name to the year list
+
+colnames(years)[1]<-"Year"
+
+#bind the year list and diversity values back together
+diversity<-cbind(AllVals,years)
+
+#you can now feed the diversity data to some graphics or write out the file.
+diversity
+
+write.csv("C:/directory/diversityfilename.csv")
+
+
+```
+
+## OBIS diversity Example
+
+```{r OBIS Example}
+
+#download OBIS Data of interest, which could represent OBIS formatted data
+#In this example, OBIS data are downloaded by a polgyon of interest given by coordinates with the same start/end points
+
+obisdata <- occurrence(geometry = "POLYGON ((2.59689 51.16772, 2.62436 51.14059, 2.76066 51.19225, 2.73216 51.20946, 2.59689 51.16772))")
+
+
+newobis<-obisdata %>%
+    select(yearcollected, species, occurrenceStatus)%>%  
+    group_by(yearcollected)
+
+newobis$occurrenceStatus[newobis$occurrenceStatus == 'present'] <- 1
+
+newobis$occurrenceStatus[newobis$occurrenceStatus == 'absent'] <- 0
+
+newobis$occurrenceStatus<-as.numeric(newobis$occurrenceStatus)
+
+newobis3<-melt(newobis,id=(c("species","yearcollected")))
+
+newobis2<-cast(newobis3,value+yearcollected~species,sum)
+
+
+is.nan.data.frame <- function(x)
+  do.call(cbind, lapply(x, is.nan))
+newobis2[is.nan(newobis2)] <- 0
+
+years<-as.data.frame(newobis2$yearcollected)
+
+newobis4=newobis2[-c(1:2)]
+
+for (i in 1:nrow(newobis4)) {
+  Richness<-(specnumber(newobis4))
+  Shannon<-(diversity(newobis4,index="shannon"))
+  Shannon_Effective_Number<-(exp(diversity(newobis4,index="shannon")))
+  Simpson<-(diversity(newobis4,index="simpson"))
+  Simpson_Effective_Number<-(1/(1-(diversity(newobis4,index="simpson"))))
+  AllVals<-cbind(Richness,Shannon,Shannon_Effective_Number,Simpson,Simpson_Effective_Number)
+  }
+
+colnames(years)[1]<-"Year"
+diversity<-cbind(AllVals,years)
+diversity
+
+
+
+
+
+
+```
+
+#Estimate species accumulation curves from sample data
+
+```{r SAC Example}
+
+#The Species Accumulation is a function of sampling, so we need to have data where rows represent sampling events rather than whole years.
+
+#http://cc.oulu.fi/~jarioksa/softhelp/vegan/html/specaccum.html
+
+
+obisdata <- occurrence(geometry = "POLYGON ((2.59689 51.16772, 2.62436 51.14059, 2.76066 51.19225, 2.73216 51.20946, 2.59689 51.16772))")
+
+
+
+sacobis<-obisdata %>%
+    select(eventDate, species, occurrenceStatus)%>%  
+    group_by(eventDate)
+
+sacobis
+
+
+sacobis$occurrenceStatus[sacobis$occurrenceStatus == 'present'] <- 1
+
+sacobis$occurrenceStatus[sacobis$occurrenceStatus == 'absent'] <- 0
+
+sacobis$occurrenceStatus<-as.numeric(sacobis$occurrenceStatus)
+
+sacobis3<-melt(sacobis,id=(c("species","eventDate")))
+
+sacobis2<-cast(sacobis3,value+eventDate~species,sum)
+
+
+is.nan.data.frame <- function(x)
+  do.call(cbind, lapply(x, is.nan))
+sacobis2[is.nan(sacobis2)] <- 0
+
+event<-as.data.frame(sacobis2$eventDate)
+
+sacobis2
+
+sacobis4=sacobis2[-c(1:2)]
+sacobis4
+newobis4
+
+#method=coleman finds expected SAC
+
+#If years are considered samples
+SAC<-specaccum(newobis4, method = "random", permutations = 100,
+          conditioned =TRUE, gamma = "jack1")
+
+#If observations are considered samples
+SAC2<-specaccum(sacobis4, method = "random", permutations = 100,
+          conditioned =TRUE, gamma = "jack1")
+
+
+
+plot(SAC, ci.type="poly", col="blue", lwd=2, ci.lty=0, ci.col="lightblue")
+plot(SAC2, ci.type="poly", col="blue", lwd=2, ci.lty=0, ci.col="lightblue")
+
+
+
+
+boxplot(SAC2, col="yellow", add=TRUE, pch="+")
+
+
+
+
+
+```

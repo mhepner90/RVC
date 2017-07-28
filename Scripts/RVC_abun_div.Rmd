@@ -1,0 +1,91 @@
+---
+title: "RVC Abundance and Biodiversity"
+author: "Megan Hepner"
+date: "5/17/2017"
+output: html_document
+---
+
+```{r librarys}
+#rm(list = ls())
+library(knitr)
+library(tidyverse)
+library(rvc)
+library(vegan)
+library(dygraphs)
+```
+
+```{r add 94-98 data}
+#rds files to read 
+RVCdata_FK_rds = 'big_csv/RVCdata_FK.rds'
+RVCdata_DT_rds = 'big_csv/RVCdata_DT.rds'
+rvc94_16_csv = 'big_csv/rvc94_16.csv'
+spp_list <- read_csv('spp_list.csv') #402 species 
+
+if (!all(file.exists(RVCdata_FK_rds, RVCdata_DT_rds))){
+  RVCdata_FK <- getRvcData(1999:2016, "FLA KEYS", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+  write_rds(RVCdata_FK, 'big_csv/RVCdata_FK.rds')
+  RVCdata_DT <- getRvcData(1999:2016, "DRY TORT", server = 'https://www.sefsc.noaa.gov/rvc_analysis20/')
+  write_rds(RVCdata_DT, 'big_csv/RVCdata_DT.rds')
+} else{ #read data 
+RVCdata_FK = read_rds('big_csv/RVCdata_FK.rds')
+RVCdata_DT = read_rds('big_csv/RVCdata_DT.rds')} 
+
+# add 1994 - 1998 RVC data and reweight by strata
+if (!file.exists(rvc94_16_csv)){
+  rvc98 <-read.csv("90srvc/fk1998_dat2.csv")
+  rvc97 <-read.csv("90srvc/fk1997_dat2.csv")
+  rvc96 <-read.csv("90srvc/fk1996_dat2.csv")
+  rvc95 <-read.csv("90srvc/fk1995_dat2.csv")
+  rvc94 <-read.csv("90srvc/fk1994_dat2.csv")
+  rvc94_16 <- rbind(RVCdata_FK$sample_data, rvc98, rvc97, rvc96, rvc95, rvc94)
+  write_csv(rvc94_16, "big_csv/rvc94_16.csv")
+} else {
+  rvc94_16 = read.csv("big_csv/rvc94_16.csv")
+}
+
+strat94 <- read.csv("90srvc/FKeys_NTOTS_Reweight_1994.csv")
+strat <- strat94[which(strat94$YEAR<1999),]
+RVCdata_FK$sample_data <- rvc94_16
+RVCdata_FK$stratum_data <- rbind(strat,RVCdata_FK$stratum_data)
+
+```
+
+```{r}
+
+rvc99_16 = read_csv('big_csv/domain_fkabun_1999_2016.csv')
+abundance = getDomainAbundance(RVCdata_FK, spp_list, merge_protected = F)
+density = getDomainDensity(RVCdata_FK, spp_list, merge_protected = F)
+#biomass = getDomainBiomass(RVCdata_FK, spp_list, merge_protected = F)
+
+tg_ab = rvc99_16 %>%
+  mutate(
+    trophic_group = 
+      ifelse(
+        SPECIES_CD == "HYP HARR" |"ATH STIP" | "JEN SPE."| "HAR JAGU"| "ANC LYOL"| "INE VITT"| "HEM BRAS"| "SAR AURI"| "HAR HUME"| "CHR ATHE"), 
+      "Forage fish", 
+      ifelse(SPECIES_CD, c("CEP CRUE", "MYC BONA", "EPI MORI", "EPI STRI", "EPI ITAJ", "CEP FULV", "MYC MICR", "MYC PHEN", "MYC VENE", "MYC INTE", "MYC TIGR", "EPI FLAV", "DER INER", "SRR SPE.", "Epi nive", "Myc acut"),
+      "Grouper",
+      ifelse(SPECIES_CD, c("HAE SCIU", "HAE AURO", "HAE PLUM", "HAE SPE.", "HAE FLAV", "HAE CHRY", "ANI VIRG","HAE MELA", "HAE CARB", "HAE PARR", "HAE STRI", "HAE MACR", "ANI SURI", "HAE ALBU"),
+      "Grunts",
+      ifelse(SPECIES_CD, c("THA BIFA","STE PART","GYM MORI","PRI AREN","ABU SAXA","HAL BIVI","HAL GARN","HAL MACU","CHR MULT","CLE PARR","STE PLAN","CHR CYAN","MUL MART","MIC CHRY","STE ADUS","CHA CAPI","STE VARI","PEM SCHO","POM ARCU","CAN ROST","CHA OCEL","PSE MACU","HOL TRIC","CHR SCOT","HAL RADI","CAL CALA","CHA SEDE","XYR SPLE","STE LEUC","HOL CILI","POM PARU","AUL MACU","CHA STRI","OPI AURI","HAL POEY","CHR INSO","HOL ADSC","ODO DENT","STE DIEN","HOL BERM","CHA FABE","XYR MART","GER CINE","HOL RUFU","LAC TRIQ","PAR ACUM","ALU SCRI","BAL CAPR","MAL PLUM","CAN SUFF","CAN PULL","HET CRUE","OGC SPE.","XYR SPE.","ACA QUAD","CAL BAJO","MON TUCK","SPH SPEN","ARC RHOM","DIO HOLO","LAC BICA","XYR NOVA","BAL VETU","DIO HYST","HAL CYAN","GYM FUNE","DIP HOLB","APO PSEU","HOL TOWN","EQU PUNC","LAC TRIG","HAL PICT","MYR JACO","SAR VEXI","SYN INTE","HAL CAUD","AMB PINO","GYM MILI","ALU SCHO","ACA POLY","CAL PROR","CHI SCHO","HET LONG","SCO PLUM","CHR ENCH","CAL SPE.","APO MACU","CAN MACR","PAR UMBR","LAG RHOM","EQU LANC","CAL PENN","STE HISP","APO BINO","NEO MARI","ARC PROB","CHI ANTE","APO TOWN","DOR MEGA","REM REMO","OPI WHIT","CEN ARGI","SYN FOET","AST SPE.","CAR HIPP","SAR CORU","OPI MACR","GYM VICI","DIP ARGE","PAG PAGR","PAR BAIR","BOT LUNA","EUC ARGE","PRO ACUL","LAB GOBI","FIS TABA","ALU SPE.","GRA LORE","MON CILI","ECH NEUC","ALU MONO","BOT OCEL","BAL SPE.","PAR ALBI","STE SPE.","APO QUAD","ENC NIGR","GYM SAXI","OPI SPE.","ELO SAUR","MAN BIRO","APO AURO","SPH TEST","CAL NODO","DIO SPE.","SCO CARI","LAB FILA","AHL EGMO","ANT OCEL","AST GUTT","LAB SPE.","LAB SPE.","MUR RETI","AST STEL","EUC GULA","HOL SPE.","ORT CHRY","PRI OPHR","LAB BUCC","ACA SOLA","CAL LEUC","ENC CARY","GYM NIGR","MYR BREV","SAR BULL","TRA GOOD","TRA LATH","UMB CORO","EUC JONE","EUCLEFR","STY LATE","SYA MICR","SYN SCOV","APO PHEN","HIP REID","PHA XENU","AST PUNC","CHI ATIN","CHL CHRY","HIP EREC","OGC NASU","SER PHOE","SPH NEPH","MYR OCEL","PRI RUBI","RHI LENT","ALB VULP","DAC VOLI","RYP BIST","BRO BARB","HYP GUMM","OPS TAU_","EMM ATLA","UPE PARV","SYN SYNO"),
+      "Higher Level Reef Fish",
+    ifelse(SPECIES_CD, c("LAC MAXI", "BOD RUFU", "BOD PULC"),
+      "Hogfish",
+    ifelse(SPECIES_CD, c("PTE VOLI"),
+      "Lionfish",
+    ifelse(SPECIES_CD,c("CAR RUBE", "SPH BARR", "ALE CILI","DEC PUNC", "DEC MACA", "CAR CRYS", "CAR BART", "SCO REGA","SPH PICU", "CAR LATU", "SEL VOME", "ELA BIPI", "CAR SPE.", "TRA FALC", "EUT ALLE", "SER RIVO", "SCO MACU", "SER DUME", "SCO CAVA", "SPH GUAC", "CAR LUGU", "OLI SAUR", "SER SPE.", "Rac cana", "Ser zona"),
+    "Opportunists", 
+    ifelse(SPECIES_CD, c("CAR RUBE", "SPH BARR", "ALE CILI","DEC PUNC", "DEC MACA", "CAR CRYS", "CAR BART", "SCO REGA","SPH PICU", "CAR LATU", "SEL VOME", "ELA BIPI", "CAR SPE.", "TRA FALC", "EUT ALLE", "SER RIVO", "SCO MACU", "SER DUME", "SCO CAVA", "SPH GUAC", "CAR LUGU", "OLI SAUR", "SER SPE.", "Rac cana", "Ser zona"),
+    "Parrotfish",
+    ifelse(SPECIES_CD, c("URO JAMA", "ECH NAUC", "DAS AMER", "AET NARI", "NAR BANC", "Rhi bona"),
+    "Rays",
+    ifelse(SPECIES_CD, c("SER TIGR","HYP GEMM","HYP UNIC","SER TABA","SER BALD","HYP PUEL","EPI ADSC","SER TORT","EPI GUTT","HYP NIGR","DIP FORM","HYP SPE.","SCH BETA","HYP TANN", "RYP SAPO","PAR FURC","HYP INDI","HYP GUTT","ALP AFER","LIO EUKR","SER ANNU","LIO RUBE","HYP HYBR","HYP CHLO","PRI AQUI","RYP MACU","SER SUBL","CEN OCYU","CEN STRI","Epi drum","Lio mowb"),
+   "Sea bass and Hamlets",
+    ifelse(SPECIES_CD, c("GIN CIRR", "CAR PERE", "CAR LEUC", "CAR LIMB", "SPH MOKA", "SPH TIBU", "CAR FALC", "SPH LEWI", "CAR OBSC", "Neg brev", "CAR PLUM", 'Gal cuvi'),
+   "Sharks",
+    ifelse(SPECIES_CD, c("COR PERS","ACA COER","KYP SECT","ACA BAHI","ACA CHIR","COR GLAU","ELA OCEA","GNA THOM","PTE CALL","ACA SPE.","MAL TRIA","COR DICR","PAR MARM","MAL MACR","OPH MACC","CTE SAEP","MIC CARR","PTE HELE","HEM SIMU","SCA CRIS","COR EIDO","GOB SPE.","TYL CROC","MIC MICR","ACA ASPE","COR SPE.","BLE SPE.","STR NOTA","MEL NIGE","HYP BERM","EMB PAND","ELA EVEL","ACA CHAP","EMB BAHA","COR LIPE","NES LONG","ENN BOEH","ACA MARI","LAB NUCH","MAL VERS","MAL GILL","ELA MACR","PRI HIPO","GOB DILE","ELA SAUC","ELA XANT","STR TIMU","MAL AURO","PAR MARN","CHA LIMB","OXY STIG","ELA HORS","PAR NIGR","COR PUNC","ACA SPIN","BOL BOQU","ElA RAND","LAB KALI","LAB NIGR","ENN ALTI"),
+   "Small Reef Fish",
+    ifelse(SPECIES_CD, c("OCY CHRY", "LUT GRIS", "LUT ANAL", "LUT APOD", "LUT SYNA", "LUT MAHO", "LUT JOCU", "LUT BUCC", 'LUT SPE.', "LUT CYAN", "RHO AURO", "Lut camp"),
+    "Snapper", "NA"
+    ))))))))))))))
+```

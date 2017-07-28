@@ -1,0 +1,67 @@
+---
+title: "New_RVC_domains"
+author: "Katie Shulzitski"
+date: "July 13, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+#library(plyr)
+
+```
+
+## Get PSU coordinates for domain assignment in ArcGIS
+
+```{r bind sample data files and remove duplicate PSU records}
+
+## FK sample data
+cat("bind all csv's\n") #concatenate and print - character string naming the file to print to
+d_fk = data_frame()
+for (f in list.files('big_csv/sample_data/FK', pattern="\\.csv", full.names=T)){
+      cat(' ', f,'\n')
+      d_f = read_csv(
+        f, #path to a file 
+        progress=F, #progress: Display a progress bar
+        trim_ws=T) #trim_ws: leading and trailing whitespace are trimmed 
+     d_fk = bind_rows(d_fk, d_f)
+} 
+
+d_fk_distinct <- d_fk %>% group_by(PRIMARY_SAMPLE_UNIT,YEAR) %>% distinct(.keep_all=TRUE)
+
+write_csv(d_fk_distinct, 'big_csv/sample_data/FK/sample_data_all_years.csv') 
+
+```
+
+## Apply subregion domain assignment from ArcGIS to all sample data
+
+```{r join table with subregion domain assignment for each PSU with all sample data}
+
+#read in subregion domain assignments made in ArcGIS
+subregions <- read_csv('big_csv/subregion_domains/subregion_domains_by_psu.csv') # 5241 x 3
+subregions$Unique_ID <- paste(subregions$PRIMARY_SAMPLE_UNIT, subregions$YEAR, sep='_')  
+subregions <- subregions[,3:4]
+
+#read in all FK sample data
+cat("bind all csv's\n") #concatenate and print - character string naming the file to print to
+sample_data = data_frame()
+for (f in list.files('big_csv/sample_data/FK', pattern="\\.csv", full.names=T)){
+      cat(' ', f,'\n')
+      d_f = read_csv(
+        f, #path to a file 
+        progress=F, #progress: Display a progress bar
+        trim_ws=T) #trim_ws: leading and trailing whitespace are trimmed 
+     sample_data = bind_rows(sample_data, d_f) # 4,426,134 x 22
+} 
+
+sample_data$Unique_ID <- paste(sample_data$PRIMARY_SAMPLE_UNIT, sample_data$YEAR, sep='_') 
+
+#join dataframes
+data_with_subregion <- left_join(sample_data,subregions,by="Unique_ID")
+
+#save data
+write_csv(data_with_subregion, 'big_csv/subregion_domains/FK_sample_data_all_years_withSubregionDomain.csv') 
+```
+

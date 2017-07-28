@@ -1,0 +1,1621 @@
+---
+title: "misc code"
+author: "Megan Hepner"
+date: "7/10/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(MASS) # contains boxcox function
+library(moments) # contains skewness function
+library(DescTools)
+library(rpsychi) #statistical tests using summary data
+library(AICcmodavg) #AIC
+library(ade4) #mantel.rtest
+library(ggplot2) #geom_boxplot and other plots
+library(nortest) #checks for normality 
+library(psych) #pairs.panels 
+
+#library(magrittr) # needed to call this library separately from one in tidyverse in order to get functionality of github version not found in CRAN version
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+```{r}
+######PREVIOUS TRIALS TO GET FD CODE TO WORK 
+
+# fk_domain_abun_diversity_no_spp = domain_fk_abun_no_spp %>% #15,651 x 10
+#   filter(protected_status != "all") %>% 
+#   select(YEAR, protected_status, SPECIES_CD, abundance) %>% #10,434 * 4
+#   group_by(YEAR, protected_status) %>% ##32 groups (fk 16*2)
+#   nest(-YEAR) %>%  
+#   mutate(
+#     data_wide = map(data, function(x) 
+#       full_join(x, trait_matrix %>% select(SPECIES_CD), by='SPECIES_CD') %>%
+#         mutate(abundance = ifelse(is.na(abundance), 0, abundance)) %>%
+#         spread(SPECIES_CD, abundance, fill =0)))
+#    
+# idk.2 = map(fk_domain_abun_diversity_no_spp$data_wide, function(x) as.matrix(x)) 
+# raoQ = 1/(1-apply(idk.2, 1, function(x) as.matrix(func.dist) %*% x)) 
+
+#abundance.matrix = as.matrix(fk_domain_abun_diversity_no_spp$data_wide)
+#raoQ = 1/(1-apply(abundance.matrix, 1, function(x) as.matrix(func.dist) %*% x))
+
+#func.3 = map(data_wide, function(x) 1/1-(as.matrix(func.dist) %*% x))) 
+#func.2 = map(data_wide, function(x) 1/1-(x %*% as.matrix(func.dist) %*% x)))
+#func.1 = map(data_wide, function(x) 1/1-apply(x,1, function(x) t(x) %*% as.matrix(func.dist)))) #worked but not how i wanted it to 
+
+# DEBUG with own dbFD function for use of browser() to inspect variables before stop() or other errors
+source('dbFD_debug.R')
+i_dbg <<- 0
+# rm(dbFD) # remove function when ready to try FD:dbFD
+
+## FK's domain abundance only identified to species level (without spp.) 
+# fk_domain_abun_diversity_no_spp = domain_fk_abun_no_spp %>% #15,651 x 10
+#   filter(protected_status != "all") %>% 
+#   select(YEAR, protected_status, SPECIES_CD, abundance) %>% #10,434 * 4
+#   group_by(YEAR, protected_status) %>% ##32 groups (fk 16*2)
+#   nest(-YEAR) %>%  
+#   mutate(
+#     data_wide = map(data, function(x) 
+#       full_join(x, trait_matrix %>% select(SPECIES_CD), by='SPECIES_CD') %>%
+#         mutate(abundance = ifelse(is.na(abundance), 0, abundance)) %>%
+#         spread(SPECIES_CD, abundance, fill =0)), 
+    # functional = map(data_wide,
+    #                  function(x) 1/(1 - dbFD(as.matrix(func.dist), x))))
+   # spp_idx = map(data_wide, function(x) apply(x, 2, sum) > 0),
+    #fk_domain_abun_diversity_no_spp$spp_idx[[1]]
+   # dbFD_abundance = map2(data_wide, spp_idx, function(x,y) x[,y]), 
+    #dbFD_traits    = map(spp_idx, function(y) as.matrix(func.dist)[y,y]),
+    #test = 1/(1 - dbFD(dbFD_traits, dbFD_abundance))
+    #functional = map2(dbFD_traits, dbFD_abundance, function(x, a) 1/(1 - dbFD(x, a, stand.FRic=F)))) #x = distance matrix, a
+                      #function(x, a) 1/(1 - divc(x, a))))
+
+#FRic: No dimensionality reduction was required. All 176 PCoA axes were kept as 'traits'.  Called from: dbFD(x, a, stand.FRic = F)
+
+### PACKAGE ade4 Rao's Q with divc()
+# fk_domain_abun_diversity_no_spp = domain_fk_abun_no_spp %>% #15,651 x 10
+#   filter(protected_status != "all") %>% 
+#   select(YEAR, protected_status, SPECIES_CD, abundance) %>% #10,434 * 4
+#   group_by(YEAR, protected_status) %>% ##32 groups (fk 16*2)
+#   nest(-YEAR) %>%  
+#   mutate(
+#     data_wide = map(data, function(x) 
+#       full_join(x, trait_matrix %>% select(SPECIES_CD), by='SPECIES_CD') %>%
+#         mutate(abundance = ifelse(is.na(abundance), 0, abundance)) %>%
+#         spread(SPECIES_CD, abundance, fill =0)), 
+#     raoQ = map(data_wide, 
+#                 function(x) 1/(1 - divc(x, as.dist(func.dist))))) 
+# 
+#   source('divc_debug.R')
+#   x = fk_domain_abun_diversity_no_spp$data_wide[[1]] # View(x)
+#   #divc(x, as.dist(func.dist))
+#   divc(x, func.dist)
+  #Error in mutate_impl(.data, dots) : Non convenient df
+
+#divc(df, dis, scale) 
+#df: a data frame with elements as rows, samples as columns, and abundance, presence-absence or frequencies as entries
+#dis: an object of class dist containing distances or dissimilarities among elements. If dis is NULL, Gini-Simpson index is performed  
+  #raoQ = map(data_wide, function(x) 1/(1 - divc(x, as.dist(func.dist))))) 
+ #Compute functional diversity 
+   func.div=1/(1-apply(fk_domain_abun_diversity_no_spp$data_wide,1,function(x) t(x) %*% as.matrix(func.dist) %*% x))
+```
+
+
+### Florida Keys domain
+
+```{r domain abundance}
+
+domain_fk_abun <- read_csv('big_csv/abundance_domain/domain_fk_abun.csv', 
+                           col_types = cols(
+                             YEAR = col_integer(),
+                             REGION = col_character(),
+                             SPECIES_CD = col_character(),
+                             abundance = col_double(),
+                             var = col_double(),
+                             n = col_integer(),
+                             nm = col_integer(),
+                             N = col_double(),
+                             NM = col_double(),
+                             protected_status = col_character()
+                           ))
+
+domain_fk_abun_no_spp = domain_fk_abun %>%
+  filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species
+
+```
+
+```{r domain biomass}
+
+domain_fk_bio <- read_csv('big_csv/biomass_domain/domain_fk_biomass.csv', 
+                          col_types = cols(
+                            protected_status = col_character()
+                          ))
+
+domain_fk_bio_no_spp = domain_fk_bio %>%
+  filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species
+```
+
+```{r domain biodiversity}
+
+trait_matrix = read_csv('functional_diversity/species_trait_matrix_348_spp.csv')
+trait_matrix = trait_matrix %>%
+  as.tibble() %>%
+  mutate(
+    SPECIES_CD = toupper(as.character(SPECIES_CD))) %>% 
+  arrange(SPECIES_CD)
+
+domain_fk_abun <- read_csv('big_csv/abundance_domain/domain_fk_abun.csv', 
+                           col_types = cols(
+                             YEAR = col_integer(),
+                             REGION = col_character(),
+                             SPECIES_CD = col_character(),
+                             abundance = col_double(),
+                             var = col_double(),
+                             n = col_integer(),
+                             nm = col_integer(),
+                             N = col_double(),
+                             NM = col_double(),
+                             protected_status = col_character()
+                           ))
+
+domain_fk_abun_no_spp = domain_fk_abun %>%
+  filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species 
+
+#length(unique(domain_fk_abun_no_spp$SPECIES_CD)) # 348
+#length(unique(trait_matrix$SPECIES_CD))          # 348
+
+
+
+## FK's domain abundance only identified to species level (without spp.) 
+fk_domain_abun_diversity_no_spp = domain_fk_abun_no_spp %>% #14,634 * 10
+  #filter(protected_status != "all") %>% 
+  select(YEAR, protected_status, SPECIES_CD, abundance) %>% #14,634 * 4
+  group_by(YEAR, protected_status) %>% ##45 groups (fk 15*3)
+  nest(-YEAR) %>%  
+  mutate(
+    data_wide = map(data, function(x) 
+      full_join(x, trait_matrix %>% select(SPECIES_CD), by='SPECIES_CD') %>%
+        mutate(abundance = ifelse(is.na(abundance), 0, abundance)) %>%
+        spread(SPECIES_CD, abundance, fill =0)), 
+    #species richness
+    richness=map(data_wide,   
+                 function(x) specnumber(x)),
+    #simpson diversity as effective number of species 
+    simpson=map(data_wide, 
+                function(x) 1/(1 - diversity(x, index = 'simpson'))),
+    #shannon diversity as effective number of species 
+    shannon=map(data_wide, 
+                function(x) exp(diversity(x, index = 'shannon')))) %>%
+  unnest(richness,shannon,simpson)  
+  
+#fk_domain_abun_diversity_no_spp = fk_domain_abun_diversity_no_spp %>%
+  #select(YEAR, protected_status,richness,shannon,simpson)
+  
+#write_csv(fk_domain_abun_diversity_no_spp, 'big_csv/diversity_without_spe/domain_fk_abun_diversity_no_spp.csv')
+
+```
+
+
+```{r dygraphs}
+
+domain_fk_abun_diversity = read_csv('big_csv/abundance_domain/domain_fk_abun_diversity.csv')
+
+## Simpson for protected and unprotected stacked 
+fk_simpson = domain_fk_abun_diversity %>% 
+  filter(protected_status != 'all') %>%
+  select(YEAR, protected_status, dom_simpson) %>%
+  mutate(
+    protected_status = recode(
+      protected_status, '0'='Unprotected', '1'='Protected')) %>%
+  spread(protected_status, dom_simpson)
+
+dygraph(fk_simpson, main = "Simpson Reef Fish Diversity") %>% 
+  dyAxis("y", label = "Effective Number of Species", valueRange = c(0, 50)) %>%
+  dyAxis("x", label = "Year") %>%
+  dyOptions(stackedGraph = T) 
+#dyRangeSelector(height = 20) 
+
+## Shannon for protected and unprotected stacked 
+fk_shannon = domain_fk_abun_diversity %>% 
+  filter(protected_status != 'all') %>%
+  select(YEAR, protected_status, dom_shannon) %>%
+  mutate(
+    protected_status = recode(
+      protected_status, '0'='Unprotected', '1'='Protected')) %>%
+  spread(protected_status, dom_shannon)
+
+dygraph(fk_shannon, main = "Shannon Reef Fish Diversity") %>% 
+  dyAxis("y", label = "Effective Number of Species", valueRange = c(0, 75)) %>%
+  dyAxis("x", label = "Year") %>%
+  dyOptions(stackedGraph = T)
+#dyRangeSelector(height = 20) 
+
+
+d = domain_fk_abun_diversity %>% 
+  filter(protected_status != 0) %>% 
+  filter(protected_status != 1)
+
+#Simpson for "all" filled 
+dygraph_simp = d %>%
+  select(YEAR, dom_simpson)
+
+dygraph(dygraph_simp, main = "Simpson Diversity of Reef Fish in FKNMS") %>%
+  dyOptions(fillGraph = T, fillAlpha = 0.4, drawPoints = T, pointSize = 2) %>%
+  dySeries("dom_simpson", label = "Simpson Diversity") %>% 
+  dyAxis("y", label = "Effective Number of Species") %>% 
+  dyAxis("x", label = "Year")
+
+#Shannon for "all" filled 
+dygraph_shannon = d %>%
+  select(YEAR, dom_shannon)
+
+dygraph(dygraph_shannon, main = "Shannon Diversity of Reef Fish in FKNMS") %>%
+  dyOptions(fillGraph = T, fillAlpha = 0.4, drawPoints = T, pointSize = 2) %>%
+  dySeries("dom_shannon", label = "Shannon Diversity") %>% 
+  dyAxis("y", label = "Effective Number of Species") %>% 
+  dyAxis("x", label = "Year")
+
+#Richness for "all" filled 
+dygraph_richness = d %>%
+  select(YEAR, dom_richness)
+
+dygraph(dygraph_richness, main = "Species Richness of Reef Fish in FKNMS") %>%
+  dyOptions(fillGraph = T, fillAlpha = 0.4, drawPoints = T, pointSize = 2) %>%
+  dySeries("dom_richness", label = "Species Richness") %>% 
+  dyAxis("y", label = "Number of Species") %>% 
+  dyAxis("x", label = "Year")
+
+## Simpson and Shannon stacked for "all"
+dygraph_simp_shannon = d %>%
+  select(YEAR, dom_simpson, dom_shannon)
+
+dygraph(dygraph_simp_shannon, main = "Florida Keys Reef Fish Biodiversity") %>% 
+  dyAxis("y", label = "Effective Number of Species", valueRange = c(0, 70)) %>%
+  dyAxis("x", label = "Year") %>%
+  dySeries("dom_shannon", label = "Shannon Diversity", color = "blue") %>% 
+  dySeries("dom_simpson", label = "Simpson Diversity", color = "red") %>% 
+  dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 1.5) %>% #drawGrid = F
+  dyLegend(width = 400)
+
+# m <- plot_ly(x = 1:10)
+# saveWidget(as.widget(m), "temp.html")
+# webshot("temp.html", file = "test.png",
+#         cliprect = "viewport")
+
+#Richness, Shannon, Simpson stacked for "all"
+dygraph_rich_simp_shannon = d %>%
+  select(YEAR, dom_simpson, dom_shannon, dom_richness)
+
+dygraph(dygraph_rich_simp_shannon, main = "Florida Keys Reef Fish Biodiversity") %>% 
+  dyAxis("y", label = "Effective Number of Species", valueRange = c(0, 350)) %>% 
+  dyAxis("x", label = "Year") %>%
+  dySeries("dom_richness", label = "Richness", color = "purple") %>%
+  dySeries("dom_shannon", label = "Shannon", color = "blue") %>% 
+  dySeries("dom_simpson", label = "Simpson", color = "red") %>% 
+  dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 1.5) %>% #drawGrid = F
+  dyLegend(width = 400)
+
+##without spp 
+d_no_spp = fk_domain_abun_diversity_no_spp %>% 
+  filter(protected_status != 0) %>% 
+  filter(protected_status != 1)
+
+dygraph_rich_simp_shannon_no_spp = d_no_spp %>%
+  select(YEAR, simpson, shannon, richness)
+
+dygraph(dygraph_rich_simp_shannon_no_spp, main = "Florida Keys Reef Fish Biodiversity") %>% 
+  dyAxis("y", label = "Effective Number of Species", valueRange = c(0, 350)) %>% 
+  dyAxis("x", label = "Year") %>%
+  dySeries("richness", label = "Richness", color = "purple") %>%
+  dySeries("shannon", label = "Shannon", color = "blue") %>% 
+  dySeries("simpson", label = "Simpson", color = "red") %>% 
+  dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 1.5) %>% #drawGrid = F
+  dyLegend(width = 400)
+
+dygraph_simp_shannon_no_spp = d_no_spp %>%
+  select(YEAR, simpson, shannon)
+
+dygraph(dygraph_simp_shannon_no_spp, main = "Florida Keys Reef Fish Biodiversity") %>% 
+  dyAxis("y", label = "Effective Number of Species") %>%  #valueRange = c(0, 350)
+  dyAxis("x", label = "Year") %>%
+  dySeries("shannon", label = "Shannon", color = "blue") %>% 
+  dySeries("simpson", label = "Simpson", color = "red") %>% 
+  dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 1.5) %>% #drawGrid = F
+  dyLegend(width = 400)
+
+```
+
+```{r domain biodiversity plots}
+
+domain_fk_abun_diversity = read_csv('big_csv/abundance_domain/domain_fk_abun_diversity.csv')
+# Parsed with column specification:
+# cols(
+#   YEAR = col_integer(),
+#   protected_status = col_character(),
+#   dom_richness = col_integer(),
+#   dom_simpson = col_double(),
+#   dom_shannon = col_double()
+# )
+protected_status_names <- c(
+  "0" = "Unprotected",
+  "1" = "Protected",
+  "all" = "All"
+)
+#richness, simpson, shannon for domain FKNMS  
+FK_abun_RShSim <- ggplot(data = fk_domain_abun_diversity, aes(x = YEAR)) +
+  geom_point(aes(y = dom_richness, color = "dom_richness")) +
+  geom_point(aes(y = dom_simpson, color = "dom_simpson")) +
+  geom_point(aes(y = dom_shannon, color = "dom_shannon")) +
+  geom_line(aes(y = dom_richness, color = "dom_richness")) +
+  geom_line(aes(y = dom_simpson, color = "dom_simpson")) +
+  geom_line(aes(y = dom_shannon, color = "dom_shannon")) +
+  facet_grid(protected_status ~ ., labeller = as_labeller(protected_status_names)) +
+  labs(x = "Year", y = "Effective Number of Species", color = "Diversity indices") +
+  scale_colour_manual(values = c("darkturquoise", "magenta", "blue"), labels=c("Species Richness", "Shannon Diversity", "Simpson Diversity")) +
+  ggtitle("Reef Fish Biodiversity in the FKNMS") +
+  theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 12))+
+  scale_x_continuous(breaks = c(1999:2016))+
+  scale_y_continuous(limits= c(0, 300), breaks = c(0,25,50,75,100,125,150,175,200,225,250,275,300))
+
+
+#simpson, shannon by protected status for domain FKNMS
+FK_abun_ShSim <-ggplot(data = fk_domain_abun_diversity, aes(x = YEAR)) +
+  geom_point(aes(y = dom_simpson, color = "dom_simpson")) +
+  geom_point(aes(y = dom_shannon, color = "dom_shannon")) +
+  geom_line(aes(y = dom_simpson, color = "dom_simpson")) +
+  geom_line(aes(y = dom_shannon, color = "dom_shannon")) +
+  facet_grid(protected_status ~ ., labeller = as_labeller(protected_status_names)) +
+  labs(x = "Year", y = "Effective Number of Species", color = "Diversity index") +
+  scale_colour_manual(values = c("magenta", "blue"), labels=c("Shannon diversity", "Simpson Diversity")) +
+  ggtitle("Reef Fish Biodiversity in the Florida Keys") +
+  theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 12))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(1999:2016)) +
+  scale_y_continuous(limits= c(0, 250), breaks = c(5,10,15,20,25,30,35,40,45,50))
+
+#species richness by protected status for domain FKNMS
+FK_abun_Rich <- ggplot(data = fk_domain_abun_diversity, aes(x = YEAR)) +
+  geom_point(aes(y = dom_richness, color = "dom_richness"),color = "darkturquoise") +
+  geom_line(aes(y = dom_richness, color = "dom_richness"), color = "darkturquoise") +
+  facet_grid(protected_status ~ ., labeller = as_labeller(protected_status_names)) +
+  labs(x = "Year", y = "Effective Number of Species", color = "Level of protection") +
+  ggtitle("Species Richness of Reef Fish in the Florida Keys") +
+  theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 12))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(1999:2016)) +
+  scale_y_continuous(limits= c(0, 250), breaks = c(0,50, 100, 150, 200, 250, 300))
+## wonky 
+
+#shannon by protected status for domain FKNMS
+FK_abun_Shan <- ggplot(data = fk_domain_abun_diversity, aes(x = YEAR)) +
+  geom_point(aes(y = dom_shannon, color = "dom_shannon"),color = "magenta") +
+  geom_line(aes(y = dom_shannon, color = "dom_shannon"), color = "magenta") +
+  facet_grid(protected_status ~ ., labeller = as_labeller(protected_status_names)) +
+  labs(x = "Year", y = "Effective Number of Species", color = "Level of protection") +
+  #scale_colour_manual(labels=c("Unprotected", "Protected", "All")) +
+  ggtitle("Shannon Diveristy of Reef Fish in the Florida Keys") +
+  theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 12))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(1999:2016)) +
+  scale_y_continuous(limits= c(0, 50), breaks = c(5,10,15,20,25,30,35,40,45,50))
+
+#simpson by protected status for domain FKNMS
+FK_abun_Simp <- ggplot(data = fk_domain_abun_diversity, aes(x = YEAR)) +
+  geom_point(aes(y = dom_simpson, color = "dom_simpson"),color = "blue") +
+  geom_line(aes(y = dom_simpson, color = "dom_simpson"), color = "blue") +
+  facet_grid(protected_status ~ ., labeller = as_labeller(protected_status_names)) +
+  labs(x = "Year", y = "Effective Number of Species", color = "Level of protection") +
+  #scale_colour_manual(labels=c("Unprotected", "Protected", "All")) +
+  ggtitle("Simpson Diveristy of Reef Fish in the Florida Keys") +
+  theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 12))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(1999:2016)) +
+  scale_y_continuous(limits= c(0, 25), breaks = c(5,10,15,20,25))
+
+```
+
+```{r strata abundance}
+## FK's abundance by strata 
+strata_fk_abun <- read_csv("big_csv/abundance_strata/strata_fk_abun.csv",
+                           col_types = cols(
+                             YEAR = col_integer(),
+                             REGION = col_character(),
+                             STRAT = col_character(),
+                             SPECIES_CD = col_character(),
+                             abundance = col_double(),
+                             var = col_double(),
+                             n = col_integer(),
+                             nm = col_integer(),
+                             N = col_double(),
+                             NM = col_double(),
+                             protected_status = col_character()
+                           ))
+
+strata_fk_abun_no_spp = strata_fk_abun %>%
+  filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species 
+```
+
+```{r strata biomass}
+
+strata_fk_bio <- read_csv('big_csv/biomass_strata/strata_fk_biomass.csv', 
+                          col_types = cols(
+                            protected_status = col_character()
+                          ))
+
+strata_fk_bio_no_spp = strata_fk_bio %>%
+  filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species
+```
+
+Is reef fish biodiversity and strata type related? 
+
+```{r strata biodiversity}
+
+## FK's abundance by strata 
+strata_fk_abun <- read_csv("big_csv/abundance_strata/strata_fk_abun.csv",
+                           col_types = cols(
+                             protected_status = col_character()))
+
+strata_fk_abun_no_spp = strata_fk_abun %>%
+  filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species 
+
+fk_strata_abun_diversity_no_spp = strata_fk_abun_no_spp %>% #132,930 * 12
+  filter(protected_status == 'all') %>% #66,465 * 12
+  select(YEAR, STRAT, PROT, SPECIES_CD, abundance) %>% #62,058 * 5
+  group_by(YEAR, STRAT, SPECIES_CD) %>% #35,841 gruops    
+  summarise(
+    abun_merged = sum(abundance))
+
+trait_matrix = read_csv('functional_diversity/species_trait_matrix_348_spp.csv')
+
+trait_matrix = trait_matrix %>%
+  as.tibble() %>%
+  mutate(
+    SPECIES_CD = toupper(as.character(SPECIES_CD))) %>% 
+  arrange(SPECIES_CD)
+
+strata_merged = fk_strata_abun_diversity_no_spp %>%
+  group_by(YEAR, STRAT) %>% #103 groups 
+  nest() %>%  #data 339*2
+  mutate(
+    data_wide = map(data, function(x) 
+      full_join(x, trait_matrix %>% select(SPECIES_CD), by='SPECIES_CD') %>% 
+        mutate(abun_merged = ifelse(is.na(abun_merged), 0, abun_merged)) %>%
+        spread(SPECIES_CD, abun_merged, fill =0)),
+    richness = map( #species richness
+      data_wide, 
+      function(x) specnumber(x)),
+    simpson = map( #simpson diversity as effective number of species 
+      data_wide,
+      function(x) 1/(1 - diversity(x, index = 'simpson'))),
+    shannon = map( #shannon diversity as effective number of species 
+      data_wide,
+      function(x) exp(diversity(x, index = 'shannon')))) %>%
+  unnest(richness, simpson, shannon)
+
+strata_diversity_no_spp_merged = strata_merged %>%
+  unnest(data)
+  
+  select(YEAR, STRAT, richness, simpson, shannon) 
+
+write_csv(strata_diversity_no_spp_merged, 'diversity_without_spe/strata_fk_abun_diversity_no_spp_merged.csv')
+
+```
+
+```{r strata biodiversity plots, eval = F}
+
+strata_diversity_no_spp_merged = read_csv("diversity_without_spe/strata_fk_abun_diversity_no_spp_merged.csv")
+
+# strata_names <- c(
+#  "FMLR" = "Forereef Midchannel Linear Reef",
+#  "FSLR" = "Forereef Shallow Linear Reef",
+#  "HRRF" = "High Relief Reef", #(Spur and Groove)
+#  "INPR" = "Inshore patch reef",
+#  "MCPR" = "Midchannel Patch Reef",
+#  "OFPR" = "Offshore Patch Reef",
+#  "FDLR" = "Forereef Deep Linear Reef")
+
+##protected by strata 
+fk_strata_protected = strata_fk_abun_diversity %>% 
+  filter(protected_status != 1)
+
+#richness protected by strata 
+fk_rich_protected = fk_strata_protected %>% 
+  select(YEAR, STRAT, richness) %>%
+  spread(STRAT, richness)
+
+dygraph(fk_rich_protected, main = "Florida Keys Richness by Strata - NTMR") %>% 
+  dyAxis("y", label = "Effective Number of Species") %>%
+  dyAxis("x", label = "Year") %>% 
+  dyOptions(stackedGraph = T, colors = colorRamps::blue2red(7), fillAlpha = .8, axisLineWidth = 2)
+
+##shannon protected by strata 
+fk_shan_protected = fk_strata_protected %>% 
+  select(YEAR, STRAT, shannon) %>%
+  spread(STRAT, shannon)
+
+dygraph(fk_shan_protected, main = "Florida Keys Shannon Diversity by Strata - NTMR") %>% 
+  dyAxis("y", label = "Effective Number of Species") %>%
+  dyAxis("x", label = "Year") %>% 
+  dyOptions(stackedGraph = T, colors = colorRamps::blue2red(7), fillAlpha = .8, axisLineWidth = 2)
+
+##simpson protected by strata 
+fk_simp_protected = fk_strata_protected %>% 
+  select(YEAR, STRAT, simpson) %>%
+  spread(STRAT, simpson)
+
+dygraph(fk_simp_protected, main = "Florida Keys Simpson Diversity by Strata - NTMR") %>% 
+  dyAxis("y", label = "Effective Number of Species") %>%
+  dyAxis("x", label = "Year") %>% 
+  dyOptions(stackedGraph = T, colors = colorRamps::blue2red(7), fillAlpha = .8, axisLineWidth = 2)#topo.colors(n = 7, alpha = 1) RColorBrewer::brewer.pal(7, "Paired") grDevices::topo.colors(7, alpha = 1) grDevices::rainbow(7) colorspace::rainbow_hcl(7) colorspace::heat_hcl(7)
+
+#unprotected by strata 
+fk_strata_unprotected = strata_fk_abun_diversity %>% 
+  filter(protected_status != 0)
+
+#richness unprotected by strata 
+fk_rich_unprotected = fk_strata_unprotected %>% 
+  select(YEAR, STRAT, richness) %>%
+  spread(STRAT, richness)
+
+dygraph(fk_rich_unprotected, main = "Florida Keys Richness by Strata - Unprotected") %>% 
+  dyAxis("y", label = "Effective Number of Species") %>%
+  dyAxis("x", label = "Year") %>% 
+  dyOptions(stackedGraph = T, colors = colorRamps::blue2red(7), fillAlpha = .8, axisLineWidth = 2)
+
+#simpson unprotected by strata
+fk_simp_unprotected = fk_strata_unprotected %>% 
+  select(YEAR, STRAT, simpson) %>%
+  spread(STRAT, simpson)
+
+dygraph(fk_simp_unprotected, main = "Florida Keys Simpson Diversity by Strata - Unprotected") %>% 
+  dyAxis("y", label = "Effective Number of Species") %>%
+  dyAxis("x", label = "Year") %>% 
+  dyOptions(stackedGraph = T, colors = colorRamps::blue2red(7), fillAlpha = .8, axisLineWidth = 2)
+
+strata_names <- c(
+  "FMLR" = "FMLR",
+  "FSLR" = "FSLR",
+  "HRRF" = "HRRF", #(Spur and Groove)
+  "INPR" = "INPR",
+  "MCPR" = "MCPR",
+  "OFPR" = "OFPR",
+  "FDLR" = "FDLR")
+
+protected_status_names <- c(
+  "0" = "Unprotected",
+  "1" = "Protected",
+  "all" = "All"
+)
+
+#strata_diversity_no_spp_merged - not by level of protection  
+
+#simpson diversity by protected status by strata in FKNMS
+ggplot(data = strata_diversity_no_spp_merged, aes(x = YEAR)) +
+  geom_point(aes(y = simpson, color = "simpson"),color = "blue") +
+  geom_line(aes(y = simpson, color = "simpson"), color = "blue") +
+  facet_grid(STRAT ~.) +
+  labs(x = "Year", y = "Effective Number of Species") +
+  ggtitle("Simpson Diveristy of Reef Fish in the Florida Keys") + 
+  theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 12)) +
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(1999:2016)) +
+  scale_y_continuous(limits= c(0, 25), breaks = c(5,10,15,20,25))
+
+#shannon diversity by protected status by strata in FKNMS
+FK_strata_ab_shannon <- ggplot(data = fk_strata_abun_diversity, aes(x = YEAR)) +
+  geom_point(aes(y = shannon, color = "shannon"), color = "magenta") +
+  geom_line(aes(y = shannon, color = "shannon"), color = "magenta") +
+  facet_grid(STRAT ~ protected_status, 
+             labeller = labeller(.rows = strata_names, .cols = protected_status_names)) +
+  labs(x = "Year", y = "Effective Number of Species", color = "Level of protection") +
+  ggtitle("Shannon Diveristy of Reef Fish in the Florida Keys by Strata") + 
+  theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 12))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(1999:2016)) +
+  scale_y_continuous(limits= c(0, 50), breaks = c(5,10,15,20,25))
+
+```
+
+# Stat testing 
+
+Parametric test require the data to meet assumptions of having a normal distribution and homoscedasticity
+
+```{r stat testing with abundance data}
+
+# 1. Read in data and remove years (optional)
+psu_abun <- read_csv('big_csv/abundance_psu/psu_fk_abundance_no_spp_merged.csv', 
+                       col_types = cols(
+                          YEAR = col_integer(),
+                          REGION = col_character(),
+                          STRAT = col_character(),
+                          PROT = col_integer(),
+                          PRIMARY_SAMPLE_UNIT = col_character(),
+                          SPECIES_CD = col_character(),
+                          m = col_integer(),
+                          var = col_double(),
+                          abundance = col_double(),
+                          protected_status = col_character())) # 1,553,704  x 10
+
+#remove species not identified to species 
+psu_abun = psu_abun %>%
+  filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species 
+
+# the psu_abun dataframe has an abundance for each species for each psu so sum abundance across species for each psu...skip this step for diversity indices
+psu_abun_sum <- psu_abun %>%
+  group_by(YEAR, PRIMARY_SAMPLE_UNIT, STRAT, PROT) %>%
+  summarize(abundance_sum = sum(abundance)) # 5,241 x 4 
+  
+# (optional) the psu_bio_sum_YRsubset dataframe produced with the code below has years with low sample sizes (few PSUs)/missing strata removed (i.e., 1999, 2000, and 2004)
+psu_abun_sum_YRsubset <- psu_abun_sum %>%
+  filter(YEAR!=1999,YEAR!=2000,YEAR!=2004) # 4,725 x 4
+
+
+# 2. Run ANOVA to get residuals so we can use them to test assumptions of normality and equal variances
+psu_abun_sum_YRsubset$fYEAR <- as.factor(psu_abun_sum_YRsubset$YEAR) # categorical variables are factors
+psu_abun_sum_YRsubset$fSTRAT <- as.factor(psu_abun_sum_YRsubset$STRAT) # categorical variables are factors
+abundance_aov <- aov(abundance_sum~fYEAR*fSTRAT, data=psu_abun_sum_YRsubset) # since there might be an interaction between YEAR and STRAT (i.e., biomass may not change through time consistently across strata or vice versa) use "*" in your model to include an interaction term
+psu_abun_sum_YRsubset$resids <- residuals(abundance_aov) # get residuals
+psu_abun_sum_YRsubset$pred_val <- predict(abundance_aov) # get predicted values
+
+# 2a. Examine plots of residuals to qualitatively check for normality and equal variances
+ggplot() + geom_density(aes(x=psu_abun_sum_YRsubset$resids)) # look at distribution of residuals
+  ### distribution looks terrible....few very high values and many very low values
+plot(abundance_aov) 
+  # plot 1: Residuals vs Fitted values - data points should be distibuted evenly above and below the line and across the plot...if they are not, this indicates a violation of assumptions
+  # plot 2: Q-Q plot - data points\ should fall more or less along dashed line...if they do not, this indicates a violation of assumptions
+  ### plots look terribles....few very high values and many very low values
+
+# 2b. Shapiro-Wilk test - p-value < 0.05 means the data are NOT normally distributed
+psu_abun_sum_YRsubset %$% shapiro.test(resids) 
+  ### W = 0.17422, p-value < 2.2e-16; non-normal distribution
+
+# 2c. Test for skew - greater than zero is evidence for having skew; test with t-test - p-value < 0.05 means data are skewed
+skewness(psu_abun_sum_YRsubset$resids) #44.67215
+t<- skewness(psu_abun_sum_YRsubset$resids) %>% divide_by(sqrt(6/length(psu_abun_sum_YRsubset$resids))) # t-value 1253.609
+1-pt(t,length(psu_abun_sum_YRsubset$resids)) # probability of the t-value by chance alone when skew is zero; pt=cummulative density function of t-dist, first number=calculated t-value; second=df
+  ### skew = 44.67215 and p = 0; significantly skewed
+
+# 2d. Bartlett test - p-value < 0.05 means data do not have equal variances across groups (Barlet test for homogeneity)
+bartlett.test(psu_abun_sum_YRsubset$resids~psu_abun_sum_YRsubset$fYEAR) # Bartlett's K-squared = 7315.7, df = 12, p-value < 2.2e-16
+bartlett.test(psu_abun_sum_YRsubset$resids~psu_abun_sum_YRsubset$fSTRAT) # Bartlett's K-squared = 5467, df = 6, p-value < 2.2e-16
+  ### significant different variances across both YEAR groups and STRAT groups
+
+
+# 3. Transform data using Boxcox method 
+psu_abun_sum_YRsubset %>%
+  boxcox(abundance_sum~fYEAR, data = .) %$%
+  x[which.max(y)] #x is lambda and y is values of likelihood
+# x = 0.1010101; this output is the lambda value that you should use to transform data
+psu_abun_sum_YRsubset %>%
+  boxcox(abundance_sum~fSTRAT, data = .) %$%
+  x[which.max(y)] #x is lambda and y is values of likelihood
+# x = 0.1010101
+psu_abun_sum_YRsubset <- psu_abun_sum_YRsubset %>% mutate(abundance_sum_bc = (abundance_sum %>%
+  raise_to_power(.1) %>% subtract(1) %>% divide_by(.1))) # use x/lambda in raise_to_power() and divide_by()
+
+# 4. Retest assumptions using transformed data
+abundance_aov <- aov(abundance_sum_bc~fYEAR*fSTRAT, data=psu_abun_sum_YRsubset) # since there might be an interaction between YEAR and STRAT (i.e., biomass may not change through time consistently across strata or vice versa) use "*" in your model to include an interaction term
+psu_abun_sum_YRsubset$resids_bc <- residuals(abundance_aov) # get residuals
+psu_abun_sum_YRsubset$pred_va_bcl <- predict(abundance_aov) # get predicted values
+
+# 4a. Examine plots of residuals to qualitatively check for normality and equal variances
+ggplot() + geom_density(aes(x=psu_abun_sum_YRsubset$resids_bc)) # look at distribution of residuals
+  ### better looking distribution, but kind of skinny/not much spread around 0
+plot(abundance_aov) 
+  # plot 1: Residuals vs Fitted values - data points should be distibuted evenly above and below the line and across the plot...if they are not, this indicates a violation of assumptions
+  # plot 2: Q-Q plot - data points should fall more or less along dashed line...if they do not, this indicates a violation of assumptions
+  ### still don't look great
+
+# 4b. Shapiro-Wilk test - p-value < 0.05 means the data are NOT normally distributed
+psu_abun_sum_YRsubset %$% shapiro.test(resids_bc) 
+  ### W = 0.95965, p-value < 2.2e-16; still not normal
+
+# 4c. Test for skew - greater than zero is evidence for having skew; test with t-test - p-value < 0.05 means data are skewed
+skewness(psu_abun_sum_YRsubset$resids_bc)
+t<- skewness(psu_abun_sum_YRsubset$resids_bc) %>% divide_by(sqrt(6/length(psu_abun_sum_YRsubset$resids_bc))) # t-value
+1-pt(t,length(psu_abun_sum_YRsubset$resids_bc)) # probability of the t-value by chance alone when skew is zero; pt=cummulative density function of t-dist, first number=calculated t-value; second=df
+  ### skew = 0.4274009 and p = 0; still skewed?
+
+# 4d. Bartlett test - p-value < 0.05 means data do not have equal variances across groups
+bartlett.test(psu_abun_sum_YRsubset$resids_bc~psu_abun_sum_YRsubset$fYEAR) # Bartlett's K-squared = 241.18, df = 12, p-value < 2.2e-16
+bartlett.test(psu_abun_sum_YRsubset$resids_bc~psu_abun_sum_YRsubset$fSTRAT) # Bartlett's K-squared = 263.38, df = 6, p-value < 2.2e-16
+  ### still have unequal variancess
+
+
+### If data conform to assumptions proceed with parametric test (e.g., ANOVA, t-test); if data do not conform to assumptions proceed with non-parametric test (e.g., Kruksal-Wallis, Mann-Whitney U (aka Wilcoxon Rank Sum))
+
+
+# 5. 2-way ANOVA
+psu_abun_sum_YRsubset$fYEAR <- as.factor(psu_abun_sum_YRsubset$YEAR)
+psu_abun_sum_YRsubset$fSTRAT <- as.factor(psu_abun_sum_YRsubset$STRAT)
+abundance_aov <- aov(abundance_sum_bc~fYEAR*fSTRAT, data=psu_abun_sum_YRsubset) #since there might be an interaction between YEAR and STRAT (i.e., biomass may not change through time consistently across strata or vice versa) use "*" in your model to include an interaction term
+summary(abundance_aov) #displays Type I ANOVA table
+drop1(abundance_aov,~.,test="F") #displays Type III ANOVA table (default of most stats packages...use this one)
+#Single term deletions
+
+#Model:
+#abundance_sum_bc ~ fYEAR * fSTRAT
+#             Df Sum of Sq    RSS    AIC F value    Pr(>F)    
+#<none>                    6682.7 1819.9                      
+#fYEAR        12    50.055 6732.7 1831.2  2.8925 0.0005387 ***
+#fSTRAT        6   186.704 6869.4 1938.1 21.5779 < 2.2e-16 ***
+#fYEAR:fSTRAT 72   251.339 6934.0 1850.4  2.4207 3.283e-10 ***
+#---
+#Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+# 5a. If 2-way ANOVA is significant, do a posteriori post-hoc pairwise comparisons
+Tuk_fYEAR <- TukeyHSD(abundance_aov, "fYEAR", ordered=T)
+Tuk_fSTRAT <- TukeyHSD(abundance_aov, "fSTRAT", ordered=T)
+Tuk_fYEARfSTRAT <- TukeyHSD(abundance_aov, "fYEAR:fSTRAT", ordered=T)
+Tuk <- as.data.frame(rbind(Tuk_fYEAR$fYEAR,Tuk_fSTRAT$fSTRAT,Tuk_fYEARfSTRAT$`fYEAR:fSTRAT`))
+write.csv(Tuk, "big_csv/plots/abundance_2wayANOVA_TukeyHSDvalues.csv") 
+
+```
+
+```{r stat testing with biomass data}
+
+# 1. Read in data and remove years (optional)
+psu_bio <- read_csv('big_csv/biomass_psu/psu_fk_biomass_no_spp_merged.csv', 
+                       col_types = cols(
+                          YEAR = col_integer(),
+                          REGION = col_character(),
+                          STRAT = col_character(),
+                          PROT = col_integer(),
+                          PRIMARY_SAMPLE_UNIT = col_character(),
+                          SPECIES_CD = col_character(),
+                          m = col_integer(),
+                          var = col_double(),
+                          biomass = col_double(),
+                          protected_status = col_character())) # 1,609,672  x 10
+
+#remove species not identified to species 
+psu_bio = psu_bio %>%
+  filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species 
+
+# the psu_bio dataframe has a biomass for each species for each psu so sum biomass across species for each psu...skip this step for diversity indices
+psu_bio_sum <- psu_bio %>%
+  group_by(YEAR, PRIMARY_SAMPLE_UNIT, STRAT) %>%
+  summarize(biomass_sum = sum(biomass)) # 5241 x 4 (5241 = total # of PSUs sampled from 1999 to 2016)
+  
+# (optional) the psu_bio_sum_YRsubset dataframe produced with the code below has years with low sample sizes (few PSUs)/missing strata removed (i.e., 1999, 2000, and 2004)
+psu_bio_sum_YRsubset <- psu_bio_sum %>%
+  filter(YEAR!=1999,YEAR!=2000,YEAR!=2004) # 4725 x 4
+
+# (optional) tried removing two points with very high biomass values (at least an order of magnitude higher than all other values)....data still violated assumptions even after transformation
+#psu_bio_sum_YRsubset <- psu_bio_sum %>%
+#  filter(YEAR!=1999,YEAR!=2000,YEAR!=2004) %>%
+#  filter(biomass_sum<1000)
+
+
+# 2. Run ANOVA to get residuals so we can use them to test assumptions of normality and equal variances
+psu_bio_sum_YRsubset$fYEAR <- as.factor(psu_bio_sum_YRsubset$YEAR) # categorical variables are factors
+psu_bio_sum_YRsubset$fSTRAT <- as.factor(psu_bio_sum_YRsubset$STRAT) # categorical variables are factors
+biomass_aov <- aov(biomass_sum~fYEAR*fSTRAT, data=psu_bio_sum_YRsubset) # since there might be an interaction between YEAR and STRAT (i.e., biomass may not change through time consistently across strata or vice versa) use "*" in your model to include an interaction term
+psu_bio_sum_YRsubset$resids <- residuals(biomass_aov) # get residuals
+psu_bio_sum_YRsubset$pred_val <- predict(biomass_aov) # get predicted values
+
+# 2a. Examine plots of residuals to qualitatively check for normality and equal variances
+ggplot() + geom_density(aes(x=psu_bio_sum_YRsubset$resids)) # look at distribution of residuals
+  ### distribution of our residuals does not look good...few very large values and many very small values
+plot(biomass_aov) 
+  # plot 1: Residuals vs Fitted values - data points should be distibuted evenly above and below the line and across the plot...if they are not, this indicates a violation of assumptions
+  # plot 2: Q-Q plot - data points\ should fall more or less along dashed line...if they do not, this indicates a violation of assumptions
+  ### two data points are way out there and possibly causing violation of assumptions (i.e., 524, 26, less so with 1080)
+
+# 2b. Shapiro-Wilk test - p-value < 0.05 means the data are NOT normally distributed
+psu_bio_sum_YRsubset %$% shapiro.test(resids) 
+  ### W = 0.2177, p-value < 2.2e-16; our residuals are NOT normally distributed
+
+# 2c. Test for skew - greater than zero is evidence for having skew; test with t-test - p-value < 0.05 means data are skewed
+skewness(psu_bio_sum_YRsubset$resids)
+t<- skewness(psu_bio_sum_YRsubset$resids) %>% divide_by(sqrt(6/length(psu_bio_sum_YRsubset$resids))) # t-value
+1-pt(t,length(psu_bio_sum_YRsubset$resids)) # probability of the t-value by chance alone when skew is zero; pt=cummulative density function of t-dist, first number=calculated t-value; second=df
+  ### skew = 34.50221 and p = 0; our residuals are skewed
+
+# 2d. Bartlett test - p-value < 0.05 means data do not have equal variances across groups
+bartlett.test(psu_bio_sum_YRsubset$resids~psu_bio_sum_YRsubset$fYEAR) # Bartlett's K-squared = 6471, df = 12, p-value < 2.2e-16
+bartlett.test(psu_bio_sum_YRsubset$resids~psu_bio_sum_YRsubset$fSTRAT) # Bartlett's K-squared = 2625.7, df = 6, p-value < 2.2e-16
+  ### our variances are unequal across both YEAR and STRAT
+
+
+# 3. Transform data using Boxcox method 
+psu_bio_sum_YRsubset %>%
+  boxcox(biomass_sum~fYEAR, data = .) %$%
+  x[which.max(y)] #x is lambda and y is values of likelihood
+# x = 0.1010101; this output is the lambda value that you should use to transform data
+psu_bio_sum_YRsubset %>%
+  boxcox(biomass_sum~fSTRAT, data = .) %$%
+  x[which.max(y)] #x is lambda and y is values of likelihood
+# x = 0.1010101
+psu_bio_sum_YRsubset <- psu_bio_sum_YRsubset %>% mutate(biomass_sum_bc = (biomass_sum %>%
+  raise_to_power(.1) %>% subtract(1) %>% divide_by(.1))) # use x/lambda in raise_to_power() and divide_by()
+
+# 3a. Try sqrt transformation
+psu_bio_sum_YRsubset$biomass_sum_sqrt = sqrt(psu_bio_sum_YRsubset$biomass_sum)
+  ### this transformation did even worse than the boxcox
+
+
+# 4. Retest assumptions using transformed data
+biomass_aov <- aov(biomass_sum_bc~fYEAR*fSTRAT, data=psu_bio_sum_YRsubset) # since there might be an interaction between YEAR and STRAT (i.e., biomass may not change through time consistently across strata or vice versa) use "*" in your model to include an interaction term
+psu_bio_sum_YRsubset$resids_bc <- residuals(biomass_aov) # get residuals
+psu_bio_sum_YRsubset$pred_va_bcl <- predict(biomass_aov) # get predicted values
+
+# 4a. Examine plots of residuals to qualitatively check for normality and equal variances
+ggplot() + geom_density(aes(x=psu_bio_sum_YRsubset$resids_bc)) # look at distribution of residuals
+  ### distribution of our residuals looks better but still not much spread around 0
+plot(biomass_aov) 
+  # plot 1: Residuals vs Fitted values - data points should be distibuted evenly above and below the line and across the plot...if they are not, this indicates a violation of assumptions
+  # plot 2: Q-Q plot - data points should fall more or less along dashed line...if they do not, this indicates a violation of assumptions
+  ### better but not great; data point 524 still is pretty far out there
+
+# 4b. Shapiro-Wilk test - p-value < 0.05 means the data are NOT normally distributed
+psu_bio_sum_YRsubset %$% shapiro.test(resids_bc) 
+  ### W = 0.98867, p-value < 2.2e-16; our residuals are still NOT normally distributed
+
+# 4c. Test for skew - greater than zero is evidence for having skew; test with t-test - p-value < 0.05 means data are skewed
+skewness(psu_bio_sum_YRsubset$resids_bc)
+t<- skewness(psu_bio_sum_YRsubset$resids_bc) %>% divide_by(sqrt(6/length(psu_bio_sum_YRsubset$resids_bc))) # t-value
+1-pt(t,length(psu_bio_sum_YRsubset$resids_bc)) # probability of the t-value by chance alone when skew is zero; pt=cummulative density function of t-dist, first number=calculated t-value; second=df
+  ### skew = 0.06864448 and p = 0.02706148; our residuals are still slightly skewed but look way better
+
+# 4d. Bartlett test - p-value < 0.05 means data do not have equal variances across groups
+bartlett.test(psu_bio_sum_YRsubset$resids_bc~psu_bio_sum_YRsubset$fYEAR) # Bartlett's K-squared = 181.45, df = 12, p-value < 2.2e-16
+bartlett.test(psu_bio_sum_YRsubset$resids_bc~psu_bio_sum_YRsubset$fSTRAT) # Bartlett's K-squared = 149.52, df = 6, p-value < 2.2e-16
+  ### our variances are still quite unequal across both YEAR and STRAT
+
+
+### If data conform to assumptions proceed with parametric test (e.g., ANOVA, t-test); if data do not conform to assumptions proceed with non-parametric test (e.g., Kruksal-Wallis, Mann-Whitney U (aka Wilcoxon Rank Sum))
+
+
+# 5. 2-way ANOVA
+psu_bio_sum_YRsubset$fYEAR <- as.factor(psu_bio_sum_YRsubset$YEAR)
+psu_bio_sum_YRsubset$fSTRAT <- as.factor(psu_bio_sum_YRsubset$STRAT)
+biomass_aov <- aov(biomass_sum_bc~fYEAR*fSTRAT, data=psu_bio_sum_YRsubset) #since there might be an interaction between YEAR and STRAT (i.e., biomass may not change through time consistently across strata or vice versa) use "*" in your model to include an interaction term
+summary(biomass_aov) #displays Type I ANOVA table
+drop1(biomass_aov,~.,test="F") #displays Type III ANOVA table (default of most stats packages...use this one)
+#Single term deletions
+
+#Model:
+#biomass_sum_bc ~ fYEAR * fSTRAT
+#             Df Sum of Sq    RSS    AIC F value    Pr(>F)    
+#<none>                    8166.8 2767.6                      
+#fYEAR        12    30.060 8196.8 2760.9  1.4214     0.148    
+#fSTRAT        6    97.877 8264.7 2811.8  9.2562 4.164e-10 ***
+#fYEAR:fSTRAT 72   246.562 8413.3 2764.1  1.9431 3.792e-06 ***
+#---
+#Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+# 5a. If 2-way ANOVA is significant, do a posteriori post-hoc pairwise comparisons
+Tuk_fYEAR <- TukeyHSD(biomass_aov, "fYEAR", ordered=T)
+Tuk_fSTRAT <- TukeyHSD(biomass_aov, "fSTRAT", ordered=T)
+Tuk_fYEARfSTRAT <- TukeyHSD(biomass_aov, "fYEAR:fSTRAT", ordered=T)
+Tuk <- as.data.frame(rbind(Tuk_fYEAR$fYEAR,Tuk_fSTRAT$fSTRAT,Tuk_fYEARfSTRAT$`fYEAR:fSTRAT`))
+write.csv(Tuk, "big_csv/plots/biomass_2wayANOVA_TukeyHSDvalues.csv") 
+
+```
+
+```{r stat testing with diversity data}
+
+# 1. Read in data and remove years (optional)
+psu_diversity = read_csv("big_csv/diversity_without_spe/psu_diversity_no_spp_merged.csv") #A tibble: 1,689,982 x 9
+# Parsed with column specification:
+# cols(
+#   YEAR = col_integer(),
+#   PRIMARY_SAMPLE_UNIT = col_character(),
+#   richness = col_integer(),
+#   simpson = col_double(),
+#   shannon = col_double(),
+#   STRAT = col_character(),
+#   PROT = col_integer(),
+#   SPECIES_CD = col_character(),
+#   abundance = col_double()
+# )
+
+# the psu_diversity dataframe has a value for each diversity metric that is repeated for each YEAR/PSU for each species record....need to remove duplicate rows and can also select columns of interest for the analysis of diversity metrics
+psu_div = psu_diversity %>% 
+  select(YEAR, PRIMARY_SAMPLE_UNIT, STRAT, richness, simpson, shannon) %>%
+  group_by(YEAR, PRIMARY_SAMPLE_UNIT, STRAT) %>%
+  summarize(
+    richness = first(richness),
+    simpson = first(simpson),
+    shannon = first(shannon)) # 5241 x 6
+  
+# (optional) the psu_div_YRsubset dataframe produced with the code below has years with low sample sizes (few PSUs)/missing strata removed (i.e., 1999, 2000, and 2004)
+psu_div_YRsubset <- psu_div %>%
+  filter(YEAR!=1999,YEAR!=2000,YEAR!=2004) # 4725 x 6
+
+# 2. Run ANOVA to get residuals so we can use them to test assumptions of normality and equal variances
+psu_div_YRsubset$fYEAR <- as.factor(psu_div_YRsubset$YEAR) # categorical variables are factors
+psu_div_YRsubset$fSTRAT <- as.factor(psu_div_YRsubset$STRAT) # categorical variables are factors
+# richness
+richness_aov <- aov(richness~fYEAR*fSTRAT, data=psu_div_YRsubset) # since there might be an interaction between YEAR and STRAT (i.e., diversity may not change through time consistently across strata or vice versa) use "*" in your model to include an interaction term
+psu_div_YRsubset$resids_rich <- residuals(richness_aov) # get residuals
+psu_div_YRsubset$pred_val_rich <- predict(richness_aov) # get predicted values
+# simpson
+simpson_aov <- aov(simpson~fYEAR*fSTRAT, data=psu_div_YRsubset) # since there might be an interaction between YEAR and STRAT (i.e., diversity may not change through time consistently across strata or vice versa) use "*" in your model to include an interaction term
+psu_div_YRsubset$resids_simp <- residuals(simpson_aov) # get residuals
+psu_div_YRsubset$pred_val_simp <- predict(simpson_aov) # get predicted values
+# shannon
+shannon_aov <- aov(shannon~fYEAR*fSTRAT, data=psu_div_YRsubset) # since there might be an interaction between YEAR and STRAT (i.e., diversity may not change through time consistently across strata or vice versa) use "*" in your model to include an interaction term
+psu_div_YRsubset$resids_shan <- residuals(shannon_aov) # get residuals
+psu_div_YRsubset$pred_val_shan <- predict(shannon_aov) # get predicted values
+
+# 2a. Examine plots of residuals to qualitatively check for normality and equal variances
+#richness
+ggplot() + geom_density(aes(x=psu_div_YRsubset$resids_rich)) # look at distribution of residuals
+  ### doesn't look bad
+plot(richness_aov) 
+  # plot 1: Residuals vs Fitted values - data points should be distibuted evenly above and below the line and across the plot...if they are not, this indicates a violation of assumptions
+  # plot 2: Q-Q plot - data points\ should fall more or less along dashed line...if they do not, this indicates a violation of assumptions
+  ### these plots also don't look bad
+#simpson
+ggplot() + geom_density(aes(x=psu_div_YRsubset$resids_simp)) # look at distribution of residuals
+  ### distribution of residuals looks ok
+plot(simpson_aov) 
+  # plot 1: Residuals vs Fitted values - data points should be distibuted evenly above and below the line and across the plot...if they are not, this indicates a violation of assumptions
+  # plot 2: Q-Q plot - data points\ should fall more or less along dashed line...if they do not, this indicates a violation of assumptions
+  ### residuals vs fitted values plot doesn't look great - spread across line increases to the right of plot
+#shannon
+ggplot() + geom_density(aes(x=psu_div_YRsubset$resids_shan)) # look at distribution of residuals
+  ### distribution looks ok 
+plot(shannon_aov) 
+  # plot 1: Residuals vs Fitted values - data points should be distibuted evenly above and below the line and across the plot...if they are not, this indicates a violation of assumptions
+  # plot 2: Q-Q plot - data points\ should fall more or less along dashed line...if they do not, this indicates a violation of assumptions
+  ### residuals vs fitted values plot doesn't look great - spread across line seems to increase to the right of plot
+
+# 2b. Shapiro-Wilk test - p-value < 0.05 means the data are NOT normally distributed
+#richness
+psu_div_YRsubset %$% shapiro.test(resids_rich) 
+  ### W = 0.99612, p-value = 8.243e-10; this test result says distribution of residuals is significantly different from normal 
+#simpson
+psu_div_YRsubset %$% shapiro.test(resids_simp) 
+  ### W = 0.99557, p-value = 8.865e-11; non-normal distribution
+#shannon
+psu_div_YRsubset %$% shapiro.test(resids_shan) 
+  ### W = 0.99978, p-value = 0.928; normal distribution without transformation!
+
+
+# 2c. Test for skew - greater than zero is evidence for having skew; test with t-test - p-value < 0.05 means data are skewed
+# richness
+skewness(psu_div_YRsubset$resids_rich)
+t<- skewness(psu_div_YRsubset$resids_rich) %>% divide_by(sqrt(6/length(psu_div_YRsubset$resids_rich))) # t-value
+1-pt(t,length(psu_div_YRsubset$resids_rich)) # probability of the t-value by chance alone when skew is zero; pt=cummulative density function of t-dist, first number=calculated t-value; second=df
+  ### skew = -0.2038638 and p = 1; distribution of residuals is NOT significantly skewed
+# simpson
+skewness(psu_div_YRsubset$resids_simp)
+t<- skewness(psu_div_YRsubset$resids_simp) %>% divide_by(sqrt(6/length(psu_div_YRsubset$resids_simp))) # t-value
+1-pt(t,length(psu_div_YRsubset$resids_simp)) # probability of the t-value by chance alone when skew is zero; pt=cummulative density function of t-dist, first number=calculated t-value; second=df
+  ### skew = 0.2653317 and p = 5.684342e-14; significant skew in distribution
+# shannon
+skewness(psu_div_YRsubset$resids_shan)
+t<- skewness(psu_div_YRsubset$resids_shan) %>% divide_by(sqrt(6/length(psu_div_YRsubset$resids_shan))) # t-value
+1-pt(t,length(psu_div_YRsubset$resids_shan)) # probability of the t-value by chance alone when skew is zero; pt=cummulative density function of t-dist, first number=calculated t-value; second=df
+  ### skew = 0.004875036 and p = 0.4455952; no significant skew
+
+# 2d. Bartlett test - p-value < 0.05 means data do not have equal variances across groups
+# richness
+bartlett.test(psu_div_YRsubset$resids_rich~psu_div_YRsubset$fYEAR) # Bartlett's K-squared = 81.852, df = 12, p-value = 1.828e-12
+bartlett.test(psu_div_YRsubset$resids_rich~psu_div_YRsubset$fSTRAT) # Bartlett's K-squared = 70.023, df = 6, p-value = 4.044e-13
+  ### variances of residuals are significantly different among groups for both YEAR and STRAT
+# simpson
+bartlett.test(psu_div_YRsubset$resids_simp~psu_div_YRsubset$fYEAR) # Bartlett's K-squared = 32.026, df = 12, p-value = 0.001371
+bartlett.test(psu_div_YRsubset$resids_simp~psu_div_YRsubset$fSTRAT) # Bartlett's K-squared = 63.763, df = 6, p-value = 7.713e-12
+  ### variances of residuals are significantly different among groups for both YEAR and STRAT, but more so for STRAT
+# shannon
+bartlett.test(psu_div_YRsubset$resids_shan~psu_div_YRsubset$fYEAR) # Bartlett's K-squared = 49.285, df = 12, p-value = 1.865e-06
+bartlett.test(psu_div_YRsubset$resids_shan~psu_div_YRsubset$fSTRAT) # Bartlett's K-squared = 45.932, df = 6, p-value = 3.054e-08
+  ### variances of residuals are significantly different among groups for both YEAR and STRAT
+
+
+# 3. Transform data using Boxcox method 
+# richness
+psu_div_YRsubset %>%
+  boxcox(richness~fYEAR, data = .) %$%
+  x[which.max(y)] #x is lambda and y is values of likelihood
+# x = 1.232323; this output is the lambda value that you should use to transform data
+psu_div_YRsubset %>%
+  boxcox(richness~fSTRAT, data = .) %$%
+  x[which.max(y)] #x is lambda and y is values of likelihood
+# x = 1.313131
+psu_div_YRsubset <- psu_div_YRsubset %>% mutate(richness_bc = (richness %>%
+  raise_to_power(1.27) %>% subtract(1) %>% divide_by(1.27))) # since x for YEAR and STRAT were so similar, I used something in between; use x/lambda in raise_to_power() and divide_by()
+# simpson
+psu_div_YRsubset %>%
+  boxcox(simpson~fYEAR, data = .) %$%
+  x[which.max(y)] #x is lambda and y is values of likelihood
+# x = 0.6666667; this output is the lambda value that you should use to transform data
+psu_div_YRsubset %>%
+  boxcox(simpson~fSTRAT, data = .) %$%
+  x[which.max(y)] #x is lambda and y is values of likelihood
+# x = 0.6666667
+psu_div_YRsubset <- psu_div_YRsubset %>% mutate(simpson_bc = (simpson %>%
+  raise_to_power(.7) %>% subtract(1) %>% divide_by(.7))) # use x/lambda in raise_to_power() and divide_by()
+# shannon
+psu_div_YRsubset %>%
+  boxcox(shannon~fYEAR, data = .) %$%
+  x[which.max(y)] #x is lambda and y is values of likelihood
+# x = 0.9090909; this output is the lambda value that you should use to transform data
+psu_div_YRsubset %>%
+  boxcox(shannon~fSTRAT, data = .) %$%
+  x[which.max(y)] #x is lambda and y is values of likelihood
+# x = 0.9494949
+psu_div_YRsubset <- psu_div_YRsubset %>% mutate(shannon_bc = (shannon %>%
+  raise_to_power(.9) %>% subtract(1) %>% divide_by(.9))) # use x/lambda in raise_to_power() and divide_by()
+
+
+# 4. Retest assumptions using transformed data
+# richness
+richness_aov <- aov(richness_bc~fYEAR*fSTRAT, data=psu_div_YRsubset) # since there might be an interaction between YEAR and STRAT (i.e., diversity may not change through time consistently across strata or vice versa) use "*" in your model to include an interaction term
+psu_div_YRsubset$resids_rich_bc <- residuals(richness_aov) # get residuals
+psu_div_YRsubset$pred_val_rich_bc <- predict(richness_aov) # get predicted values
+# simpson
+simpson_aov <- aov(simpson_bc~fYEAR*fSTRAT, data=psu_div_YRsubset) # since there might be an interaction between YEAR and STRAT (i.e., diversity may not change through time consistently across strata or vice versa) use "*" in your model to include an interaction term
+psu_div_YRsubset$resids_simp_bc <- residuals(simpson_aov) # get residuals
+psu_div_YRsubset$pred_val_simp_bc <- predict(simpson_aov) # get predicted values
+# shannon
+shannon_aov <- aov(shannon_bc~fYEAR*fSTRAT, data=psu_div_YRsubset) # since there might be an interaction between YEAR and STRAT (i.e., diversity may not change through time consistently across strata or vice versa) use "*" in your model to include an interaction term
+psu_div_YRsubset$resids_shan_bc <- residuals(shannon_aov) # get residuals
+psu_div_YRsubset$pred_val_shan_bc <- predict(shannon_aov) # get predicted values
+
+# 4a. Examine plots of residuals to qualitatively check for normality and equal variances
+# richness
+ggplot() + geom_density(aes(x=psu_div_YRsubset$resids_rich_bc)) # look at distribution of residuals
+  ### plot still looks ok to me
+plot(richness_aov) 
+  # plot 1: Residuals vs Fitted values - data points should be distibuted evenly above and below the line and across the plot...if they are not, this indicates a violation of assumptions
+  # plot 2: Q-Q plot - data points should fall more or less along dashed line...if they do not, this indicates a violation of assumptions
+  ### plots still look ok to me
+ggplot(data = psu_div_YRsubset) + geom_boxplot(mapping = aes(x = STRAT, y = richness_bc)) + facet_wrap(~YEAR, scales="free_y")
+# simpson
+ggplot() + geom_density(aes(x=psu_div_YRsubset$resids_simp_bc)) # look at distribution of residuals
+  ### plot looks ok to me 
+plot(simpson_aov) 
+  # plot 1: Residuals vs Fitted values - data points should be distibuted evenly above and below the line and across the plot...if they are not, this indicates a violation of assumptions
+  # plot 2: Q-Q plot - data points should fall more or less along dashed line...if they do not, this indicates a violation of assumptions
+  ### still same pattern in plot of residuals vs fitted values
+# shannon
+ggplot() + geom_density(aes(x=psu_div_YRsubset$resids_shan_bc)) # look at distribution of residuals
+  ### looks fine
+plot(shannon_aov) 
+  # plot 1: Residuals vs Fitted values - data points should be distibuted evenly above and below the line and across the plot...if they are not, this indicates a violation of assumptions
+  # plot 2: Q-Q plot - data points should fall more or less along dashed line...if they do not, this indicates a violation of assumptions
+  ### still same pattern in plot of residuals vs fitted values
+
+# 4b. Shapiro-Wilk test - p-value < 0.05 means the data are NOT normally distributed
+# richness
+psu_div_YRsubset %$% shapiro.test(resids_rich_bc) 
+  ### W = 0.999, p-value = 0.006514; distribution of residuals is a little closer to normal
+# simpson
+psu_div_YRsubset %$% shapiro.test(resids_simp_bc) 
+  ### W = 0.99936, p-value = 0.09424; woohoo!!!!!!! normal distribution!!!!!
+# shannon
+psu_div_YRsubset %$% shapiro.test(resids_shan_bc) 
+  ### W = 0.99921, p-value = 0.03159; slightly non-normal distribution
+
+# 4c. Test for skew - greater than zero is evidence for having skew; test with t-test - p-value < 0.05 means data are skewed
+# richness
+skewness(psu_div_YRsubset$resids_rich_bc)
+t<- skewness(psu_div_YRsubset$resids_rich_bc) %>% divide_by(sqrt(6/length(psu_div_YRsubset$resids_rich_bc))) # t-value
+1-pt(t,length(psu_div_YRsubset$resids_rich_bc)) # probability of the t-value by chance alone when skew is zero; pt=cummulative density function of t-dist, first number=calculated t-value; second=df
+  ### skew = 0.01062075 and p = 0.3828413; distribution of residuals is still NOT significantly skewed
+# simpson
+skewness(psu_div_YRsubset$resids_simp_bc)
+t<- skewness(psu_div_YRsubset$resids_simp_bc) %>% divide_by(sqrt(6/length(psu_div_YRsubset$resids_simp_bc))) # t-value
+1-pt(t,length(psu_div_YRsubset$resids_simp_bc)) # probability of the t-value by chance alone when skew is zero; pt=cummulative density function of t-dist, first number=calculated t-value; second=df
+  ### skew =-0.04192732 and p = 0.8802892; yay! no significant skew!
+# shannon
+skewness(psu_div_YRsubset$resids_shan_bc)
+t<- skewness(psu_div_YRsubset$resids_shan_bc) %>% divide_by(sqrt(6/length(psu_div_YRsubset$resids_shan_bc))) # t-value
+1-pt(t,length(psu_div_YRsubset$resids_shan_bc)) # probability of the t-value by chance alone when skew is zero; pt=cummulative density function of t-dist, first number=calculated t-value; second=df
+  ### skew = -0.09237946 and p = 0.9952198; no skew
+
+# 4d. Bartlett test - p-value < 0.05 means data do not have equal variances across groups
+# richness
+bartlett.test(psu_div_YRsubset$resids_rich_bc~psu_div_YRsubset$fYEAR) # Bartlett's K-squared = 64.355, df = 12, p-value = 3.587e-09
+bartlett.test(psu_div_YRsubset$resids_rich_bc~psu_div_YRsubset$fSTRAT) # Bartlett's K-squared = 42.823, df = 6, p-value = 1.264e-07
+  ### better but variances of residuals still significantly different among groups for both YEAR and STRAT
+# simpson
+bartlett.test(psu_div_YRsubset$resids_simp_bc~psu_div_YRsubset$fYEAR) # Bartlett's K-squared = 33.481, df = 12, p-value = 0.0008139
+bartlett.test(psu_div_YRsubset$resids_simp_bc~psu_div_YRsubset$fSTRAT) # Bartlett's K-squared = 46.817, df = 6, p-value = 2.036e-08
+  ### variances still significantly different among groups especially for STRAT
+# shannon
+bartlett.test(psu_div_YRsubset$resids_shan_bc~psu_div_YRsubset$fYEAR) # Bartlett's K-squared = 51.741, df = 12, p-value = 6.889e-07
+bartlett.test(psu_div_YRsubset$resids_shan_bc~psu_div_YRsubset$fSTRAT) # Bartlett's K-squared = 43.221, df = 6, p-value = 1.055e-07
+  ### variances still unequal across groups
+
+
+### If data conform to assumptions proceed with parametric test (e.g., ANOVA, t-test); if data do not conform to assumptions proceed with non-parametric test (e.g., Kruksal-Wallis, Mann-Whitney U (aka Wilcoxon Rank Sum))
+
+
+# 5. 2-way ANOVA
+# richness
+psu_div_YRsubset$fYEAR <- as.factor(psu_div_YRsubset$YEAR)
+psu_div_YRsubset$fSTRAT <- as.factor(psu_div_YRsubset$STRAT)
+richness_aov <- aov(richness_bc~fYEAR*fSTRAT, data=psu_div_YRsubset) #since there might be an interaction between YEAR and STRAT (i.e., biomass may not change through time consistently across strata or vice versa) use "*" in your model to include an interaction term
+summary(richness_aov) #displays Type I ANOVA table
+drop1(richness_aov,~.,test="F") #displays Type III ANOVA table (default of most stats packages...use this one)
+#Single term deletions
+
+#Model:
+#richness_bc ~ fYEAR * fSTRAT
+#             Df Sum of Sq     RSS   AIC F value    Pr(>F)    
+#<none>                    2576671 29956                      
+#fYEAR        12     19995 2596666 29969  2.9967 0.0003412 ***
+#fSTRAT        6     78540 2655211 30086 23.5417 < 2.2e-16 ***
+#fYEAR:fSTRAT 72     86991 2663662 29969  2.1729 5.056e-08 ***
+#---
+#Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+# simpson
+psu_div_YRsubset$fYEAR <- as.factor(psu_div_YRsubset$YEAR)
+psu_div_YRsubset$fSTRAT <- as.factor(psu_div_YRsubset$STRAT)
+simpson_aov <- aov(simpson_bc~fYEAR*fSTRAT, data=psu_div_YRsubset) #since there might be an interaction between YEAR and STRAT (i.e., biomass may not change through time consistently across strata or vice versa) use "*" in your model to include an interaction term
+summary(simpson_aov) #displays Type I ANOVA table
+drop1(simpson_aov,~.,test="F") #displays Type III ANOVA table (default of most stats packages...use this one)
+#Single term deletions
+
+#Model:
+#simpson_bc ~ fYEAR * fSTRAT
+#             Df Sum of Sq   RSS    AIC F value    Pr(>F)    
+#<none>                    13990 5310.9                      
+#fYEAR        12    102.76 14093 5321.5  2.8365 0.0006868 ***
+#fSTRAT        6    176.59 14167 5358.2  9.7489 1.067e-10 ***
+#fYEAR:fSTRAT 72    401.96 14392 5300.7  1.8492 1.967e-05 ***
+#---
+#Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+# shannon
+psu_div_YRsubset$fYEAR <- as.factor(psu_div_YRsubset$YEAR)
+psu_div_YRsubset$fSTRAT <- as.factor(psu_div_YRsubset$STRAT)
+shannon_aov <- aov(shannon_bc~fYEAR*fSTRAT, data=psu_div_YRsubset) #since there might be an interaction between YEAR and STRAT (i.e., biomass may not change through time consistently across strata or vice versa) use "*" in your model to include an interaction term
+summary(shannon_aov) #displays Type I ANOVA table
+drop1(shannon_aov,~.,test="F") #displays Type III ANOVA table (default of most stats packages...use this one)
+#Single term deletions
+
+#Model:
+#shannon_bc ~ fYEAR * fSTRAT
+#             Df Sum of Sq   RSS   AIC F value    Pr(>F)    
+#<none>                    53740 11670                      
+#fYEAR        12    453.61 54193 11686  3.2596 0.0001055 ***
+#fSTRAT        6    820.96 54561 11729 11.7987 3.570e-13 ***
+#fYEAR:fSTRAT 72   1519.41 55259 11658  1.8197 3.248e-05 ***
+#---
+#Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+# 5a. If 2-way ANOVA is significant, do a posteriori post-hoc pairwise comparisons
+Tuk_fYEAR <- TukeyHSD(richness_aov, "fYEAR", ordered=T)
+Tuk_fSTRAT <- TukeyHSD(richness_aov, "fSTRAT", ordered=T)
+Tuk_fYEARfSTRAT <- TukeyHSD(richness_aov, "fYEAR:fSTRAT", ordered=T)
+Tuk <- as.data.frame(rbind(Tuk_fYEAR$fYEAR,Tuk_fSTRAT$fSTRAT,Tuk_fYEARfSTRAT$`fYEAR:fSTRAT`))
+write.csv(Tuk, "big_csv/plots/richness_2wayANOVA_TukeyHSDvalues.csv") 
+
+```
+```{r shapefiles}
+library(foreign)
+dbf = read.dbf('FL_files/FLGrid_100m_work8.dbf')
+dbf2 = read.dbf('FL_files/Unified_Florida_Hab.dbf')
+library(maptools)
+shape = readShapePoly("FL_files/Unified_Florida_Hab.shp")
+library(shapefiles)
+shx = read.shx("FL_files/Unified_Florida_Hab.shx")
+library(spatstat)
+library(lattice)
+library(maps)
+library(rgeos)
+library(rgdal) #readOGR 
+library(ggmap)
+library(tmap)
+library(marmap) #marine maps 
+```
+
+plots 
+
+```{r subset data}
+
+# (optional) the psu_div_YRsubset dataframe produced with the code below has years with low sample sizes (few PSUs)/missing strata removed (i.e., 1999, 2000, and 2004)
+psu_div_YRsubset <- psu_div %>%
+  filter(YEAR!=1999,YEAR!=2000,YEAR!=2004) # 4725 x 6
+
+# do this for dataframe with subset of years as well
+# summarize data to get mean and standard error for each year/stratum combination  
+psu_div_forPlot_YRsubset = psu_div_YRsubset %>% 
+  group_by(YEAR, STRAT) %>%
+  summarize(
+    richness_mean = mean(richness),
+    richness_n = length(richness),
+    richness_sd = sd(richness),
+    richness_se = richness_sd / sqrt(richness_n),
+    richness_min = min(richness),
+    richness_max = max(richness),
+    simpson_mean = mean(simpson),
+    simpson_n = length(simpson),
+    simpson_sd = sd(simpson),
+    simpson_se = simpson_sd / sqrt(simpson_n),
+    simpson_min = min(simpson),
+    simpson_max = max(simpson),
+    shannon_mean = mean(shannon),
+    shannon_n = length(shannon),
+    shannon_sd = sd(shannon),
+    shannon_se = shannon_sd / sqrt(shannon_n),
+    shannon_min = min(shannon),
+    shannon_max = max(shannon))
+
+# boxplots look better for diversity metrics than barplots (the opposite is true for biomass and abundance)...skip barplots
+
+# by STRAT
+ggplot(psu_div_forPlot_YRsubset, aes(x=STRAT, y=richness_mean)) + geom_bar(position=position_dodge(), stat="identity") + geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2, position=position_dodge(.9)) + theme_classic() + theme(axis.text.x = element_text(angle=90)) + facet_wrap(~YEAR, scales='free_y')
+ggsave(file="fk_MeanRichness_ByStratumForEachYear_YRsubset.pdf", path="big_csv/plots")
+
+# by YEAR
+ggplot(psu_div_forPlot_YRsubset, aes(x=YEAR, y=richness_mean, group=YEAR)) + geom_bar(position=position_dodge(), stat="identity") + geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2, position=position_dodge(.9)) + theme_classic() + theme(axis.text.x = element_text(angle=90)) + facet_wrap(~STRAT, scales='free_y')
+ggsave(file="fk_MeanRichness_ByYearForEachStratum_YRsubset.pdf", path="big_csv/plots")
+
+# by STRAT and YEAR
+## richness
+ggplot(psu_div_forPlot_YRsubset, aes(x=YEAR, y=richness_mean, colour=STRAT, group=STRAT)) + geom_point() + geom_line() + geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2)
+ggsave(file="fk_MeanRichness_ByYearANDStratum_YRsubset.pdf", path="big_csv/plots")
+## simpson
+ggplot(psu_div_forPlot_YRsubset, aes(x=YEAR, y=richness_mean, colour=STRAT, group=STRAT)) + geom_point() + geom_line() + geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2)
+ggsave(file="fk_MeanSimpson_ByYearANDStratum_YRsubset.pdf", path="big_csv/plots")
+## shannon
+ggplot(psu_div_forPlot_YRsubset, aes(x=YEAR, y=richness_mean, colour=STRAT, group=STRAT)) + geom_point() + geom_line() + geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2)
+ggsave(file="fk_MeanShannon_ByYearANDStratum_YRsubset.pdf", path="big_csv/plots")
+
+### although boxplots don't work well for biomass and abundance, they look great for diversity metrics
+# richness
+# by STRAT
+ggplot(data = psu_div) + geom_boxplot(mapping = aes(x = STRAT, y = richness)) + facet_wrap(~YEAR, scales="free_y")
+ggsave(file="fk_Richness_boxplot_ByStratumForEachYear.pdf", path="big_csv/plots")
+# by YEAR
+ggplot(data = psu_div) + geom_boxplot(mapping = aes(x = YEAR, y = richness, group = YEAR)) + facet_wrap(~STRAT, scales="free_y")
+ggsave(file="fk_Richness_boxplot_ByYearForEachStratum.pdf", path="big_csv/plots")
+# simpson
+# by STRAT
+ggplot(data = psu_div) + geom_boxplot(mapping = aes(x = STRAT, y = simpson)) + facet_wrap(~YEAR, scales="free_y")
+ggsave(file="fk_Simpson_boxplot_ByStratumForEachYear.pdf", path="big_csv/plots")
+# by YEAR
+ggplot(data = psu_div) + geom_boxplot(mapping = aes(x = YEAR, y = simpson, group = YEAR)) + facet_wrap(~STRAT, scales="free_y")
+ggsave(file="fk_Simpson_boxplot_ByYearForEachStratum.pdf", path="big_csv/plots")
+# shannon
+# by STRAT
+ggplot(data = psu_div) + geom_boxplot(mapping = aes(x = STRAT, y = shannon)) + facet_wrap(~YEAR, scales="free_y")
+ggsave(file="fk_Shannon_boxplot_ByStratumForEachYear.pdf", path="big_csv/plots")
+# by YEAR
+ggplot(data = psu_div) + geom_boxplot(mapping = aes(x = YEAR, y = shannon, group = YEAR)) + facet_wrap(~STRAT, scales="free_y")
+ggsave(file="fk_Shannon_boxplot_ByYearForEachStratum.pdf", path="big_csv/plots")
+
+# do this for dataframe with subset of years as well
+# richness
+# by STRAT
+ggplot(data = psu_div_YRsubset) + geom_boxplot(mapping = aes(x = STRAT, y = richness)) + facet_wrap(~YEAR, scales="free_y")
+ggsave(file="fk_Richness_boxplot_ByStratumForEachYear_YRsubset.pdf", path="big_csv/plots")
+# by YEAR
+ggplot(data = psu_div_YRsubset) + geom_boxplot(mapping = aes(x = YEAR, y = richness, group = YEAR)) + facet_wrap(~STRAT, scales="free_y")
+ggsave(file="fk_Richness_boxplot_ByYearForEachStratum_YRsubset.pdf", path="big_csv/plots")
+# simpson
+# by STRAT
+ggplot(data = psu_div_YRsubset) + geom_boxplot(mapping = aes(x = STRAT, y = simpson)) + facet_wrap(~YEAR, scales="free_y")
+ggsave(file="fk_Simpson_boxplot_ByStratumForEachYear_YRsubset.pdf", path="big_csv/plots")
+# by YEAR
+ggplot(data = psu_div_YRsubset) + geom_boxplot(mapping = aes(x = YEAR, y = simpson, group = YEAR)) + facet_wrap(~STRAT, scales="free_y")
+ggsave(file="fk_Simpson_boxplot_ByYearForEachStratum_YRsubset.pdf", path="big_csv/plots")
+# shannon
+# by STRAT
+ggplot(data = psu_div_YRsubset) + geom_boxplot(mapping = aes(x = STRAT, y = shannon)) + facet_wrap(~YEAR, scales="free_y")
+ggsave(file="fk_Shannon_boxplot_ByStratumForEachYear_YRsubset.pdf", path="big_csv/plots")
+# by YEAR
+ggplot(data = psu_div_YRsubset) + geom_boxplot(mapping = aes(x = YEAR, y = shannon, group = YEAR)) + facet_wrap(~STRAT, scales="free_y")
+ggsave(file="fk_Shannon_boxplot_ByYearForEachStratum_YRsubset.pdf", path="big_csv/plots")
+
+```
+
+```{r strata biodiversity}
+
+if(!file.exists("strata_div_rds")){
+  
+  #read in strata abundance data 
+  strata_fk_abun <- read_csv("big_csv/abundance_strata/strata_fk_abun.csv",
+                           col_types = cols(
+                             protected_status = col_character()))
+
+  #remove species not identified to species 
+  strata_fk_abun_no_spp = strata_fk_abun %>%
+    filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) #348 species
+  
+  #read in trait matrix 
+  trait_matrix = read_csv('functional_diversity/species_trait_matrix_348_spp.csv')
+  
+  #trait matrix needs to be alphabetically for FD code 
+  trait_matrix = trait_matrix %>%
+    as.tibble() %>%
+    mutate(
+      SPECIES_CD = toupper(as.character(SPECIES_CD))) %>% 
+    arrange(SPECIES_CD)
+  
+  #compute diversity indices by weighted strata abundances  
+  strata_diversity_no_spp_merged = strata_fk_abun_no_spp %>% #tibble: 132,930 x 12 
+    filter(protected_status != "all") %>% #tibble: 66,465*12
+    select(YEAR,STRAT,PROT,SPECIES_CD,abundance) %>% #tibble: 66,465 x 5
+    group_by(YEAR, STRAT) %>% #110 groups
+    nest(-YEAR) %>%
+    mutate(
+      data_wide = map(data, function(x) 
+        full_join(x, trait_matrix %>% select(SPECIES_CD), by='SPECIES_CD') %>%
+          mutate(abundance = ifelse(is.na(abundance), 0, abundance)) %>%
+          spread(SPECIES_CD, abundance, fill =0)),
+      data_wide = map(data, ~ spread(data=.x, SPECIES_CD, abundance, fill =0)), 
+      richness = map( #species richness
+        data_wide, 
+        function(x) specnumber(x %>% select(-PROT))),
+      simpson = map( #simpson diversity as effective number of species 
+        data_wide,
+        function(x) 1/(1 - diversity(x %>% select(-PROT), index = 'simpson'))),
+      shannon = map( #shannon diversity as effective number of species 
+        data_wide, 
+        function(x) exp(diversity(x %>% select(-PROT), index = 'shannon')))) %>% 
+    unnest(richness,simpson, shannon)
+
+write_csv(strata_diversity_no_spp_merged,'diversity_without_spe/strata_fk_abun_diversity_no_spp_merged.csv')
+
+write_rds(strata_diversity_no_spp_merged, "strata_diversity_weighted")}
+else{
+  strata_diversity_no_spp_merged = read_rds("strata_diversity_weighted")}
+
+ggplot(strata_diversity_no_spp_merged, aes(x=YEAR, y=simpson, colour=STRAT, group=STRAT)) + 
+  geom_point() +
+  geom_line() 
+
+# do this for dataframe with subset of years as well
+# summarize data to get mean and standard error for each year/stratum combination  
+psu_abun_forPlot_YRsubset = psu_abun_sum_YRsubset %>% 
+  group_by(YEAR, STRAT) %>%
+  summarize(
+    abundance_mean = mean(abundance_sum),
+    abundance_n = length(abundance_sum),
+    abundance_sd = sd(abundance_sum),
+    abundance_se = abundance_sd / sqrt(abundance_n),
+    abundance_min = min(abundance_sum),
+    abundance_max = max(abundance_sum))
+# plot mean and se across strat and year using bar graphs
+# by STRAT
+ggplot(psu_abun_forPlot_YRsubset, aes(x=STRAT, y=abundance_mean)) + geom_bar(position=position_dodge(), stat="identity") + geom_errorbar(aes(ymin=abundance_mean-abundance_se, ymax=abundance_mean+abundance_se), width=.2, position=position_dodge(.9)) + theme_classic() + theme(axis.text.x = element_text(angle=90)) + facet_wrap(~YEAR, scales='free_y')
+ggsave(file="fk_MeanAbundance_ByStratumForEachYear_YRsubset.pdf", path="big_csv/plots")
+# by YEAR
+ggplot(psu_abun_forPlot_YRsubset, aes(x=YEAR, y=abundance_mean, group=YEAR)) + geom_bar(position=position_dodge(), stat="identity") + geom_errorbar(aes(ymin=abundance_mean-abundance_se, ymax=abundance_mean+abundance_se), width=.2, position=position_dodge(.9)) + theme_classic() + theme(axis.text.x = element_text(angle=90)) + facet_wrap(~STRAT, scales='free_y')
+ggsave(file="fk_MeanAbundance_ByYearForEachStratum_YRsubset.pdf", path="big_csv/plots")
+# by STRAT and YEAR
+ggplot(psu_abun_forPlot_YRsubset, aes(x=YEAR, y=abundance_mean, colour=STRAT, group=STRAT)) + geom_point() + geom_line() + geom_errorbar(aes(ymin=abundance_mean-abundance_se, ymax=abundance_mean+abundance_se), width=.2)
+ggsave(file="fk_MeanAbundance_ByYearANDStratum_YRsubset.pdf", path="big_csv/plots")
+
+### tried these for abundance but didn't look good (too many very low values mixed with a small number of very high values)
+#ggplot(data = psu_abun_sum) + geom_boxplot(mapping = aes(x = STRAT, y = abundance_sum)) + facet_wrap(~YEAR, scales="free_y")
+#ggplot(data = psu_abun_sum) + geom_boxplot(mapping = aes(x = YEAR, y = abundance_sum, group = YEAR)) + facet_wrap(~STRAT, scales="free_y")
+
+# (optional) the psu_bio_sum_YRsubset dataframe produced with the code below has years with low sample sizes (few PSUs)/missing strata removed (i.e., 1999, 2000, and 2004)
+psu_abun_sum_YRsubset <- psu_abun_sum %>%
+  filter(YEAR!=1999,YEAR!=2000,YEAR!=2004) # 4725 x 4
+```
+
+```{r psu abundance plots}
+
+psu_abun <- read_csv('big_csv/abundance_psu/psu_fk_abundance_no_spp_merged.csv', 
+                       col_types = cols(
+                          YEAR = col_integer(),
+                          REGION = col_character(),
+                          STRAT = col_character(),
+                          PROT = col_integer(),
+                          PRIMARY_SAMPLE_UNIT = col_character(),
+                          SPECIES_CD = col_character(),
+                          m = col_integer(),
+                          var = col_double(),
+                          abundance = col_double(),
+                          protected_status = col_character())) # 1,689,982  x 10
+
+# the psu_abun dataframe has an abundance for each species for each psu so sum abundance across species for each psu...skip this step for diversity indices
+psu_abun_sum <- psu_abun %>%
+  group_by(YEAR, PRIMARY_SAMPLE_UNIT, STRAT) %>%
+  summarize(abundance_sum = sum(abundance)) # 5241 x 4 (5241 = total # of PSUs sampled from 1999 to 2016)
+  
+# Plot data by year and stratum separately and together
+# summarize data to get mean and standard error for each year/stratum combination  
+psu_abun_forPlot = psu_abun_sum %>% 
+  group_by(YEAR, STRAT) %>%
+  summarize(
+    abundance_mean = mean(abundance_sum),
+    abundance_n = length(abundance_sum),
+    abundance_sd = sd(abundance_sum),
+    abundance_se = abundance_sd / sqrt(abundance_n),
+    abundance_min = min(abundance_sum),
+    abundance_max = max(abundance_sum))
+# plot mean and se across strat and year using bar graphs
+# by STRAT
+ggplot(psu_abun_forPlot, aes(x=STRAT, y=abundance_mean)) + geom_bar(position=position_dodge(), stat="identity") + geom_errorbar(aes(ymin=abundance_mean-abundance_se, ymax=abundance_mean+abundance_se), width=.2, position=position_dodge(.9)) + theme_classic() + theme(axis.text.x = element_text(angle=90)) + facet_wrap(~YEAR, scales='free_y')
+ggsave(file="fk_MeanAbundance_ByStratumForEachYear.pdf", path="big_csv/plots")
+# by YEAR
+ggplot(psu_abun_forPlot, aes(x=YEAR, y=abundance_mean, group=YEAR)) + geom_bar(position=position_dodge(), stat="identity") + geom_errorbar(aes(ymin=abundance_mean-abundance_se, ymax=abundance_mean+abundance_se), width=.2, position=position_dodge(.9)) + theme_classic() + theme(axis.text.x = element_text(angle=90)) + facet_wrap(~STRAT, scales='free_y')
+ggsave(file="fk_MeanAbundance_ByYearForEachStratum.pdf", path="big_csv/plots")
+# by STRAT and YEAR
+ggplot(psu_abun_forPlot, aes(x=YEAR, y=abundance_mean, colour=STRAT, group=STRAT)) + geom_point() + geom_line() + geom_errorbar(aes(ymin=abundance_mean-abundance_se, ymax=abundance_mean+abundance_se), width=.2)
+ggsave(file="fk_MeanAbundance_ByYearANDStratum.pdf", path="big_csv/plots")
+
+
+```
+
+```{r psu biomass plots}
+
+psu_bio <- read_csv('big_csv/biomass_psu/psu_fk_biomass_no_spp_merged.csv', 
+                       col_types = cols(
+                          YEAR = col_integer(),
+                          REGION = col_character(),
+                          STRAT = col_character(),
+                          PROT = col_integer(),
+                          PRIMARY_SAMPLE_UNIT = col_character(),
+                          SPECIES_CD = col_character(),
+                          m = col_integer(),
+                          var = col_double(),
+                          biomass = col_double(),
+                          protected_status = col_character())) # 1,609,672  x 10
+
+# the psu_bio dataframe has a biomass for each species for each psu so sum biomass across species for each psu...skip this step for diversity indices
+psu_bio_sum <- psu_bio %>%
+  group_by(YEAR, PRIMARY_SAMPLE_UNIT, STRAT) %>%
+  summarize(biomass_sum = sum(biomass)) # 5241 x 4 (5241 = total # of PSUs sampled from 1999 to 2016)
+  
+# (optional) the psu_bio_sum_YRsubset dataframe produced with the code below has years with low sample sizes (few PSUs)/missing strata removed (i.e., 1999, 2000, and 2004)
+psu_bio_sum_YRsubset <- psu_bio_sum %>%
+  filter(YEAR!=1999,YEAR!=2000,YEAR!=2004) # 4725 x 4
+
+# plot data by year and stratum separately and together
+# summarize data to get mean and standard error for each year/stratum combination  
+psu_bio_forPlot = psu_bio_sum %>% 
+  group_by(YEAR, STRAT) %>%
+  summarize(
+    biomass_mean = mean(biomass_sum),
+    biomass_n = length(biomass_sum),
+    biomass_sd = sd(biomass_sum),
+    biomass_se = biomass_sd / sqrt(biomass_n),
+    biomass_min = min(biomass_sum),
+    biomass_max = max(biomass_sum))
+# plot mean and se across strat and year using bar graphs
+# by STRAT
+ggplot(psu_bio_forPlot, aes(x=STRAT, y=biomass_mean)) + geom_bar(position=position_dodge(), stat="identity") + geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2, position=position_dodge(.9)) + theme_classic() + theme(axis.text.x = element_text(angle=90)) + facet_wrap(~YEAR, scales='free_y')
+ggsave(file="fk_MeanBiomass_ByStratumForEachYear.pdf", path="big_csv/plots")
+# by YEAR
+ggplot(psu_bio_forPlot, aes(x=YEAR, y=biomass_mean, group=YEAR)) + geom_bar(position=position_dodge(), stat="identity") + geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2, position=position_dodge(.9)) + theme_classic() + theme(axis.text.x = element_text(angle=90)) + facet_wrap(~STRAT, scales='free_y')
+ggsave(file="fk_MeanBiomass_ByYearForEachStratum.pdf", path="big_csv/plots")
+# by STRAT and YEAR
+ggplot(psu_bio_forPlot, aes(x=YEAR, y=biomass_mean, colour=STRAT, group=STRAT)) + geom_point() + geom_line() + geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2)
+ggsave(file="fk_MeanBiomass_ByYearANDStratum.pdf", path="big_csv/plots")
+
+# do this for dataframe with subset of years as well
+# summarize data to get mean and standard error for each year/stratum combination  
+psu_bio_forPlot_YRsubset = psu_bio_sum_YRsubset %>% 
+  group_by(YEAR, STRAT) %>%
+  summarize(
+    biomass_mean = mean(biomass_sum),
+    biomass_n = length(biomass_sum),
+    biomass_sd = sd(biomass_sum),
+    biomass_se = biomass_sd / sqrt(biomass_n),
+    biomass_min = min(biomass_sum),
+    biomass_max = max(biomass_sum))
+# plot mean and se across strat and year using bar graphs
+# by STRAT
+ggplot(psu_bio_forPlot_YRsubset, aes(x=STRAT, y=biomass_mean)) + geom_bar(position=position_dodge(), stat="identity") + geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2, position=position_dodge(.9)) + theme_classic() + theme(axis.text.x = element_text(angle=90)) + facet_wrap(~YEAR, scales='free_y')
+ggsave(file="fk_MeanBiomass_ByStratumForEachYear_YRsubset.pdf", path="big_csv/plots")
+# by YEAR
+ggplot(psu_bio_forPlot_YRsubset, aes(x=YEAR, y=biomass_mean, group=YEAR)) + geom_bar(position=position_dodge(), stat="identity") + geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2, position=position_dodge(.9)) + theme_classic() + theme(axis.text.x = element_text(angle=90)) + facet_wrap(~STRAT, scales='free_y')
+ggsave(file="fk_MeanBiomass_ByYearForEachStratum_YRsubset.pdf", path="big_csv/plots")
+# by STRAT and YEAR
+ggplot(psu_bio_forPlot_YRsubset, aes(x=YEAR, y=biomass_mean, colour=STRAT, group=STRAT)) + geom_point() + geom_line() + geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2)
+ggsave(file="fk_MeanBiomass_ByYearANDStratum_YRsubset.pdf", path="big_csv/plots")
+
+### tried using boxplots but they don't look good
+#ggplot(data = psu_bio_sum) + geom_boxplot(mapping = aes(x = STRAT, y = biomass_sum)) + facet_wrap(~YEAR, scales="free_y")
+#ggplot(data = psu_bio_sum) + geom_boxplot(mapping = aes(x = YEAR, y = biomass_sum, group = YEAR)) + facet_wrap(~STRAT, scales="free_y")
+
+```
+
+```{r psu biodiversity plots}
+
+psu_diversity = read_csv("big_csv/diversity_without_spe/psu_diversity_no_spp_merged.csv",
+                      col_types = cols(
+                          YEAR = col_integer(),
+                          PRIMARY_SAMPLE_UNIT = col_character(),
+                          richness = col_integer(),
+                          simpson = col_double(),
+                          shannon = col_double(),
+                          STRAT = col_character(),
+                          SPECIES_CD = col_character(),
+                          abun_merged = col_double())) # 1,689,982 x 9
+
+# the psu_diversity dataframe has a value for each diversity metric that is repeated for each YEAR/PSU for each species record....need to remove duplicate rows and can also select columns of interest for the analysis of diversity metrics
+psu_div = psu_diversity %>% 
+  select(YEAR, PRIMARY_SAMPLE_UNIT, STRAT, richness, simpson, shannon) %>%
+  group_by(YEAR, PRIMARY_SAMPLE_UNIT, STRAT) %>%
+  summarize(
+    richness = first(richness),
+    simpson = first(simpson),
+    shannon = first(shannon)) # 5241 x 6
+  
+# plot data by year and stratum separately and together
+# summarize data to get mean and standard error for each year/stratum combination
+all_matrices_data = read_rds("psu_matrices_data_rds")
+
+psu_div_forPlot = all_matrices_data %>% 
+  group_by(YEAR, STRAT) %>%
+  summarize(
+    richness_mean = mean(richness),
+    richness_n = length(richness),
+    richness_sd = sd(richness),
+    richness_se = richness_sd / sqrt(richness_n),
+    richness_min = min(richness),
+    richness_max = max(richness),
+    simpson_mean = mean(simpson),
+    simpson_n = length(simpson),
+    simpson_sd = sd(simpson),
+    simpson_se = simpson_sd / sqrt(simpson_n),
+    simpson_min = min(simpson),
+    simpson_max = max(simpson),
+    shannon_mean = mean(shannon),
+    shannon_n = length(shannon),
+    shannon_sd = sd(shannon),
+    shannon_se = shannon_sd / sqrt(shannon_n),
+    shannon_min = min(shannon),
+    shannon_max = max(shannon))
+
+write_csv(psu_div_forPlot, "psu_div_forPlot.csv")
+# boxplots look better for diversity metrics than barplots (the opposite is true for biomass and abundance)...skip barplots
+
+# by STRAT
+ggplot(psu_div_forPlot, aes(x=STRAT, y=richness_mean)) +
+  geom_bar(position=position_dodge(), stat="identity") +
+  geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2, position=position_dodge(.9)) + 
+  theme_classic() +
+  theme(axis.text.x = element_text(angle=90)) + 
+  facet_wrap(~YEAR, scales='free_y')
+#ggsave(file="fk_MeanRichness_ByStratumForEachYear.pdf", path="big_csv/plots")
+
+# by YEAR
+ggplot(psu_div_forPlot, aes(x=YEAR, y=richness_mean, group=YEAR)) +  
+  geom_bar(position=position_dodge(), stat="identity") + 
+  geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2, position=position_dodge(.9)) + 
+  theme_classic() + 
+  theme(axis.text.x = element_text(angle=90)) + 
+  facet_wrap(~STRAT, scales='free_y')
+#ggsave(file="fk_MeanRichness_ByYearForEachStratum.pdf", path="big_csv/plots")
+
+# by STRAT and YEAR
+# richness
+ggplot(psu_div_forPlot, aes(x=YEAR, y=richness_mean, colour=STRAT, group=STRAT)) + 
+  geom_point() +
+  geom_line() + 
+  geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2)
+#ggsave(file="fk_MeanRichness_ByYearANDStratum.pdf", path="big_csv/plots")
+
+# simpson
+ggplot(psu_div_forPlot, aes(x=YEAR, y=simpson_mean, colour=STRAT, group=STRAT)) + 
+  geom_point() +
+  geom_line() +
+  geom_errorbar(aes(ymin=simpson_mean-simpson_se, ymax=simpson_mean+simpson_se), width=.2)
+#ggsave(file="fk_MeanSimpson_ByYearANDStratum.pdf", path="big_csv/plots")
+
+# shannon
+ggplot(psu_div_forPlot, aes(x=YEAR, y=shannon_mean, colour=STRAT, group=STRAT)) + 
+  geom_point() + 
+  geom_line() + 
+  geom_errorbar(aes(ymin=shannon_mean-shannon_se, ymax=shannon_mean+shannon_se), width=.2)
+#ggsave(file="fk_MeanShannon_ByYearANDStratum.pdf", path="big_csv/plots")
+
+```
+

@@ -1,0 +1,253 @@
+---
+title: "statistical_tests"
+author: "Katie Shulzitski"
+date: "June 3, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Packages to be used for chunk: Examining sample sizes (number of PSUs sampled) by YEAR and STRATUM
+library("dplyr")
+library("reshape2")
+
+# Packages to be used for chunk: 
+library("rpsychi")
+
+# Packages for performing statistical tests
+library("MASS")
+library("ggplot2")
+library("moments")
+library("DescTools")
+
+```
+
+## Examining sample sizes (number of PSUs sampled) by YEAR and STRATUM
+
+```{r bind sample data csv files, eval = F}
+
+# Combine all sample data csv files into one file (1999 to 2016)
+
+## FK sample data
+cat("bind all csv's\n") #concatenate and print - character string naming the file to print to
+d_fk = data_frame()
+for (f in list.files('big_csv/sample_data/FK', pattern="\\.csv", full.names=T)){
+  cat(' ', f,'\n')
+  d_f = read_csv(
+    f) 
+  d_fk = bind_rows(d_fk, d_f)
+} 
+
+# Manipulate data frame to get total number of PSUs sampled per YEAR and STRATUM and also get total PSUs sampled for each YEAR
+d_fk$dum1 <- 1 
+d_fk_sum1 <- d_fk %>% group_by(YEAR,STRAT,PRIMARY_SAMPLE_UNIT) %>% summarise(sum1=sum(dum1))
+d_fk_sum1$dum2 <- 1
+d_fk_sum2 <- d_fk_sum1 %>% group_by(YEAR,STRAT) %>% summarise(sum2=sum(dum2))
+d_fk_sum3 <- dcast(d_fk_sum2, YEAR ~ STRAT, value.var="sum2")
+d_fk_sum3$total <- rowSums(d_fk_sum3[,-1], na.rm=TRUE)
+write.csv(d_fk_sum3, 'big_csv/sample_data/fk_sample_summary.csv',row.names=FALSE) # This file shows the breakdown of number of PSUs sampled by YEAR and STRATUM
+
+```
+
+## Performing a two-way ANOVA using summary statistics
+
+```{r perform two-way ANOVA using summary statistics, eval = F}
+
+```
+
+## Checking data for normality and homoscedasticity
+
+### COLUMN is the column name of the variable of interest that you want to test (e.g., abundance) and DATAFRMAE is the dataframe from which you are working. COLUMN2 is the variable by which you are testing (e.g., year).
+
+```{r}
+
+ggplot() + geom_density(aes(x=COLUMN), data=DATAFRAME) #first just plot the data to see what your distribution looks like
+shapiro.test(DATAFRAME$COLUMN) # test for normality
+#to look at residuals....
+r1=lm(COLUMN~COLUMN2,DATAFRAME) 
+plot(DATAFRAME$COLUMN2, rstandard(r1))
+hist(r1$resid)
+qqnorm(r1$resid)
+qqline(r1$resid)
+skewness(r1$resid) #greater than zero is evidence for having skew
+
+```
+
+## Transforming your data using the boxcox method
+
+### XXX is where you need to copy in the lamda with the highest likelihood (you can round this number to something more reasonable)
+
+```{r}
+
+#need non-zero data for boxcox method to add a small amount to every value
+DATAFRAME$COLUMN_t <- DATAFRAME$COLUMN+0.01 
+b=boxcox(COLUMN_t~COLUMN2,data=DATAFRAME)
+b #x is lambda and y is values of likelihood
+lamda=b$x
+lik=b$y
+bc=cbind(lamda,lik)
+bc
+bc[order(-lik),] #use the lamda with the highest likelihood to transform your data
+DATAFRAME$COLUMN_bc <- DATAFRAME$COLUMN^XXX 
+DATAFRAME$COLUMN_bc <- DATAFRAME$COLUMN_bc-1 
+DATAFRAME$COLUMN_bc <- DATAFRAME$COLUMN_bc/XXX
+
+```
+
+## Checking data for normality and homoscedasticity AFTER transformation
+
+```{r}
+
+ggplot() + geom_density(aes(x=COLUMN_bc), data=DATAFRAME)
+shapiro.test(DATAFRAME$COLUMN_bc)
+r1=lm(COLUMN_bc~COLUMN2,DATAFRAME)
+plot(DATAFRAME$COLUMN2, rstandard(r1))
+hist(r1$resid)
+qqnorm(r1$resid)
+qqline(r1$resid)
+skewness(r1$resid) #greater than zero is evidence for having skew
+
+# if data look normal and homoscedastic after transformation, proceed with parametric test
+# if data do not look normal and homoscedastic after transformation, proceed with non-parametric test
+
+```
+
+## ANOVA: parametric test for differences among groups
+
+### Use COLUMN_bc if using transformed data, otherwise use COLUMN
+
+```{r}
+
+ANOVA <- aov(COLUMN_bc ~ COLUMN2, data=DATAFRAME) 
+plot(ANOVA)
+summary(ANOVA) # display Type I ANOVA table
+drop1(ANOVA,~.,test="F") # type III SS and F Tests 
+
+# for post-hoc pairwise tests.....
+TukeyHSD(ANOVA) # where fit comes from aov()
+
+```
+
+## Kruskal-Wallis: non-parametric test for differences among groups
+
+```{r}
+
+kruskal.test(COLUMN~COLUMN2, data=DATAFRAME)
+
+# for post-hoc pairwise tests....
+DunnTest(x=DATAFRAME$COLUMN, g=DATAFRAME$COLUMN2, method="fdr") # note that these p-values are one-sided values; for two-sided p-values they need to be doubled
+
+```
+
+
+## Normality
+
+Checking data for normality 
+
+COLUMN is the column name of the variable of interest that you want to test (e.g., abundance) and DATAFRMAE is the dataframe from which you are working. COLUMN2 is the variable by which you are testing (e.g., year).
+
+```{r normality}
+
+simpson_stat_dom_merged = fk_domain_abun_diversity_no_spp %>%
+  select(YEAR, simpson, protected_status) %>%
+  filter(protected_status != "0") %>%
+  filter(protected_status != "1") 
+#ggplot() + geom_density(aes(x=COLUMN), data=DATAFRAME) #first just plot the data to see what your distribution looks like
+shapiro.test(simpson_stat_dom_merged$simpson) # test for normality
+#data:  simpson_stat_dom_merged$simpson
+#W = 0.8214, p-value = 0.007013
+
+#to look at residuals....
+r1=lm(simpson_stat_dom_merged$simpson~simpson_stat_dom_merged$YEAR) 
+plot(simpson_stat_dom_merged$YEAR, rstandard(r1))
+hist(r1$resid)
+qqnorm(r1$resid)
+qqline(r1$resid)
+skewness(r1$resid) #greater than zero is evidence for having skew
+#-1.931305
+```
+
+## Boxcox method 
+
+Transforming your data using the boxcox method
+
+XXX is where you need to copy in the lamda with the highest likelihood (you can round this number to something more reasonable)
+
+```{r transforming data}
+
+#need non-zero data for boxcox method to add a small amount to every value
+simpson_stat_dom_merged$simpson_t <- simpson_stat_dom_merged$simpson+0.01 
+b=boxcox(simpson_stat_dom_merged$simpson_t~simpson_stat_dom_merged$YEAR)
+b #x is lambda and y is values of likelihood
+lamda=b$x #lambda values 
+lik=b$y #y is values of liklihood 
+bc=cbind(lamda,lik)
+bc[order(-lik),] #use the lamda with the highest likelihood to transform your data
+#lambda of 2 is best transformation 
+simpson_stat_dom_merged$simpson_bc <- simpson_stat_dom_merged$simpson^2 
+simpson_stat_dom_merged$simpson_bc <- simpson_stat_dom_merged$simpson_bc-1 
+simpson_stat_dom_merged$simpson_bc <- simpson_stat_dom_merged$simpson_bc/2
+
+#simpson_stat_dom_merged$simpson_bc is now transformed using the boxcox method 
+```
+
+## Normality 
+
+Checking data for normality after transformation
+
+```{r check for normality}
+
+ggplot() + geom_density(aes(x=simpson_stat_dom_merged$simpson_bc))
+shapiro.test(simpson_stat_dom_merged$simpson_bc)
+#data:  simpson_stat_dom_merged$simpson_bc
+#W = 0.92366, p-value = 0.219
+r1=lm(simpson_stat_dom_merged$simpson_bc~simpson_stat_dom_merged$YEAR)
+plot(simpson_stat_dom_merged$YEAR, rstandard(r1))
+hist(r1$resid)
+qqnorm(r1$resid)
+qqline(r1$resid)
+skewness(r1$resid) #greater than zero is evidence for having skew
+#-1.204832
+
+# if data look normal after transformation, proceed with parametric test
+# if data do not look normal and homoscedastic after transformation, proceed with non-parametric test
+
+```
+
+## ANOVA
+
+ANOVA: parametric test for differences among groups
+Use COLUMN_bc if using transformed data, otherwise use COLUMN
+
+```{r ANOVA}
+
+ANOVA <- aov(simpson_stat_dom_merged$simpson_bc ~ simpson_stat_dom_merged$YEAR) 
+plot(ANOVA)
+summary(ANOVA) # display Type I ANOVA table
+#Df Sum Sq Mean Sq F value Pr(>F)
+#simpson_stat_dom_merged$YEAR  1    460   459.6   0.277  0.607
+#Residuals                    13  21554  1658.0 
+
+#p value 0.6 so not significant 
+drop1(ANOVA,~.,test="F") # type III SS and F Tests 
+#                            Df Sum of Sq   RSS    AIC F value Pr(>F)
+#<none>                                    21554 113.05               
+#simpson_stat_dom_merged$YEAR  1    459.62 22014 111.37  0.2772 0.6074
+
+# for post-hoc pairwise tests
+#TukeyHSD(ANOVA) # where fit comes from aov()
+
+```
+
+## Kruskal-Wallis
+non-parametric test for differences among groups
+
+```{r Kruskal-Wallis}
+
+kruskal.test(COLUMN~COLUMN2, data=DATAFRAME)
+
+# for post-hoc pairwise tests....
+DunnTest(x=DATAFRAME$COLUMN, g=DATAFRAME$COLUMN2, method="fdr") # note that these p-values are one-sided values; for two-sided p-values they need to be doubled
+
+```
