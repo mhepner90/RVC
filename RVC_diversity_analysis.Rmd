@@ -2757,6 +2757,7 @@ library(tidyverse)
 
 #Create socket cluster of multiple cores 
 cl=makeCluster(detectCores()) #shouls i make type = "base" or "FORK"??
+
 #Load automap on all cores (to access function `autoKrige`)
 clusterEvalQ(cl,c(library(automap),library(mgcv),library(plotrix)))
 
@@ -3004,16 +3005,16 @@ library(mgcv) #gam
 # 1. Read in data and remove years (optional)
 all_matrices_data = read_rds("psu_matrices_data_rds")
 
-as.data.frame(all_matrices_data)
+data = all_matrices_data %>%
+  select(YEAR, PRIMARY_SAMPLE_UNIT, LON_DEGREES, LAT_DEGREES, DEPTH, STRAT, PROT, abundance_sum, biomass_sum, evenness, richness, simpson, shannon, func.div) 
+
+as.data.frame(data)
 
 #Send all_matrices_data to each core
-clusterExport(cl,varlist=c("all_matrices_data")) 
+clusterExport(cl,varlist=c("data")) 
   #cl - a cluster object
   #varlist - character vector of names of objects to export
 
-data = all_matrices_data %>%
-  select(YEAR, PRIMARY_SAMPLE_UNIT, LON_DEGREES, LAT_DEGREES, DEPTH, STRAT, PROT, abundance_sum, biomass_sum, evenness, richness, simpson, shannon, func.div) 
-   
 partial.deviance.list=parLapply(cl, data, function(i){
   do.call(rbind, lapply(list("abundance_sum","biomass_sum","richness","evenness", "simpson","shannon", "functional"),function(j){
         
