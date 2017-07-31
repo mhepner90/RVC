@@ -222,9 +222,9 @@ func_dist_common = read_rds("functional_diversity/func_dist_common_name_rds")
 func_dist_phy_common = as.phylo(as.hclust(func.dist_common))
 
 #Plot the best tree - average 
-#removes 250/348 species 
+#removes 298/348 species 
 pdf("functional_diversity/functional_dendrogram_2.pdf", width = 7, height = 10)
-sup = drop.tip(func_dist_phy_common, sample(func_dist_phy_common$tip.label)[1:250])
+sup = drop.tip(func_dist_phy_common, sample(func_dist_phy_common$tip.label)[1:298])
 par(mfrow=c(1,1)) 
 plot(sup, horiz=TRUE, main = "Functional Dendrogram", cex = 0.5, label.offset=0.025, edge.width = 1, cex.main = 1.5)
 dev.off()
@@ -537,11 +537,19 @@ if(!file.exists("psu_abun_sum_rds")){
     filter(!abundance_sum == "0")
     #dim(psu_abun_sum) #5241*4
     
-  #remove PSU-'s with 1 species [2006,602U INPR] [2016,  1010U, INPR]
-  psu_abun_sum = psu_abun_sum[!(psu_abun_sum$YEAR == "2006" & psu_abun_sum$PRIMARY_SAMPLE_UNIT == "602U" | psu_abun_sum$YEAR == "2016" & psu_abun_sum$PRIMARY_SAMPLE_UNIT == "1010U"),] 
-  #dim(psu_abun_sum) # 5239 x 4 
+  #remove PSU-'s with 1 species [2006,602U INPR] [2016,  1010U, INPR] AND removed 2001 PSU 222U HRRF abundance 5X greater than normal (50,114 species)
+  psu_abun_sum = psu_abun_sum[!(psu_abun_sum$YEAR == "2006" & 
+                                  psu_abun_sum$PRIMARY_SAMPLE_UNIT == "602U" | 
+                                  psu_abun_sum$YEAR == "2016" & 
+                                  psu_abun_sum$PRIMARY_SAMPLE_UNIT == "1010U" | 
+                                  psu_abun_sum$YEAR == "2001" &
+                                  psu_abun_sum$PRIMARY_SAMPLE_UNIT == "222U"),] 
+  #dim(psu_abun_sum) # 5238 x 4 
 
   saveRDS(psu_abun_sum, "psu_abun_sum_rds")
+  
+  write_csv(psu_abun_sum, "big_csv/abundance_psu/psu_abun_sum.csv")
+  
 
 } else{
   psu_abun = read_rds("psu_abun_sum_rds")
@@ -572,8 +580,15 @@ if(!file.exists("psu_bio_sum_rds")){
     #dim(psu_bio_sum) #5241    5
   
   #remove PSU's with 1 species [2006,602U INPR] [2016,  1010U, INPR]
-  psu_bio_sum = psu_bio_sum[!(psu_bio_sum$YEAR == "2006" & psu_bio_sum$PRIMARY_SAMPLE_UNIT == "602U" | psu_bio_sum$YEAR == "2016" & psu_bio_sum$PRIMARY_SAMPLE_UNIT == "1010U"),]
-  #dim(psu_bio_sum) #5239    5
+  psu_bio_sum = psu_bio_sum[!(psu_bio_sum$YEAR == "2006" &
+                                psu_bio_sum$PRIMARY_SAMPLE_UNIT == "602U" |
+                                psu_bio_sum$YEAR == "2016" &
+                                psu_bio_sum$PRIMARY_SAMPLE_UNIT == "1010U" |
+                                psu_bio_sum$YEAR == "2001" &
+                                psu_bio_sum$PRIMARY_SAMPLE_UNIT == "222U"),]
+  
+
+  #dim(psu_bio_sum) #5238    5
   
    saveRDS(psu_bio_sum, "psu_bio_sum_rds")
    
@@ -631,8 +646,14 @@ if(!file.exists("psu_div_rds")){
   #dim(psu_diversity) #5,241 x 7
   
     #remove PSU-'s with 1 species [2006,602U INPR] [2016,  1010U, INPR]
-  psu_diversity = psu_diversity[!(psu_diversity$YEAR == "2006" & psu_diversity$PRIMARY_SAMPLE_UNIT == "602U" | psu_diversity$YEAR == "2016" & psu_diversity$PRIMARY_SAMPLE_UNIT == "1010U"),] 
-  #dim(psu_diversity) #5,239 x 9
+  psu_diversity = psu_diversity[!(psu_diversity$YEAR == "2006" & 
+                                    psu_diversity$PRIMARY_SAMPLE_UNIT == "602U" | 
+                                    psu_diversity$YEAR == "2016" & 
+                                    psu_diversity$PRIMARY_SAMPLE_UNIT == "1010U" |
+                                    psu_diversity$YEAR == "2001" &
+                                    psu_diversity$PRIMARY_SAMPLE_UNIT == "222U"),] 
+
+  #dim(psu_diversity) #5,238 x 9
   
   saveRDS(psu_diversity, "psu_div_rds")
 
@@ -657,6 +678,17 @@ if(!file.exists("fd_eveness_rds")){
   #Convert rownames to all caps
   rownames(traits) <- toupper(rownames(traits))
   
+  sample_data = read_csv("big_csv/sample_data/FK/sample_data_all_years.csv")
+  #remove PSU-'s with 1 species [2006,602U INPR] [2016,  1010U, INPR] AND removed 2001 PSU 222U HRRF abundance 5X greater than normal (50,114 species)
+  sample_data = sample_data[!(sample_data$YEAR == "2006" & 
+                                  sample_data$PRIMARY_SAMPLE_UNIT == "602U" | 
+                                  sample_data$YEAR == "2016" & 
+                                  sample_data$PRIMARY_SAMPLE_UNIT == "1010U" | 
+                                  sample_data$YEAR == "2001" &
+                                  sample_data$PRIMARY_SAMPLE_UNIT == "222U"),]
+  
+  saveRDS(sample_data, "sample_data_rds")
+  
   psu_fk_abun <- read_csv("big_csv/abundance_psu/psu_fk_abun.csv", col_types = cols(protected_status = col_character())) #3,643,306*10
     
   #remove species not identified in species level and protected status all
@@ -665,8 +697,17 @@ if(!file.exists("fd_eveness_rds")){
     filter(stringr::str_detect(protected_status, 'all')) 
     #dim(psu_fk_abun_no_spp) #1,689,982      10
   
-  abund = psu_fk_abun_no_spp %>% 
-    filter(protected_status != "all") %>% #1,689,982 x 10
+  #remove PSU-'s with 1 species [2006,602U INPR] [2016,  1010U, INPR] AND removed 2001 PSU 222U HRRF abundance 5X greater than normal (50,114 species)
+  psu_abun_sum = psu_fk_abun_no_spp[!(psu_fk_abun_no_spp$YEAR == "2006" & 
+                                  psu_fk_abun_no_spp$PRIMARY_SAMPLE_UNIT == "602U" | 
+                                  psu_fk_abun_no_spp$YEAR == "2016" & 
+                                  psu_fk_abun_no_spp$PRIMARY_SAMPLE_UNIT == "1010U" | 
+                                  psu_fk_abun_no_spp$YEAR == "2001" &
+                                  psu_fk_abun_no_spp$PRIMARY_SAMPLE_UNIT == "222U"),] 
+  #dim(psu_abun_sum) # 5238 x 4 
+
+  
+  abund = psu_abun_sum %>% 
     select(YEAR, PRIMARY_SAMPLE_UNIT,STRAT,PROT, SPECIES_CD, abundance)
   #1,689,982 * 6
   
@@ -718,11 +759,11 @@ if(!file.exists("fd_eveness_rds")){
 ```{r bind psu matrices and sample data}
 
 if(!file.exists("psu_matrices_data_rds")){
-  psu_abun = read_rds("psu_abun_sum_rds") #5,241*4
-  psu_bio = read_rds("psu_bio_sum_rds") #5,241*5
-  psu_div = read_rds("psu_div_rds") # #5,241*7
-  fd_evenness = read_rds("fd_eveness_rds")
-  sample_data = as.tibble(read_csv("big_csv/sample_data/FK/sample_data_all_years.csv")) 
+  psu_abun = read_rds("psu_abun_sum_rds") #5,238*4
+  psu_bio = read_rds("psu_bio_sum_rds") #5,238*5
+  psu_div = read_rds("psu_div_rds") # #5,238*9
+  fd_evenness = read_rds("fd_eveness_rds") #5238*7
+  sample_data = read_rds("sample_data_rds") #5238*22
   #PRIMARY_SAMPLE_UNIT, YEAR, MONTH, DAY, STATION_N,R LAT_DEGREES, LON_DEGREES, DEPTH, UNDERWATER_VISIBILITY, MAPGRID_NR, HABITAT_CD, ZONE_NR, SUBREGION_NR, MPA_NR, PROT, STRAT
   
   all_matrices = inner_join(psu_abun, psu_bio) #5,241*6 (+mean abundance and biomass)
@@ -731,9 +772,9 @@ if(!file.exists("psu_matrices_data_rds")){
   all_matrices_data = inner_join(all_matrices, sample_data) #5,241 x 24
 
   saveRDS(all_matrices_data, "psu_matrices_data_rds")
-
+  
   } else{
-  all_matrices_data = read_rds("psu_matrices_data_rds")
+  all_matrices_data = read_rds("psu_matrices_data_rds") #5238, 32
   }
 
 ```
@@ -814,7 +855,7 @@ ab_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=abundance_mean, colour=STRAT
   theme_bw(base_size=16)+
   theme(
       plot.margin=unit(c(1,1,1,1),"cm"),
-      legend.position="none", #"none", "right",c(0.8,0.68),
+      legend.position="right", #"none", "right",c(0.8,0.68),
       legend.text=element_text(size=11),
       legend.key.size=unit(5,"mm"),
       panel.grid.major=element_blank(),
@@ -823,7 +864,7 @@ ab_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=abundance_mean, colour=STRAT
       strip.text.x=element_text(size=18,hjust=0),
       axis.text.x=element_text(angle=90,vjust=0.5,hjust=1),
       plot.caption = element_text(size=10))
-#ggsave(file="abundance_by_year_and_strata.pdf", path="big_csv/plots")
+ggsave(file="abundance_by_year_and_strata.pdf", path="big_csv/plots")
 
 #biomass
 bio_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=biomass_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
@@ -842,7 +883,7 @@ bio_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=biomass_mean, colour=STRAT,
       strip.text.x=element_text(size=18,hjust=0),
       axis.text.x=element_text(angle=90,vjust=0.5,hjust=1),
       plot.caption = element_text(size=10))
-#ggsave(file="biomass_by_year_and_strata.pdf", path="big_csv/plots")
+ggsave(file="biomass_by_year_and_strata.pdf", path="big_csv/plots")
 
 #richness
 rich_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=richness_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
@@ -861,7 +902,7 @@ rich_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=richness_mean, colour=STRA
       strip.text.x=element_text(size=18,hjust=0),
       axis.text.x=element_text(angle=90,vjust=0.5,hjust=1),
       plot.caption = element_text(size=10))
-#ggsave(file="richness_by_year_and_strata.pdf", path="big_csv/plots")
+ggsave(file="richness_by_year_and_strata.pdf", path="big_csv/plots")
 
 # evenness
 eve_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=evenness_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
@@ -880,7 +921,7 @@ eve_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=evenness_mean, colour=STRAT
       strip.text.x=element_text(size=18,hjust=0),
       axis.text.x=element_text(angle=90,vjust=0.5,hjust=1),
       plot.caption = element_text(size=10))
-#ggsave(file="functional_diversity_by_year_and_strata.pdf", path="big_csv/plots")
+ggsave(file="functional_diversity_by_year_and_strata.pdf", path="big_csv/plots")
 
 #simpson
 sim_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=simpson_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
@@ -899,7 +940,7 @@ sim_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=simpson_mean, colour=STRAT,
       strip.text.x=element_text(size=18,hjust=0),
       axis.text.x=element_text(angle=90,vjust=0.5,hjust=1),
       plot.caption = element_text(size=10))
-#ggsave(file="simpson_diversity_by_year_and_strata.pdf", path="big_csv/plots")
+ggsave(file="simpson_diversity_by_year_and_strata.pdf", path="big_csv/plots")
 
 # shannon
 shan_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=shannon_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
@@ -937,7 +978,7 @@ func_ys= ggplot(stats_all_matrices_data,aes(x=YEAR,y=func.div_mean, colour=STRAT
       strip.text.x=element_text(size=18,hjust=0),
       axis.text.x=element_text(angle=90,vjust=0.5,hjust=1),
       plot.caption = element_text(size=10))
-#ggsave(file="functional_diversity_by_year_and_strata.pdf", path="big_csv/plots")
+ggsave(file="functional_diversity_by_year_and_strata.pdf", path="big_csv/plots")
 
 #combine multiple plots
 multiplot <- function(plotlist=c(ab_ys, rich_ys, sim_ys, func_ys, bio_ys, eve_ys, shan_ys), layout= )
@@ -961,7 +1002,6 @@ grid.arrange(
   arrangeGrob(shan_ys,func_ys, ncol=2, nrow=1),bottom = "Year", left = "Effective number of species")
 #want to remove STRAT. Just wamt one legend ideally. 
 
-
 grid.arrange(
   arrangeGrob(ab_ys,bio_ys, ncol=2, nrow=1), 
   arrangeGrob(rich_ys,sim_ys, ncol=2, nrow=1),
@@ -969,12 +1009,6 @@ grid.arrange(
 #want to remove STRAT. Just wamt one legend ideally. 
 #save legend
 legend <- get_legend(ab_ys)
-
-#########KATIE: I tried using multiplot and grid.arrange but I couldn't get the height and width functions to work correctly. I am thinking we only need one legend of Strat. Preferable enlarged on the right with all 7 plots, but that might be something that has to be done in powerpoint or paint. Maybe also have the bottom read "Year" so that its not below each chart. I am thinking the order should be: 
-#           a)Mean abundance, b)Mean Biomass, 
-#           c)Richness,        d)Evennnesss, 
-#           e)Simpson,         f) Shannon, 
-#           g) Functional 
 
 ```
 
@@ -1047,10 +1081,17 @@ if(!file.exists("stats_all_matrices_data_rds")){
   
   saveRDS(stats_all_matrices_data, "stats_all_matrices_data_rds")
   
+  write_csv(stats_all_matrices_data, "big_csv/stats_all_matrices_data.csv")
+  
   } else{ 
   stats_all_matrices_data = read_rds("stats_all_matrices_data_rds")
   }
 
+
+mean_indices = stats_all_matrices_data %>%
+  select(YEAR, STRAT, abundance_mean, biomass_mean, evenness_mean, richness_mean, simpson_mean, shannon_mean, func.div_mean) %>%
+  group_by(YEAR, STRAT) %>%
+  arrange(YEAR, desc(abundance_mean))
 # plot mean and se across strat and year using line graphs
 
 # BY STRAT and YEAR
@@ -1087,7 +1128,7 @@ bio_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=biomass_mean, colour=STRAT,
       axis.title.x=element_text(size=12),
       axis.title.y=element_text(size=12),
       title=element_text(size=12))
-#ggsave(file="biomass_by_year_and_strata.pdf", path="big_csv/plots")
+ggsave(file="biomass_by_year_and_strata.pdf", path="big_csv/plots")
 
 # evenness
 eve_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=evenness_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
@@ -1104,7 +1145,7 @@ eve_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=evenness_mean, colour=STRAT
       axis.title.x=element_text(size=12),
       axis.title.y=element_text(size=12),
       title=element_text(size=12))
-#ggsave(file="evenness_by_year_and_strata.pdf", path="big_csv/plots")
+ggsave(file="evenness_by_year_and_strata.pdf", path="big_csv/plots")
 
 #richness
 rich_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=richness_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
@@ -1121,7 +1162,7 @@ rich_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=richness_mean, colour=STRA
       axis.title.x=element_text(size=12),
       axis.title.y=element_text(size=12),
       title=element_text(size=12))
-#ggsave(file="richness_by_year_and_strata.pdf", path="big_csv/plots")
+ggsave(file="richness_by_year_and_strata.pdf", path="big_csv/plots")
 
 #simpson
 sim_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=simpson_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
@@ -1138,7 +1179,7 @@ sim_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=simpson_mean, colour=STRAT,
       axis.title.x=element_text(size=12),
       axis.title.y=element_text(size=12),
       title=element_text(size=12))
-#ggsave(file="simpson_diversity_by_year_and_strata.pdf", path="big_csv/plots")
+ggsave(file="simpson_diversity_by_year_and_strata.pdf", path="big_csv/plots")
 
 # shannon
 shan_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=shannon_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
@@ -1155,7 +1196,7 @@ shan_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=shannon_mean, colour=STRAT
       axis.title.x=element_text(size=12),
       axis.title.y=element_text(size=12),
       title=element_text(size=12))
-#ggsave(file="shannon_diversity_by_year_and_strata.pdf", path="big_csv/plots")
+ggsave(file="shannon_diversity_by_year_and_strata.pdf", path="big_csv/plots")
 
 # functional
 func_ys= ggplot(stats_all_matrices_data,aes(x=YEAR,y=func.div_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
@@ -1172,7 +1213,7 @@ func_ys= ggplot(stats_all_matrices_data,aes(x=YEAR,y=func.div_mean, colour=STRAT
       axis.title.x=element_text(size=12),
       axis.title.y=element_text(size=12),
       title=element_text(size=12))
-#ggsave(file="functional_diversity_by_year_and_strata.pdf", path="big_csv/plots")
+ggsave(file="functional_diversity_by_year_and_strata.pdf", path="big_csv/plots")
 
 #save legend
 for_legend_vert = ggplot(stats_all_matrices_data,aes(x=YEAR,y=abundance_mean, colour=STRAT, group=STRAT))+
@@ -1426,7 +1467,7 @@ ab_gs= ggplot(matrices_strat_grouped,aes(x=YEAR,y=abundance_mean, colour=STRAT_G
       axis.title.x=element_text(size=12),
       axis.title.y=element_text(size=12),
       title=element_text(size=12))
-#ggsave(file="abundance_by_year_and_strata_grouped.pdf", path="big_csv/plots")
+ggsave(file="abundance_by_year_and_strata_grouped.pdf", path="big_csv/plots")
 
 #biomass
 bio_gs= ggplot(matrices_strat_grouped,aes(x=YEAR,y=biomass_mean, colour=STRAT_GROUPED, group=STRAT_GROUPED))+ #shape=STRAT
@@ -1444,7 +1485,7 @@ bio_gs= ggplot(matrices_strat_grouped,aes(x=YEAR,y=biomass_mean, colour=STRAT_GR
       axis.title.x=element_text(size=12),
       axis.title.y=element_text(size=12),
       title=element_text(size=12))
-#ggsave(file="biomass_by_year_and_strata_grouped.pdf", path="big_csv/plots")
+ggsave(file="biomass_by_year_and_strata_grouped.pdf", path="big_csv/plots")
 
 #evenness
 eve_gs = ggplot(matrices_strat_grouped,aes(x=YEAR,y=evenness_mean, colour=STRAT_GROUPED, group=STRAT_GROUPED))+ #shape=STRAT
@@ -1462,7 +1503,7 @@ eve_gs = ggplot(matrices_strat_grouped,aes(x=YEAR,y=evenness_mean, colour=STRAT_
       axis.title.x=element_text(size=12),
       axis.title.y=element_text(size=12),
       title=element_text(size=12))
-#ggsave(file="evenness_by_year_and_strata_grouped.pdf", path="big_csv/plots")
+ggsave(file="evenness_by_year_and_strata_grouped.pdf", path="big_csv/plots")
 
 #richness
 rich_gs= ggplot(matrices_strat_grouped,aes(x=YEAR,y=richness_mean, colour=STRAT_GROUPED, group=STRAT_GROUPED))+ #shape=STRAT
@@ -1480,7 +1521,7 @@ rich_gs= ggplot(matrices_strat_grouped,aes(x=YEAR,y=richness_mean, colour=STRAT_
       axis.title.x=element_text(size=12),
       axis.title.y=element_text(size=12),
       title=element_text(size=12))
-#ggsave(file="richness_by_year_and_strata_grouped.pdf", path="big_csv/plots")
+ggsave(file="richness_by_year_and_strata_grouped.pdf", path="big_csv/plots")
 
 #simpson
 sim_gs= ggplot(matrices_strat_grouped,aes(x=YEAR,y=simpson_mean, colour=STRAT_GROUPED, group=STRAT_GROUPED))+ #shape=STRAT
@@ -1498,7 +1539,7 @@ sim_gs= ggplot(matrices_strat_grouped,aes(x=YEAR,y=simpson_mean, colour=STRAT_GR
       axis.title.x=element_text(size=12),
       axis.title.y=element_text(size=12),
       title=element_text(size=12))
-#ggsave(file="simpson_by_year_and_strata_grouped.pdf", path="big_csv/plots")
+ggsave(file="simpson_by_year_and_strata_grouped.pdf", path="big_csv/plots")
 
 #shannon
 shan_gs= ggplot(matrices_strat_grouped,aes(x=YEAR,y=shannon_mean, colour=STRAT_GROUPED, group=STRAT_GROUPED))+ #shape=STRAT
@@ -1516,7 +1557,7 @@ shan_gs= ggplot(matrices_strat_grouped,aes(x=YEAR,y=shannon_mean, colour=STRAT_G
       axis.title.x=element_text(size=12),
       axis.title.y=element_text(size=12),
       title=element_text(size=12))
-#ggsave(file="shannon_by_year_and_strata_grouped.pdf", path="big_csv/plots")
+ggsave(file="shannon_by_year_and_strata_grouped.pdf", path="big_csv/plots")
 
 #functional
 func_gs= ggplot(matrices_strat_grouped,aes(x=YEAR,y=func.div_mean, colour=STRAT_GROUPED, group=STRAT_GROUPED))+ #shape=STRAT
@@ -1534,7 +1575,7 @@ func_gs= ggplot(matrices_strat_grouped,aes(x=YEAR,y=func.div_mean, colour=STRAT_
       axis.title.x=element_text(size=12),
       axis.title.y=element_text(size=12),
       title=element_text(size=12))
-#ggsave(file="functional_diversity_by_year_and_strata_grouped.pdf", path="big_csv/plots")
+ggsave(file="functional_diversity_by_year_and_strata_grouped.pdf", path="big_csv/plots")
 
 #save legend
 for_legend_gs_vert = ggplot(matrices_strat_grouped,aes(x=YEAR,y=abundance_mean, colour=STRAT_GROUPED, group=STRAT_GROUPED))+ 
@@ -1573,7 +1614,6 @@ ggsave(file="rich_shan_sim_func_by_year_and_strata_grouped.pdf", g4, width=7, he
 
 
 ### ***Don't need to combine plots by STRAT and by YEAR just YEAR & STRAT for now***
-
 
 ### ***Didn't run the code below -KS
 # by STRAT
@@ -1673,11 +1713,17 @@ Subregions: UK, MK, LK
 
 if(!file.exists("matrices_strat_grouped_with_subregion_rds")){
   
-  all_matrices_data = read_rds("psu_matrices_data_rds") # 5239 x 23
+  all_matrices_data = read_rds("psu_matrices_data_rds") # 5238 x 32
   subregions = as.tibble(read_csv("big_csv/subregion_domains/subregion_domains_by_psu.csv")) # 5241 x 3
   
     #remove PSU-'s with 1 species [2006,602U INPR] [2016,  1010U, INPR]
- subregions = subregions[!(subregions$YEAR == "2006" & subregions$PRIMARY_SAMPLE_UNIT == "602U" | subregions$YEAR == "2016" & subregions$PRIMARY_SAMPLE_UNIT == "1010U"),] #5239 x 3
+ subregions = subregions[!(subregions$YEAR == "2006" & 
+                             subregions$PRIMARY_SAMPLE_UNIT == "602U" | 
+                             subregions$YEAR == "2016" & 
+                             subregions$PRIMARY_SAMPLE_UNIT == "1010U" |
+                             subregions$YEAR == "2001" &
+                             subregions$PRIMARY_SAMPLE_UNIT == "222U"),] #5238 x 3
+  saveRDS(subregions, "subregions_rds")
   
   all_matrices_data_with_subregion = inner_join(all_matrices_data, subregions) #5,239 x 25                  
   
@@ -1689,6 +1735,7 @@ if(!file.exists("matrices_strat_grouped_with_subregion_rds")){
       ifelse(grepl("FMLR|FSLR|FDLR", STRAT), 'LINEAR_REEF', 
              ifelse(grepl("OFPR|MCPR|INPR", STRAT), 'PATCH_REEF',
                     ifelse(grepl('HRRF', STRAT), 'HIGH_RELIEF', "IDK")))) %>%
+    filter(SUBREGION_DOMAIN != "BiscBay") %>% 
     group_by(SUBREGION_DOMAIN, STRAT_GROUPED, YEAR) %>% 
     summarize(
       abundance_mean = mean(abundance_sum),
@@ -1745,7 +1792,7 @@ ab_sy_HR = matrices_strat_grouped_with_subregion %>% filter(STRAT_GROUPED=="HIGH
   geom_errorbar(aes(ymax=abundance_mean+abundance_se,ymin=abundance_mean-abundance_se),width=0.1)+
   geom_line(aes(group=SUBREGION_DOMAIN),lwd=1)+
   labs(title= "A) Abundance", x="Year", y="Mean abundance ()", colour = "Subregion")+
-  scale_colour_manual(labels=c("LK", "MK", "UK"), values= c("red", "green", "blue"))+
+  scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("red", "green", "blue"))+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
   theme_bw()+
   theme(
@@ -1933,7 +1980,7 @@ HR = x %>% filter(STRAT_GROUPED=="HIGH_RELIEF") %>% ggplot(.,aes(x=YEAR, y=value
    geom_line(aes(group=SUBREGION_DOMAIN),lwd=1)+
   facet_wrap(~variable,scales="free",ncol=2)+
   labs(title= "", x="Year", y="", colour = "Subregion")+
-  scale_colour_manual(labels=c("Upper Keys", "Middle Keys", "Lower Keys"), values= c("red", "green", "blue"))+
+  scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("red", "green", "blue"))+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
     theme(
       strip.text=element_text(hjust = 0),
@@ -1950,7 +1997,7 @@ LR = x %>% filter(STRAT_GROUPED=="LINEAR_REEF") %>% ggplot(.,aes(x=YEAR, y=value
    geom_line(aes(group=SUBREGION_DOMAIN),lwd=1)+
   facet_wrap(~variable,scales="free",ncol=2)+
   labs(title= "", x="Year", y="", colour = "Subregion")+
-  scale_colour_manual(labels=c("Upper Keys", "Middle Keys", "Lower Keys"), values= c("red", "green", "blue"))+
+  scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("red", "green", "blue"))+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
     theme(
       strip.text=element_text(hjust = 0),
@@ -1958,7 +2005,7 @@ LR = x %>% filter(STRAT_GROUPED=="LINEAR_REEF") %>% ggplot(.,aes(x=YEAR, y=value
       panel.spacing.x=unit(3, "lines"),
       legend.position=c(0.75,0.1))
 ggsave(file="all_indices_by_subregion_and_year_LINEAR_REEF.pdf", LR, width=7, height=10, path="big_csv/plots")
-
+LR
 #PATCH REEF
 PR = x %>% filter(STRAT_GROUPED=="PATCH_REEF") %>% ggplot(.,aes(x=YEAR, y=value.mean, col=SUBREGION_DOMAIN, group=SUBREGION_DOMAIN))+
   geom_point(size=3)+
@@ -1966,7 +2013,7 @@ PR = x %>% filter(STRAT_GROUPED=="PATCH_REEF") %>% ggplot(.,aes(x=YEAR, y=value.
    geom_line(aes(group=SUBREGION_DOMAIN),lwd=1)+
   facet_wrap(~variable,scales="free",ncol=2)+
   labs(title= "", x="Year", y="", colour = "Subregion")+
-  scale_colour_manual(labels=c("Upper Keys", "Middle Keys", "Lower Keys"), values= c("red", "green", "blue"))+
+  scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("red", "green", "blue"))+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
     theme(
       strip.text=element_text(hjust = 0),
@@ -1974,6 +2021,130 @@ PR = x %>% filter(STRAT_GROUPED=="PATCH_REEF") %>% ggplot(.,aes(x=YEAR, y=value.
       panel.spacing.x=unit(3, "lines"),
       legend.position=c(0.75,0.1))
 ggsave(file="all_indices_by_subregion_and_year_PATCH_REEF.pdf", PR, width=7, height=10, path="big_csv/plots")
+PR
+```
+
+```{r Plot of all Strat but seperated by Forereef, Patch, High}
+
+all_matrices_data = read_rds("psu_matrices_data_rds")
+
+#all_matrices_data_with_subregion = readRDS("psu_matrices_data_with_subregion_rds")
+
+df.2 = all_matrices_data %>% 
+  select(YEAR, STRAT, PRIMARY_SAMPLE_UNIT, abundance_sum, biomass_sum, evenness, richness, simpson, shannon, func.div) %>%
+  filter(STRAT != "INPR") %>%
+  filter(STRAT != "MCPR") %>%
+  filter(STRAT != "OFPR") %>%
+  filter(STRAT != "HRRF")
+         
+#Melt dataframe so diversity indices are in a single column
+  x.2 = reshape2::melt(df.2, id.vars = c("YEAR", "STRAT"), measure.vars=c("abundance_sum", "biomass_sum", "evenness","richness","simpson","shannon","func.div")) # 31024 x 5
+
+#Summarize means and SEs by year, subregion, and variable
+  x.2=plyr::ddply(x.2, c("YEAR", "STRAT", "variable"), summarize, value.mean=mean(value), value.se=plotrix::std.error(value))
+
+#Rename levels for figure plotting
+  levels(x.2$variable)=c("A) Abundance", "B) Biomass", "C) Evenness", "D) Richness", "E) Simpson", "F) Shannon", "G) Functional")
+
+#Rename regions for figure plotting
+x.2$STRAT=factor(x.2$STRAT)
+levels(x.2$STRAT)=c("FDLR","FMLR", "FSLR")
+
+#Plot line graph
+#HIGH RELIEF
+Forereef =  x.2 %>%
+  ggplot(.,aes(x=YEAR, y=value.mean, col=STRAT, group=STRAT))+
+  geom_point(size=3)+
+  geom_errorbar(aes(ymax=value.mean+value.se,ymin=value.mean-value.se),width=0.1)+
+   geom_line(aes(group=STRAT),lwd=1)+
+  facet_wrap(~variable,scales="free",ncol=2)+
+  labs(title= "", x="Year", y="", colour = "Strata")+
+  scale_colour_manual(labels=c("FDLR","FMLR", "FSLR"), values= c("red", "green", "blue"))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+    theme(
+      strip.text=element_text(hjust = 0),
+      strip.background = element_blank(),
+      panel.spacing.x=unit(3, "lines"),
+      legend.position=c(0.75,0.1))
+Forereef
+ggsave(file="all_indices_by_year_all_forereef.pdf", Forereef, width=7, height=10, path="big_csv/plots")
+
+### PATCH REEF 
+df.3 = all_matrices_data %>% 
+  select(YEAR, STRAT, PRIMARY_SAMPLE_UNIT, abundance_sum, biomass_sum, evenness, richness, simpson, shannon, func.div) %>%
+  filter(STRAT != "FDLR") %>%
+  filter(STRAT != "FMLR") %>%
+  filter(STRAT != "FSLR") %>%
+  filter(STRAT != "HRRF")
+         
+#Melt dataframe so diversity indices are in a single column
+  x.3 = reshape2::melt(df.3, id.vars = c("YEAR", "STRAT"), measure.vars=c("abundance_sum", "biomass_sum", "evenness","richness","simpson","shannon","func.div")) # 31024 x 5
+
+#Summarize means and SEs by year, subregion, and variable
+  x.3=plyr::ddply(x.3, c("YEAR", "STRAT", "variable"), summarize, value.mean=mean(value), value.se=plotrix::std.error(value))
+
+#Rename levels for figure plotting
+  levels(x.3$variable)=c("A) Abundance", "B) Biomass", "C) Evenness", "D) Richness", "E) Simpson", "F) Shannon", "G) Functional")
+
+#Rename regions for figure plotting
+x.3$STRAT=factor(x.3$STRAT)
+levels(x.3$STRAT)=c("OFPR","MCPR", "INPR")
+
+#Plot line graph
+#Patchreef
+Patchreef =  x.3 %>%
+  ggplot(.,aes(x=YEAR, y=value.mean, col=STRAT, group=STRAT))+
+  geom_point(size=3)+
+  geom_errorbar(aes(ymax=value.mean+value.se,ymin=value.mean-value.se),width=0.1)+
+   geom_line(aes(group=STRAT),lwd=1)+
+  facet_wrap(~variable,scales="free",ncol=2)+
+  labs(title= "", x="Year", y="", colour = "Strata")+
+  scale_colour_manual(labels=c("INPR","MCPR","OFPR"), values= c("red", "green", "blue"))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+    theme(
+      strip.text=element_text(hjust = 0),
+      strip.background = element_blank(),
+      panel.spacing.x=unit(3, "lines"),
+      legend.position=c(0.75,0.1))
+Patchreef
+ggsave(file="all_indices_by_year_all_patchreef.pdf", Patchreef, width=7, height=10, path="big_csv/plots")
+
+##High reef 
+df.4 = all_matrices_data %>% 
+  select(YEAR, STRAT, PRIMARY_SAMPLE_UNIT, abundance_sum, biomass_sum, evenness, richness, simpson, shannon, func.div) %>%
+  filter(STRAT == "HRRF")
+         
+#Melt dataframe so diversity indices are in a single column
+  x.4 = reshape2::melt(df.4, id.vars = c("YEAR", "STRAT"), measure.vars=c("abundance_sum", "biomass_sum", "evenness","richness","simpson","shannon","func.div")) # 31024 x 5
+
+#Summarize means and SEs by year, subregion, and variable
+  x.4=plyr::ddply(x.4, c("YEAR", "STRAT", "variable"), summarize, value.mean=mean(value), value.se=plotrix::std.error(value))
+
+#Rename levels for figure plotting
+  levels(x.4$variable)=c("A) Abundance", "B) Biomass", "C) Evenness", "D) Richness", "E) Simpson", "F) Shannon", "G) Functional")
+
+#Rename regions for figure plotting
+x.4$STRAT=factor(x.4$STRAT)
+levels(x.4$STRAT)=c("HRRF")
+
+#Plot line graph
+#Highreef
+Highreef =  x.4 %>%
+  ggplot(.,aes(x=YEAR, y=value.mean, col=STRAT, group=STRAT))+
+  geom_point(size=3)+
+  geom_errorbar(aes(ymax=value.mean+value.se,ymin=value.mean-value.se),width=0.1)+
+   geom_line(aes(group=STRAT),lwd=1)+
+  facet_wrap(~variable,scales="free",ncol=2)+
+  labs(title= "", x="Year", y="", colour = "Strata")+
+  scale_colour_manual(labels=c("HRRF"), values= c("red"))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+    theme(
+      strip.text=element_text(hjust = 0),
+      strip.background = element_blank(),
+      panel.spacing.x=unit(3, "lines"),
+      legend.position=c(0.75,0.1))
+Highreef
+ggsave(file="all_indices_by_year_all_highreef.pdf", Highreef, width=7, height=10, path="big_csv/plots")
 
 ```
 
@@ -1987,11 +2158,8 @@ Subregions: UK, MK, LK
 
 if(!file.exists("matrices_strat_and_year_grouped_with_subregion_rds")){
   
-  all_matrices_data = read_rds("psu_matrices_data_rds") # 5239 x 23
-  subregions = as.tibble(read_csv("big_csv/subregion_domains/subregion_domains_by_psu.csv")) # 5241 x 3
-  
-  #remove PSU-'s with 1 species [2006,602U INPR] [2016,  1010U, INPR]
- subregions = subregions[!(subregions$YEAR == "2006" & subregions$PRIMARY_SAMPLE_UNIT == "602U" | subregions$YEAR == "2016" & subregions$PRIMARY_SAMPLE_UNIT == "1010U"),] #5239 x 3
+  all_matrices_data = read_rds("psu_matrices_data_rds") # 5238 x 23
+  subregions = readRDS("subregions_rds") # 5238 x 3
   
   all_matrices_data_with_subregion = inner_join(all_matrices_data, subregions) #5,241 x 25                  
   saveRDS(all_matrices_data_with_subregion, "psu_matrices_data_with_subregion_rds")
@@ -2002,6 +2170,7 @@ if(!file.exists("matrices_strat_and_year_grouped_with_subregion_rds")){
       ifelse(grepl("FMLR|FSLR|FDLR", STRAT), 'LINEAR_REEF', 
              ifelse(grepl("OFPR|MCPR|INPR", STRAT), 'PATCH_REEF',
                     ifelse(grepl('HRRF', STRAT), 'HIGH_RELIEF', "IDK")))) %>%
+    filter(SUBREGION_DOMAIN != "BiscBay") %>%
     group_by(SUBREGION_DOMAIN, STRAT_GROUPED) %>% 
     summarize(
       abundance_mean = mean(abundance_sum),
@@ -2072,6 +2241,7 @@ geom_line(aes(group=STRAT_GROUPED),lwd=1) +
       axis.title.x=element_text(size=12),
       axis.title.y=element_text(size=12),
       title=element_text(size=12))
+
 ggsave(file="abundance_by_subregion_and_strata_grouped.pdf", path="big_csv/plots")
 
 
@@ -2087,14 +2257,13 @@ ggplot(matrices_strat_grouped,aes(x=YEAR,y=abundance_mean, colour=STRAT_GROUPED,
   theme_bw(base_size=16)+
   theme(
       plot.margin=unit(c(1,1,1,1),"cm"),
-      legend.position="right",
+      legend.position="none",
       panel.grid.major=element_blank(),
       panel.grid.minor=element_blank(),
       strip.background=element_blank(),
       strip.text.x=element_text(size=18,hjust=0),
-      plot.caption = element_text(size=10)))
+      plot.caption = element_text(size=10))
 ggsave(file=".pdf", path="big_csv/plots")
-
 
 #mean biomass
 ggplot(matrices_strat_grouped,aes(x=YEAR,y=biomass_mean, colour=STRAT_GROUPED, group=STRAT_GROUPED))+ #shape=STRAT
@@ -2179,7 +2348,7 @@ ggplot(matrices_strat_grouped, aes(x=STRAT_GROUPED, y=abundance_mean)) +
   theme_classic() + 
   theme(axis.text.x = element_text(angle=90)) + 
   facet_wrap(~YEAR, scales='free_y')
-#ggsave(file=".pdf", path="big_csv/plots")
+ggsave(file=".pdf", path="big_csv/plots")
 
 #biomass
 ggplot(matrices_strat_grouped, aes(x=STRAT_GROUPED, y=biomass_mean)) + 
@@ -2314,6 +2483,8 @@ if(!file.exists("matrices_strat_grouped_rds")){
       evenness_max = max(evenness))
   
   saveRDS(matrices_ntmr, "matrices_ntmr_rds")
+  
+  write_csv(matrices_ntmr, "matrices_ntmr.csv")
   
   }else{
   matrices_ntmr = read_rds("matrices_ntmr_rds")
@@ -2526,6 +2697,47 @@ ggsave(file="ab_bio_eve_by_year_and_strata_grouped.pdf", g3, width=7, height=5, 
 g4 <- grid.arrange(arrangeGrob(rich_gs,sim_gs,ncol=2),arrangeGrob(shan_gs,func_gs,ncol=2),legend_gs_horiz,nrow=3,heights=c(2,2,.4))
 ggsave(file="rich_shan_sim_func_by_year_and_strata_grouped.pdf", g4, width=7, height=6, path="big_csv/plots")
 
+rich_ntmr = matrices_ntmr %>%
+  select(YEAR, PROT, richness_mean) %>%
+  spread(PROT, richness_mean) %>%
+  mutate(ratio = `1` - `0`)
+mean(rich_ntmr$ratio) #4.093574
+
+abun_ntmr = matrices_ntmr %>%
+  select(YEAR, PROT, abundance_mean) %>%
+  spread(PROT, abundance_mean) %>%
+  mutate(ratio = `1` - `0`)
+mean(abun_ntmr$ratio) #99.41827
+
+bio_ntmr = matrices_ntmr %>%
+  select(YEAR, PROT, biomass_mean) %>%
+  spread(PROT, biomass_mean) %>%
+  mutate(ratio = `1` - `0`)
+mean(bio_ntmr$ratio) #13.52065
+
+eve_ntmr = matrices_ntmr %>%
+  select(YEAR, PROT, evenness_mean) %>%
+  spread(PROT, evenness_mean) %>%
+  mutate(ratio = `1` - `0`)
+mean(eve_ntmr$ratio) #0.004180086
+
+sim_ntmr = matrices_ntmr %>%
+  select(YEAR, PROT, simpson_mean) %>%
+  spread(PROT, simpson_mean) %>%
+  mutate(ratio = `1` - `0`)
+mean(sim_ntmr$ratio) #0.5490365
+
+shan_ntmr = matrices_ntmr %>%
+  select(YEAR, PROT, shannon_mean) %>%
+  spread(PROT, shannon_mean) %>%
+  mutate(ratio = `1` - `0`)
+mean(shan_ntmr$ratio) #0.9409276
+
+func_ntmr = matrices_ntmr %>%
+  select(YEAR, PROT, func.div_mean) %>%
+  spread(PROT, func.div_mean) %>%
+  mutate(ratio = `1` - `0`)
+mean(func_ntmr$ratio) #0.1005665
 
 ```
 
@@ -2799,12 +3011,19 @@ as.data.frame(all_matrices_data)
 #Send all_matrices_data to each core
 clusterExport(cl,varlist=c("all_matrices_data")) #varlist - character vector of names of objects to export
 
-partial.deviance.list=parLapply(cl,all_matrices_data,function(i) {
-  do.call(rbind,lapply(list("abundance_sum","biomass_sum","richness","evenness", "simpson","shannon", "functional"),function(j) {
-    
+data = all_matrices_data %>%
+  select(YEAR, PRIMARY_SAMPLE_UNIT, LON_DEGREES, LAT_DEGREES, DEPTH, STRAT, PROT, abundance_sum, biomass_sum, evenness, richness, simpson, shannon, func.div) 
+
+  #partial.deviance.list=parLapply(cl,all_matrices_data,function(i) {
+  #do.call(rbind,lapply(list("abundance_sum","biomass_sum","richness","evenness", "simpson","shannon", "functional"),function(j) {
+
     #Subset only columns that are necessary to run the models and omit any NAs so all models are run on the same data
-    data=na.omit(all_matrices_data[[i]][,c("YEAR","LON_DEGREES","LAT_DEGREES","DEPTH","STRAT","PROT","abundance_sum","biomass_sum","richness","simpson","shannon", "evenness", "func.div")])
-    
+    #data=na.omit(all_matrices_data[,c("YEAR","LON_DEGREES","LAT_DEGREES","DEPTH","STRAT","PROT","abundance_sum","biomass_sum","evenness","richness","simpson","shannon",  "func.div")])
+     #lapply(data[,8:14], function(j) {
+   
+      partial.deviance.list=parLapply(cl, data, function(i){
+      do.call(rbind, lapply(list("abundance_sum","biomass_sum","richness","evenness", "simpson","shannon", "functional"),function(j){
+        
     #Build full model and null model based on (transformed) response variable
     if(j=="richness") {
       fullmod = gam(formula(paste(j,"~YEAR+STRAT+PROT+s(LONG_DEGREES,LAT_DEGREES,  by=YEAR, bs='ts')+s(DEPTH, by='ts')")), family=poisson, data=data)
