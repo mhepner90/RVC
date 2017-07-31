@@ -2849,7 +2849,7 @@ if(!file.exists("krigeall.list_rds")){
   
   #Perform kriging interpolation for each matrix
   
-  #responses are log transformed to better meet assumptions of normality of errors and constant variance. .... except my abun and bio still dont meet assumtions even after transformation
+  #responses are log transformed to better meet assumptions of normality of errors and constant variance
   
   krigeall.list= parLapply(cl,alphasp.list,function(i) {
     lapply(names(i@data)[1:7],function(j) {
@@ -2872,7 +2872,6 @@ if(!file.exists("krigeall.list_rds")){
   #Either input_data or new_data is in LongLat, please reproject.
    #input_data:  +proj=longlat +ellps=GRS80 +datum=NAD83 +no_defs +towgs84=0,0,0 
    #new_data:    +proj=utm +zone=18 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0 
-  
   
   saveRDS(krigeall.list, "krigeall.list_rds") 
   
@@ -3020,11 +3019,12 @@ partial.deviance.list=parLapply(cl, data, function(i){
         
     #Build full model and null model based on (transformed) response variable
     if(j=="richness") {
-      fullmod = gam(formula(paste(j,"~YEAR+STRAT+PROT+s(LONG_DEGREES,LAT_DEGREES,  by=YEAR, bs='ts')+s(DEPTH, by='ts')")), family=poisson, data=data)
+      fullmod = gam(formula(paste(j,"~YEAR+STRAT+PROT+s(LONG_DEGREES,LAT_DEGREES,by=YEAR, bs='ts')+s(DEPTH, by='ts')")), family=poisson, data=data)
       nullmod = gam(formula(paste(j,"~1")), family=poisson, data=data)
       
       } else if(j=="evenness") {
-    fullmod=gam(formula(paste("asin(sqrt(",j,"))~Year+STRAT+PROT+s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')+s(DEPTH,bs='ts')")), data=data)
+    fullmod=gam(formula(paste("asin(sqrt(",j,"))~YEAR+STRAT+PROT+s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')+s(DEPTH,bs='ts')")), data=data)
+    nullmod = gam(formula(paste("asin(sqrt(",j,"))~1")),data=data)
     
    } else {
       fullmod = gam(formula(paste("log(",j,")~YEAR+STRAT+PROT+s(LONG_DEGREES,LAT_DEGREES, by=YEAR, bs='ts')+s(DEPTH, by='ts')")), data=data)
@@ -3033,239 +3033,202 @@ partial.deviance.list=parLapply(cl, data, function(i){
     
     
   #Set up empty vectors for deviances
-  time.dev=c();space.dev=c(); env.dev=c(); mngt.dev=c()
+  time.dev=c(); space.dev=c(); env.dev=c(); mngt.dev=c()
 
   #time deviances 
     
-    #Sequence 1: time->space->mangement->environment
-    time.dev[1]=
-      (deviance(update(fullmod,.~.-YEAR,
-                       sp=fullmod$sp))-
-         deviance(fullmod))/deviance(nullmod)
-    
-    space.dev[1]=
-      (deviance(update(fullmod,.~.-YEAR-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'),
-                       sp=fullmod$sp[6:9]))-
-         deviance(update(fullmod,.~.-YEAR,sp=fullmod$sp)))/deviance(nullmod)
-    
-    mngt.dev[1]=
-      (deviance(update(fullmod,.~.-YEAR-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')-PROT,
-                       sp=fullmod$sp[6:9]))-
-         deviance(update(fullmod,.~.-YEAR,sp=fullmod$sp)))/deviance(nullmod)
-    
-    env.dev[1]=
-      (deviance(nullmod)-
-         deviance(update(fullmod,.~.-YEAR-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')-PROT,
-                         sp=fullmod$sp[6:9])))/deviance(nullmod)
-    
-    #Sequence 2: time->space->environment->mangement
-    time.dev[2]=
-      (deviance(update(fullmod,.~.-YEAR,
-                       sp=fullmod$sp))-
-         deviance(fullmod))/deviance(nullmod)
-    
-    space.dev[2]=
-      (deviance(update(fullmod,.~.-YEAR-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'),
-                       sp=fullmod$sp[6:9]))-
-         deviance(update(fullmod,.~.-YEAR,
-                         sp=fullmod$sp)))/deviance(nullmod)
-    
-    env.dev[2]=
-      (deviance(update(fullmod,.~.-YEAR-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')-STRAT-s(DEPTH,bs='ts'),
-                       sp=fullmod$sp[6:9]))-
-         deviance(update(fullmod,.~.-YEAR,
-                         sp=fullmod$sp)))/deviance(nullmod)
-    
-    mngt.dev[2]=
-      (deviance(nullmod)-
-         deviance(update(fullmod,.~.-YEAR-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')-STRAT-s(DEPTH,bs='ts'),
-                         sp=fullmod$sp[6:9])))/deviance(nullmod)
+    ###Sequence 1: time->space->mangement->environment 
 
-    #sequence 3: time->management->environment->space  
-    time.dev[3]=
-      (deviance(update(fullmod,.~.-YEAR,
-                       sp=fullmod$sp))-
+   time.dev[1]= #(deviance(-time)-deviance(full))/deviance(null)
+      (deviance(update(fullmod,.~.-YEAR, sp=fullmod$sp)) - #- TIME
+         deviance(fullmod))/
+        deviance(nullmod)
+    
+    space.dev[1] = #(deviance(-time-space)-deviance(-time))/deviance(null) 
+      (deviance(update(fullmod,.~.-YEAR-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'),sp=fullmod$sp[6:9]))-
+      deviance(update(fullmod,.~.-YEAR,sp=fullmod$sp))) /
+      deviance(nullmod)
+    
+    mngt.dev[1]= #(deviance(-time-space-mngt)-deviance(-time)/deviance(null)
+      (deviance(update(fullmod,.~.-YEAR-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')-PROT, sp=fullmod$sp[6:9]))-
+      deviance(update(fullmod,.~.-YEAR,sp=fullmod$sp)))/
+      deviance(nullmod)
+    
+    env.dev[1]= #(deviance(null)-deviance(-time,-space,-mngt))/deviance(null) 
+      (deviance(nullmod)-
+      deviance(update(fullmod,.~.-YEAR-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')-PROT,sp=fullmod$sp[6:9])))/ deviance(nullmod)
+    
+    ###Sequence 2: time->space->environment->mangement
+    
+    time.dev[2]= #(deviance(-time)-deviance(full))/deviance(null)
+      (deviance(update(fullmod,.~.-YEAR, sp=fullmod$sp))-
+         deviance(fullmod))/deviance(nullmod)
+    
+    space.dev[2]= #(deviance(-time-space)-deviance(-time))/deviance(null)
+      (deviance(update(fullmod,.~.-YEAR-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'),
+                       sp=fullmod$sp[6:9]))-
+         deviance(update(fullmod,.~.-YEAR,sp=fullmod$sp)))/deviance(nullmod)
+    
+    env.dev[2]= #(deviance(-time-space-env)-deviance(-time))/deviance(null)
+      (deviance(update(fullmod,.~.-YEAR-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')-STRAT-s(DEPTH,bs='ts'),sp=fullmod$sp[6:9]))-
+         deviance(update(fullmod,.~.-YEAR,sp=fullmod$sp)))/deviance(nullmod)
+    
+    mngt.dev[2]= #(deviance(null)-deviance(-time-space-env))/deviance(null)
+      (deviance(nullmod)-
+         deviance(update(fullmod,.~.-YEAR-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')-STRAT-s(DEPTH,bs='ts'), sp=fullmod$sp[6:9])))/deviance(nullmod)
+
+    ###sequence 3: time->management->environment->space  
+    
+    time.dev[3]= 
+      (deviance(update(fullmod,.~.-YEAR, sp=fullmod$sp))-
          deviance(fullmod))/deviance(nullmod)
     
     mngt.dev[3]=
-      (deviance(update(fullmod,.~.-YEAR-PROT,
-                       sp=fullmod$sp[1:5]))-
-         deviance(update(fullmod,.~.-YEAR,
-                         sp=fullmod$sp)))/deviance(nullmod)
+      (deviance(update(fullmod,.~.-YEAR-PROT, sp=fullmod$sp[1:5]))-
+         deviance(update(fullmod,.~.-YEAR, sp=fullmod$sp[1:5])))/deviance(nullmod)
 
     env.dev[3]=
-      (deviance(update(fullmod,.~.-YEAR-PROT-STRAT-s(DEPTH,bs='ts'),
-                       sp=fullmod$sp[1:5]))-
-         deviance(update(fullmod,.~.-YEAR,
-                         sp=fullmod$sp)))/deviance(nullmod)
+      (deviance(update(fullmod,.~.-YEAR-PROT-STRAT-s(DEPTH,bs='ts'),sp=fullmod$sp[1:5]))-
+         deviance(update(fullmod,.~.-YEAR,sp=fullmod$sp[1:5])))/deviance(nullmod)
     
     space.dev[3]=
       (deviance(nullmod)-
-         deviance(update(fullmod,.~.-YEAR-PROT-STRAT-s(DEPTH,bs='ts'),
-                         sp=fullmod$sp[1:5])))/deviance(nullmod)
+         deviance(update(fullmod,.~.-YEAR-PROT-STRAT-s(DEPTH,bs='ts'),sp=fullmod$sp[1:5])))/deviance(nullmod)
     
-    #sequence 4: time->management->space->environment  
+    ###sequence 4: time->management->space->environment  
+    
     time.dev[4]=
-      (deviance(update(fullmod,.~.-YEAR,
-                       sp=fullmod$sp))-
+      (deviance(update(fullmod,.~.-YEAR, sp=fullmod$sp))-
          deviance(fullmod))/deviance(nullmod)
     
-    mngt.dev[4]=
-      (deviance(update(fullmod,.~.-YEAR-PROT,
-                       sp=fullmod$sp[1:5]))-
-         deviance(update(fullmod,.~.-YEAR,
-                         sp=fullmod$sp)))/deviance(nullmod)
+    mngt.dev[4]= #(deviance(-time-mngt)-deviance(-time))/deviance(null)
+      (deviance(update(fullmod,.~.-YEAR-PROT, sp=fullmod$sp))-
+         deviance(update(fullmod,.~.-YEAR, sp=fullmod$sp)))/deviance(nullmod)
 
-    space.dev[4]=
-      (deviance(nullmod)-
-         deviance(update(fullmod,.~.-YEAR-PROT-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'),
-                         sp=fullmod$sp[1:5]))-
-         deviance(update(fullmod,.~.-YEAR,
-                         sp=fullmod$sp)))/deviance(nullmod)
+    space.dev[4]= #(deviance(-time-mngt-space))
+      (deviance(update(fullmod,.~.-YEAR-PROT-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'),sp=fullmod$sp[1:5]))-
+         deviance(update(fullmod,.~.-YEAR, sp=fullmod$sp)))/deviance(nullmod)
     
-    env.dev[4]=
+    env.dev[4]= #deviance(null)-deviance(-time-mngt-space)/deviance(null)
       (deviance(nullmod)-
          deviance(update(fullmod,.~.-YEAR-PROT-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'),
-                         sp=fullmod$sp[1:5])))/deviance(nullmod)
+                         sp=fullmod$sp)))/deviance(nullmod)
 
-    #Sequence 5: time->environment->space->management
+    ###Sequence 5: time->environment->space->management
+    
     time.dev[5]=
-      (deviance(update(fullmod,.~.-YEAR,
-                       sp=fullmod$sp))-
+      (deviance(update(fullmod,.~.-YEAR, sp=fullmod$sp))-
          deviance(fullmod))/deviance(nullmod)
     
     env.dev[5]=
-      (deviance(update(fullmod,.~.-YEAR-STRAT-s(DEPTH,bs='ts'),
-                       sp=fullmod$sp[1:5]))-
-         deviance(update(fullmod,.~.-YEAR,
-                         sp=fullmod$sp)))/deviance(nullmod)
+      (deviance(update(fullmod,.~.-YEAR-STRAT-s(DEPTH,bs='ts'), sp=fullmod$sp))-
+         deviance(update(fullmod,.~.-YEAR, sp=fullmod$sp)))/deviance(nullmod)
     
     space.dev[5]=
-      (deviance(update(fullmod,.~.-YEAR-STRAT-s(DEPTH,bs='ts')-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'),
-                       sp=fullmod$sp[1:5]))-
-         deviance(update(fullmod,.~.-YEAR,
-                         sp=fullmod$sp)))/deviance(nullmod)
+      (deviance(update(fullmod,.~.-YEAR-STRAT-s(DEPTH,bs='ts')-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'), sp=fullmod$sp))-
+         deviance(update(fullmod,.~.-YEAR, sp=fullmod$sp)))/deviance(nullmod)
   
     mngt.dev[5]=
       (deviance(nullmod)-
-         deviance(update(fullmod,.~.-YEAR-PROT-STRAT-s(DEPTH,bs='ts')-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'),
-                         sp=fullmod$sp[1:5])))/deviance(nullmod)
+         deviance(update(fullmod,.~.-YEAR-PROT-STRAT-s(DEPTH,bs='ts')-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'),sp=fullmod$sp)))/deviance(nullmod)
     
-    #Sequence 6: time->environment->management->space
+    ###Sequence 6: time->environment->management->space
+    
     time.dev[6]=
-      (deviance(update(fullmod,.~.-YEAR,
-                       sp=fullmod$sp))-
+      (deviance(update(fullmod,.~.-YEAR, sp=fullmod$sp))-
          deviance(fullmod))/deviance(nullmod)
     
     env.dev[6]=
-      (deviance(update(fullmod,.~.-YEAR-STRAT-s(DEPTH,bs='ts'),
-                       sp=fullmod$sp[1:5]))-
+      (deviance(update(fullmod,.~.-YEAR-STRAT-s(DEPTH,bs='ts'),sp=fullmod$sp))-
          deviance(update(fullmod,.~.-YEAR,sp=fullmod$sp)))/deviance(nullmod)
     
     mngt.dev[6]=
-      (deviance(update(fullmod,.~.-YEAR-STRAT-s(DEPTH,bs='ts')-PROT,
-                       sp=fullmod$sp[1:5]))-
+      (deviance(update(fullmod,.~.-YEAR-STRAT-s(DEPTH,bs='ts')-PROT, sp=fullmod$sp))-
          deviance(update(fullmod,.~.-YEAR,sp=fullmod$sp)))/deviance(nullmod)
   
     space.dev[6]=
       (deviance(nullmod)-
-         deviance(update(fullmod,.~.-YEAR-STRAT-s(DEPTH,bs='ts')-PROT,
-                         sp=fullmod$sp[1:5])))/deviance(nullmod)
+         deviance(update(fullmod,.~.-YEAR-STRAT-s(DEPTH,bs='ts')-PROT, sp=fullmod$sp)))/deviance(nullmod)
 
-#Space deviances
+############## SPACE
     
-#Sequence 7: space->time->environment->management 
+    ###Sequence 7: space->time->environment->management 
     space.dev[7]=
-      (deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'),
-                       sp=fullmod$sp[6:9]))-
+      (deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'),sp=fullmod$sp))-
          deviance(fullmod))/deviance(nullmod)
     
     time.dev[7]=
-      (deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')-YEAR,
-                       sp=fullmod$sp[6:9]))-
-         deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'),
-                         sp=fullmod$sp[6:9])))/deviance(nullmod)
+      (deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')-YEAR, sp=fullmod$sp))-
+         deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'), sp=fullmod$sp)))/deviance(nullmod)
     
     mngt.dev[7]=
-      (deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')-YEAR-PROT,
-                       sp=fullmod$sp[6:9]))-
-         deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'),
-                         sp=fullmod$sp[6:9])))/deviance(nullmod)
+      (deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')-YEAR-PROT, sp=fullmod$sp))-
+         deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'), sp=fullmod$sp)))/deviance(nullmod)
     
     env.dev[7]=
       (deviance(nullmod)-
-         deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')-YEAR-PROT,
-                         sp=fullmod$sp[6:9])))/deviance(nullmod)
+         deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')-YEAR-PROT,sp=fullmod$sp)))/deviance(nullmod)
 
-#Sequence 8: space->time->management->environment
+    ###Sequence 8: space->time->management->environment
+    
     space.dev[8]=
       (deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'),
-                       sp=fullmod$sp[6:9]))-
+                       sp=fullmod$sp))-
          deviance(fullmod))/deviance(nullmod)
     
     time.dev[8]=
-      (deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')-YEAR,
-                       sp=fullmod$sp[6:9]))-
-         deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'),
-                         sp=fullmod$sp[6:9])))/deviance(nullmod)
+      (deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')-YEAR, sp=fullmod$sp))-
+         deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'), sp=fullmod$sp)))/deviance(nullmod)
     
     env.dev[8]=
-      (deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')-YEAR-STRAT-s(DEPTH,bs='ts'),
-                       sp=fullmod$sp[6:9]))-
-         deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'),
-                         sp=fullmod$sp[6:9])))/deviance(nullmod)
+      (deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')-YEAR-STRAT-s(DEPTH,bs='ts'), sp=fullmod$sp))-
+         deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'), sp=fullmod$sp[6:9])))/deviance(nullmod)
     
     mngt.dev[8]=
       (deviance(nullmod)-
-         deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')-YEAR-STRAT-s(DEPTH,bs='ts'),
-                         sp=fullmod$sp[6:9])))/deviance(nullmod)    
+         deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')-YEAR-STRAT-s(DEPTH,bs='ts'), sp=fullmod$sp)))/deviance(nullmod)    
     
 
-#Sequence 10: space->time->environment->mangement 
+    ###Sequence 9: space->environment->mangement->time
+    
     space.dev[9]=
       (deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'),
                        sp=fullmod$sp[6:9]))-
-         deviance(fullmod))/deviance(nullmod)
+         deviance(fullmod))/ deviance(nullmod)
     
      env.dev[9]=
       (deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')-STRAT-s(DEPTH,bs='ts'),
                        sp=fullmod$sp[6:9]))-
          deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'),
-                         sp=fullmod$sp[9:9])))/deviance(nullmod)
+                         sp=fullmod$sp[9:9]))) /deviance(nullmod)
     
     mngt.dev[9]=
-      (deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')-STRAT-s(DEPTH,bs='ts')-PROT,
-                       sp=fullmod$sp[6:9]))-
-         deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'),
-                         sp=fullmod$sp[6:9])))/deviance(nullmod)
+      (deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')-STRAT-s(DEPTH,bs='ts')-PROT, sp=fullmod$sp[6:9]))-
+         deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'), sp=fullmod$sp[6:9])))/ deviance(nullmod)
     
      time.dev[9]=
       (deviance(nullmod)-
-         deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')-STRAT-s(DEPTH,bs='ts')-PROT)))/deviance(nullmod)
+         deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')-STRAT-s(DEPTH,bs='ts')-PROT)))/ deviance(nullmod)
      
-#Sequence 10: space->environment->time->mangement 
-    space.dev[10]=
-      (deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'),
-                       sp=fullmod$sp[6:9]))-
-         deviance(fullmod))/deviance(nullmod)
+    ###Sequence 10: space->environment->time->mangement 
+    
+     space.dev[10]=
+      (deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'), sp=fullmod$sp[6:9]))-
+         deviance(fullmod))/ deviance(nullmod)
     
      env.dev[10]=
-      (deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')-STRAT-s(DEPTH,bs='ts'),
-                       sp=fullmod$sp[6:9]))-
-         deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'),
-                         sp=fullmod$sp[6:9])))/deviance(nullmod)
+      (deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')-STRAT-s(DEPTH,bs='ts'), sp=fullmod$sp[6:9]))-
+         deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'),sp=fullmod$sp[6:9])))/ deviance(nullmod)
     
      time.dev[10]=
-      (deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')-STRAT-s(DEPTH,bs='ts')-YEAR,
-                       sp=fullmod$sp[6:9]))-
-         deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'),
-                         sp=fullmod$sp[6:9])))/deviance(nullmod)
+      (deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')-STRAT-s(DEPTH,bs='ts')-YEAR, sp=fullmod$sp[6:9]))-
+         deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'), sp=fullmod$sp[6:9])))/ deviance(nullmod)
     
      mngt.dev[10]=
       (deviance(nullmod)-
-         deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')-STRAT-s(DEPTH,bs='ts')-YEAR)))/deviance(nullmod)
+         deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')-STRAT-s(DEPTH,bs='ts')-YEAR)))/ deviance(nullmod)
      
-#Sequence 11: space->mangement->time->environment 
+    ###Sequence 11: space->mangement->time->environment 
     space.dev[11]=
       (deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'),
                        sp=fullmod$sp[6:9]))-
@@ -3287,7 +3250,7 @@ partial.deviance.list=parLapply(cl, data, function(i){
       (deviance(nullmod)-
          deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')-PROT-YEAR)))/deviance(nullmod)
      
-#Sequence 12: space->mangement->environment->time
+    ###Sequence 12: space->mangement->environment->time
     space.dev[12]=
       (deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'),
                        sp=fullmod$sp[6:9]))-
@@ -3309,10 +3272,11 @@ partial.deviance.list=parLapply(cl, data, function(i){
       (deviance(nullmod)-
          deviance(update(fullmod,.~.-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')-PROT-STRAT-s(DEPTH,bs='ts'))))/deviance(nullmod)
 
-#Environment deviances
+######## ENVIRONMENT
 
-    #Sequence 13: environment->time->space->management 
-    env.dev[13]=
+    ###Sequence 13: environment->time->space->management 
+    
+     env.dev[13]=
       (deviance(update(fullmod,.~.-STRAT-s(DEPTH,bs='ts'),
                        sp=fullmod$sp[1:5]))-
          deviance(fullmod))/deviance(nullmod)
@@ -3334,7 +3298,8 @@ partial.deviance.list=parLapply(cl, data, function(i){
          deviance(update(fullmod,.~.-STRAT-s(DEPTH,bs='ts')-YEAR-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'),
                          sp=fullmod$sp[1:5])))/deviance(nullmod)
     
-    #Sequence 14: environment->time->management->space
+    ###Sequence 14: environment->time->management->space
+    
     env.dev[14]=
       (deviance(update(fullmod,.~.-STRAT-s(DEPTH,bs='ts'),
                        sp=fullmod$sp[1:5]))-
@@ -3357,7 +3322,8 @@ partial.deviance.list=parLapply(cl, data, function(i){
          deviance(update(fullmod,.~.-STRAT-s(DEPTH,bs='ts')-YEAR-PROT,
                          sp=fullmod$sp[1:5])))/deviance(nullmod)
     
-    #Sequence 15: environment->space->management->time
+    ###Sequence 15: environment->space->management->time
+    
     env.dev[15]=
       (deviance(update(fullmod,.~.-STRAT-s(DEPTH,bs='ts'),
                        sp=fullmod$sp[1:5]))-
@@ -3420,7 +3386,8 @@ partial.deviance.list=parLapply(cl, data, function(i){
       (deviance(nullmod)-
          deviance(update(fullmod,.~.-STRAT-s(DEPTH,bs='ts')-PROT-s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'))))/deviance(nullmod)
     
-    #Sequence 18: environment->management->time->space
+    ###Sequence 18: environment->management->time->space
+    
     env.dev[18]=
       (deviance(update(fullmod,.~.-STRAT-s(DEPTH,bs='ts'),
                        sp=fullmod$sp[1:5]))-
@@ -3441,7 +3408,7 @@ partial.deviance.list=parLapply(cl, data, function(i){
       (deviance(nullmod)-
          deviance(update(fullmod,.~.-STRAT-s(DEPTH,bs='ts')-PROT-YEAR)))/deviance(nullmod)
 
-#management deviances
+##### MANAGEMENT 
 
     #Sequence 19: management->environment->time->space
     mngt.dev[19]=
@@ -3575,7 +3542,8 @@ partial.deviance.list=parLapply(cl, data, function(i){
     Predictor=c("All","Space","Time","Environment","Management"),
     Partial.Deviance=c(summary(fullmod)$dev.expl,mean(space.dev),mean(time.dev),mean(env.dev),mean(mngt.dev)),
     Partial.Deviance.SE=c(0,std.error(space.dev),std.error(time.dev),std.error(env.dev),std.error(mngt.dev)))
-} ) ) } )
+  } ) ) 
+  } )
 
 #Close the cluster
 stopCluster(cl)
