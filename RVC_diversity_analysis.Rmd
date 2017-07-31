@@ -2995,18 +2995,16 @@ Fit GAM to each index separately.
 
 - the partial deviances are the proportion of total explained deviance of the model uniquely explained by space, time, environment or management, accounting for the other predictors in the model. 
 
+Modified from [https://stat.ethz.ch/pipermail/r-help/2011-November/295324.html]
+
 ```{r GAM and Partial deviances}
 
 library(mgcv) #gam
-#Build full model and null model based on (transformed) response variable
-#s() smooth term in gam model 
-#bs() a two letter character string indicating the smoothing basis to use (ts plate regression splines)
 
 # 1. Read in data and remove years (optional)
 all_matrices_data = read_rds("psu_matrices_data_rds")
 
 as.data.frame(all_matrices_data)
-#names(all_matrices_data)
 
 #Send all_matrices_data to each core
 clusterExport(cl,varlist=c("all_matrices_data")) 
@@ -3580,8 +3578,6 @@ partial.deviance.list=parLapply(cl, data, function(i){
 
 #Close the cluster
 stopCluster(cl)
-
-
 
 #Name objects in list
 names(partial.deviance.list)=c("abund","biomass","pres.abs")
