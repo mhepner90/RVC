@@ -657,6 +657,7 @@ partial.deviance.list=parLapply(cl,seq_along(alphadiv.list),function(i) {
     fullmod=gam(formula(paste("asin(sqrt(",j,"))~Month+Year+s(Long,Lat,by=Month,bs='ts')+s(SA,bs='ts')+s(WT,bs='ts')+
                   s(DO,bs='ts')+s(TDEPTH,bs='ts')")),data=data)
     nullmod=gam(formula(paste("asin(sqrt(",j,"))~1")),data=data)
+    
   } else {
     fullmod=gam(formula(paste("log(",j,")~Month+Year+s(Long,Lat,by=Month,bs='ts')+s(SA,bs='ts')+s(WT,bs='ts')+
                   s(DO,bs='ts')+s(TDEPTH,bs='ts')")),data=data)
@@ -666,67 +667,97 @@ partial.deviance.list=parLapply(cl,seq_along(alphadiv.list),function(i) {
   time.dev=c(); space.dev=c(); env.dev=c()
   
   #Sequence 1: time->space->environment
-  time.dev[1]=
-    (deviance(update(fullmod,.~.-Month-Year,sp=fullmod$sp))-
-       deviance(fullmod))/deviance(nullmod)
-  space.dev[1]=
-    (deviance(update(fullmod,.~.-Month-Year-s(Long,Lat,by=Month,bs='ts'),sp=fullmod$sp[6:9]))-
-      deviance(update(fullmod,.~.-Month-Year,sp=fullmod$sp)))/deviance(nullmod)
-  env.dev[1]=
+  time.dev[1]= #deviance(-time)-deviance(full)/deviance(null)
+    (deviance(update(fullmod,.~.-Month-Year,sp=fullmod$sp))- 
+       deviance(fullmod))/
+    deviance(nullmod)
+  
+  space.dev[1]= #deviance(-time, -space)-deviance(-time)/ deviance(null)
+    (deviance(update(fullmod,.~.-Month-Year-s(Long,Lat,by=Month,bs='ts'),sp=fullmod$sp[6:9])) -
+      deviance(update(fullmod,.~.-Month-Year, sp=fullmod$sp)))/
+    deviance(nullmod)
+  
+  env.dev[1]= #deviance(null)- deviance(-time-space)/null 
     (deviance(nullmod)-
-       deviance(update(fullmod,.~.-Month-Year-s(Long,Lat,by=Month,bs='ts'),sp=fullmod$sp[6:9])))/deviance(nullmod)
+       deviance(update(fullmod,.~.-Month-Year-s(Long,Lat,by=Month,bs='ts'),
+                       sp=fullmod$sp[6:9])))/deviance(nullmod)
 
   #Sequence 2: time->environment->space
   time.dev[2]=
-    (deviance(update(fullmod,.~.-Month-Year,sp=fullmod$sp))-
+    (deviance(update(fullmod,.~.-Month-Year,
+                     sp=fullmod$sp))-
        deviance(fullmod))/deviance(nullmod)
+  
   env.dev[2]=
-    (deviance(update(fullmod,.~.-Month-Year-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts'),sp=fullmod$sp[1:5]))-
-       deviance(update(fullmod,.~.-Month-Year,sp=fullmod$sp)))/deviance(nullmod)
+    (deviance(update(fullmod,.~.-Month-Year-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts'),
+                     sp=fullmod$sp[1:5]))-
+       deviance(update(fullmod,.~.-Month-Year,
+                       sp=fullmod$sp)))/deviance(nullmod)
+  
   space.dev[2]=
     (deviance(nullmod)-
-       deviance(update(fullmod,.~.-Month-Year-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts'),sp=fullmod$sp[1:5])))/deviance(nullmod)
+       deviance(update(fullmod,.~.-Month-Year-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts'),
+                       sp=fullmod$sp[1:5])))/deviance(nullmod)
        
   #Sequence 3: space->time->environment
   space.dev[3]=
-    (deviance(update(fullmod,.~.-s(Long,Lat,by=Month,bs='ts'),sp=fullmod$sp[6:9]))-
+    (deviance(update(fullmod,.~.-s(Long,Lat,by=Month,bs='ts'),
+                     sp=fullmod$sp[6:9]))-
        deviance(fullmod))/deviance(nullmod)
+  
   time.dev[3]=
-    (deviance(update(fullmod,.~.-s(Long,Lat,by=Month,bs='ts')-Month-Year,sp=fullmod$sp[6:9]))-
-       deviance(update(fullmod,.~.-s(Long,Lat,by=Month,bs='ts'),sp=fullmod$sp[6:9])))/deviance(nullmod)
+    (deviance(update(fullmod,.~.-s(Long,Lat,by=Month,bs='ts')-Month-Year,
+                     sp=fullmod$sp[6:9]))-
+       deviance(update(fullmod,.~.-s(Long,Lat,by=Month,bs='ts'),
+                       sp=fullmod$sp[6:9])))/deviance(nullmod)
   env.dev[3]=
     (deviance(nullmod)-
-       deviance(update(fullmod,.~.-s(Long,Lat,by=Month,bs='ts')-Month-Year,sp=fullmod$sp[6:9])))/deviance(nullmod)
+       deviance(update(fullmod,.~.-s(Long,Lat,by=Month,bs='ts')-Month-Year,
+                       sp=fullmod$sp[6:9])))/deviance(nullmod)
   
   #Sequence 4: space->environment->time
   space.dev[4]=
-    (deviance(update(fullmod,.~.-s(Long,Lat,by=Month,bs='ts'),sp=fullmod$sp[6:9]))-
+    (deviance(update(fullmod,.~.-s(Long,Lat,by=Month,bs='ts'),
+                     sp=fullmod$sp[6:9]))-
        deviance(fullmod))/deviance(nullmod)
+  
   env.dev[4]=
     (deviance(update(fullmod,.~.-s(Long,Lat,by=Month,bs='ts')-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts')))-
-       deviance(update(fullmod,.~.-s(Long,Lat,by=Month,bs='ts'),sp=fullmod$sp[6:9])))/deviance(nullmod)
-  time.dev[4]=
+       deviance(update(fullmod,.~.-s(Long,Lat,by=Month,bs='ts'),
+                       sp=fullmod$sp[6:9])))/deviance(nullmod)
+ 
+   time.dev[4]=
     (deviance(nullmod)-
        deviance(update(fullmod,.~.-s(Long,Lat,by=Month,bs='ts')-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts'))))/deviance(nullmod)
   
   #Sequence 5: environment->time->space
   env.dev[5]=
-    (deviance(update(fullmod,.~.-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts'),sp=fullmod$sp[1:5]))-
+    (deviance(update(fullmod,.~.-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts'),
+                     sp=fullmod$sp[1:5]))-
        deviance(fullmod))/deviance(nullmod)
+  
   time.dev[5]=
-    (deviance(update(fullmod,.~.-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts')-Month-Year,sp=fullmod$sp[1:5]))-
-       deviance(update(fullmod,.~.-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts'),sp=fullmod$sp[1:5])))/deviance(nullmod)
+    (deviance(update(fullmod,.~.-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts')-Month-Year,
+                     sp=fullmod$sp[1:5]))-
+       deviance(update(fullmod,.~.-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts'),
+                       sp=fullmod$sp[1:5])))/deviance(nullmod)
+  
   space.dev[5]=
     (deviance(nullmod)-
-       deviance(update(fullmod,.~.-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts')-Month-Year,sp=fullmod$sp[1:5])))/deviance(nullmod)
+       deviance(update(fullmod,.~.-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts')-Month-Year,
+                       sp=fullmod$sp[1:5])))/deviance(nullmod)
        
   #Sequence 6: environment->space->time
   env.dev[6]=
-    (deviance(update(fullmod,.~.-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts'),sp=fullmod$sp[1:5]))-
+    (deviance(update(fullmod,.~.-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts'),
+                     sp=fullmod$sp[1:5]))-
        deviance(fullmod))/deviance(nullmod)
+  
   space.dev[6]=
     (deviance(update(fullmod,.~.-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts')-s(Long,Lat,by=Month,bs='ts')))-
-       deviance(update(fullmod,.~.-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts'),sp=fullmod$sp[1:5])))/deviance(nullmod)
+       deviance(update(fullmod,.~.-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts'),
+                       sp=fullmod$sp[1:5])))/deviance(nullmod)
+  
   time.dev[6]=
     (deviance(nullmod)-
        deviance(update(fullmod,.~.-s(SA,bs='ts')-s(WT,bs='ts')-s(DO,bs='ts')-s(TDEPTH,bs='ts')-s(Long,Lat,by=Month,bs='ts'))))/deviance(nullmod)
