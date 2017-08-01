@@ -578,9 +578,11 @@ psu_family = left_join(psu_fk_abun_no_spp, family, by= "SPECIES_CD")
 psu_family_group <- psu_family %>%
     group_by(FAMILY) %>%
     summarize(abundance_sum = sum(abundance)) %>%
-    filter(!abundance_sum == "0") %>%
+    filter(abundance_sum != "0") %>%
   mutate(fam_percent = (abundance_sum/sum(abundance_sum))*100) %>%
   arrange(desc(fam_percent))
+
+write_csv(psu_family_group, "psu_family_group.csv")
 
 #FAMILY abundance_sum fam_percent
 #           <fctr>         <dbl>       <dbl>
