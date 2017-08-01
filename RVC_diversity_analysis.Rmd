@@ -108,6 +108,23 @@ library(FD)
 #install.packages("iNEXT")
 library(cowplot) #get_legend 
 
+library(automap) #Calls: autoKrige
+library(ggplot2) #Calls: ggplot
+library(gridExtra) #Calls: grid.arrange
+library(parallel) #Calls: clusterEvalQ,clusterExport,detectCores,makeCluster,parLapply
+library(raster)
+library(rgdal) #readOGR 
+library(rgeos)
+library(sp) #Calls: coordinates, spsample
+library(tidyverse)
+library(mgcv) #gam
+
+#Create socket cluster of multiple cores 
+cl=makeCluster(detectCores()) #shouls i make type = "base" or "FORK"??
+
+#Load automap on all cores (to access function `autoKrige`)
+clusterEvalQ(cl,c(library(automap),library(mgcv),library(plotrix)))
+
 #RVCdata_FK = read_rds('big_csv/RVCdata_FK.rds')
 
 map = purrr::map # override maps::map
@@ -783,15 +800,13 @@ if(!file.exists("psu_matrices_data_rds")){
 
 - create multiplot function from (https://stackoverflow.com/questions/24387376/r-weird-error-could-not-find-function-multiplot)
 
-## Questions
+ Questions
 
 - Are diversity values and strata related? 
 - Are diversity values and subregions related? 
 - Are diversity values and protection level related?
 
-## Plots of diversity indices by strata across all years 
-
-```{r Plot by year and strata}
+```{r Plot by 7 strata and year}
 
 library(cowplot)
 library(gridExtra)
@@ -1155,11 +1170,9 @@ ggplot(stats_all_matrices_data, aes(x=YEAR, y=evenness_mean, group=YEAR)) +
 
 ```
 
-## Plots of diversity indices by grouped strata across all years 
-
 Group strata by: patch reef, forereef, and high relief 
 
-```{r Plot by year and grouped strata} 
+```{r Plot by grouped strata and year} 
 
 if(!file.exists("matrices_strat_grouped_rds")){
   
@@ -1475,12 +1488,216 @@ ggplot(data = matrices_strat_grouped) +
 
 ```
 
-## Plots of diversity indices by grouped strata across subregions and years  
+```{r plot by strata grouped and subregion}
+
+all_matrices_data_with_subregion = readRDS("psu_matrices_data_with_subregion_rds")
+
+df = all_matrices_data_with_subregion %>% 
+  mutate(
+    STRAT_GROUPED = 
+      ifelse(grepl("FMLR|FSLR|FDLR", STRAT), 'LINEAR_REEF', 
+             ifelse(grepl("OFPR|MCPR|INPR", STRAT), 'PATCH_REEF',
+                    ifelse(grepl('HRRF', STRAT), 'HIGH_RELIEF', "IDK")))) %>%
+  group_by(SUBREGION_DOMAIN, STRAT_GROUPED, YEAR) %>%
+  filter(SUBREGION_DOMAIN !="BiscBay") # 4432 x 25
+
+#Melt dataframe so diversity indices are in a single column
+  x = reshape2::melt(df, id.vars = c("YEAR", "SUBREGION_DOMAIN", "STRAT_GROUPED"), measure.vars=c("abundance_sum", "biomass_sum", "evenness","richness","simpson","shannon","func.div")) # 31024 x 5
+
+#Summarize means and SEs by year, subregion, and variable
+  x=plyr::ddply(x, c("YEAR", "SUBREGION_DOMAIN", "STRAT_GROUPED", "variable"), summarize, value.mean=mean(value), value.se=plotrix::std.error(value))
+
+#Rename levels for figure plotting
+  levels(x$variable)=c("A) Abundance", "B) Biomass", "C) Evenness", "D) Richness", "E) Simpson", "F) Shannon", "G) Functional")
+
+#Rename regions for figure plotting
+x$SUBREGION_DOMAIN=factor(x$SUBREGION_DOMAIN)
+levels(x$SUBREGION_DOMAIN)=c("Upper Keys", "Middle Keys", "Lower Keys")
+
+#Plot line graph
+#HIGH RELIEF
+HR = x %>% filter(STRAT_GROUPED=="HIGH_RELIEF") %>% ggplot(.,aes(x=YEAR, y=value.mean, col=SUBREGION_DOMAIN, group=SUBREGION_DOMAIN))+
+  geom_point(size=3)+
+  geom_errorbar(aes(ymax=value.mean+value.se,ymin=value.mean-value.se),width=0.1)+
+   geom_line(aes(group=SUBREGION_DOMAIN),lwd=1)+
+  facet_wrap(~variable,scales="free",ncol=2)+
+  labs(title= "", x="Year", y="", colour = "Subregion")+
+  scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("red", "green", "blue"))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+    theme(
+      strip.text=element_text(hjust = 0),
+      strip.background = element_blank(),
+      panel.spacing.x=unit(3, "lines"),
+      legend.position=c(0.75,0.1))
+HR
+ggsave(file="all_indices_by_subregion_and_year_HIGH_RELIEF.pdf", HR, width=7, height=10, path="big_csv/plots")
+
+#LINEAR REEF
+LR = x %>% filter(STRAT_GROUPED=="LINEAR_REEF") %>% ggplot(.,aes(x=YEAR, y=value.mean, col=SUBREGION_DOMAIN, group=SUBREGION_DOMAIN))+
+  geom_point(size=3)+
+  geom_errorbar(aes(ymax=value.mean+value.se,ymin=value.mean-value.se),width=0.1)+
+   geom_line(aes(group=SUBREGION_DOMAIN),lwd=1)+
+  facet_wrap(~variable,scales="free",ncol=2)+
+  labs(title= "", x="Year", y="", colour = "Subregion")+
+  scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("red", "green", "blue"))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+    theme(
+      strip.text=element_text(hjust = 0),
+      strip.background = element_blank(),
+      panel.spacing.x=unit(3, "lines"),
+      legend.position=c(0.75,0.1))
+ggsave(file="all_indices_by_subregion_and_year_LINEAR_REEF.pdf", LR, width=7, height=10, path="big_csv/plots")
+LR
+#PATCH REEF
+PR = x %>% filter(STRAT_GROUPED=="PATCH_REEF") %>% ggplot(.,aes(x=YEAR, y=value.mean, col=SUBREGION_DOMAIN, group=SUBREGION_DOMAIN))+
+  geom_point(size=3)+
+  geom_errorbar(aes(ymax=value.mean+value.se,ymin=value.mean-value.se),width=0.1)+
+   geom_line(aes(group=SUBREGION_DOMAIN),lwd=1)+
+  facet_wrap(~variable,scales="free",ncol=2)+
+  labs(title= "", x="Year", y="", colour = "Subregion")+
+  scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("red", "green", "blue"))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+    theme(
+      strip.text=element_text(hjust = 0),
+      strip.background = element_blank(),
+      panel.spacing.x=unit(3, "lines"),
+      legend.position=c(0.75,0.1))
+ggsave(file="all_indices_by_subregion_and_year_PATCH_REEF.pdf", PR, width=7, height=10, path="big_csv/plots")
+PR
+```
+
+Plots of indices by subregions, 7 strata and across all years  
+
+```{r Plot by 7 strata subregion and year}
+
+all_matrices_data = read_rds("psu_matrices_data_rds")
+
+#all_matrices_data_with_subregion = readRDS("psu_matrices_data_with_subregion_rds")
+
+df.2 = all_matrices_data %>% 
+  select(YEAR, STRAT, PRIMARY_SAMPLE_UNIT, abundance_sum, biomass_sum, evenness, richness, simpson, shannon, func.div) %>%
+  filter(STRAT != "INPR") %>%
+  filter(STRAT != "MCPR") %>%
+  filter(STRAT != "OFPR") %>%
+  filter(STRAT != "HRRF")
+         
+#Melt dataframe so diversity indices are in a single column
+  x.2 = reshape2::melt(df.2, id.vars = c("YEAR", "STRAT"), measure.vars=c("abundance_sum", "biomass_sum", "evenness","richness","simpson","shannon","func.div")) # 31024 x 5
+
+#Summarize means and SEs by year, subregion, and variable
+  x.2=plyr::ddply(x.2, c("YEAR", "STRAT", "variable"), summarize, value.mean=mean(value), value.se=plotrix::std.error(value))
+
+#Rename levels for figure plotting
+  levels(x.2$variable)=c("A) Abundance", "B) Biomass", "C) Evenness", "D) Richness", "E) Simpson", "F) Shannon", "G) Functional")
+
+#Rename regions for figure plotting
+x.2$STRAT=factor(x.2$STRAT)
+levels(x.2$STRAT)=c("FDLR","FMLR", "FSLR")
+
+#Plot line graph
+#HIGH RELIEF
+Forereef =  x.2 %>%
+  ggplot(.,aes(x=YEAR, y=value.mean, col=STRAT, group=STRAT))+
+  geom_point(size=3)+
+  geom_errorbar(aes(ymax=value.mean+value.se,ymin=value.mean-value.se),width=0.1)+
+   geom_line(aes(group=STRAT),lwd=1)+
+  facet_wrap(~variable,scales="free",ncol=2)+
+  labs(title= "", x="Year", y="", colour = "Strata")+
+  scale_colour_manual(labels=c("FDLR","FMLR", "FSLR"), values= c("red", "green", "blue"))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+    theme(
+      strip.text=element_text(hjust = 0),
+      strip.background = element_blank(),
+      panel.spacing.x=unit(3, "lines"),
+      legend.position=c(0.75,0.1))
+Forereef
+ggsave(file="all_indices_by_year_all_forereef.pdf", Forereef, width=7, height=10, path="big_csv/plots")
+
+### PATCH REEF 
+df.3 = all_matrices_data %>% 
+  select(YEAR, STRAT, PRIMARY_SAMPLE_UNIT, abundance_sum, biomass_sum, evenness, richness, simpson, shannon, func.div) %>%
+  filter(STRAT != "FDLR") %>%
+  filter(STRAT != "FMLR") %>%
+  filter(STRAT != "FSLR") %>%
+  filter(STRAT != "HRRF")
+         
+#Melt dataframe so diversity indices are in a single column
+  x.3 = reshape2::melt(df.3, id.vars = c("YEAR", "STRAT"), measure.vars=c("abundance_sum", "biomass_sum", "evenness","richness","simpson","shannon","func.div")) # 31024 x 5
+
+#Summarize means and SEs by year, subregion, and variable
+  x.3=plyr::ddply(x.3, c("YEAR", "STRAT", "variable"), summarize, value.mean=mean(value), value.se=plotrix::std.error(value))
+
+#Rename levels for figure plotting
+  levels(x.3$variable)=c("A) Abundance", "B) Biomass", "C) Evenness", "D) Richness", "E) Simpson", "F) Shannon", "G) Functional")
+
+#Rename regions for figure plotting
+x.3$STRAT=factor(x.3$STRAT)
+levels(x.3$STRAT)=c("OFPR","MCPR", "INPR")
+
+#Plot line graph
+#Patchreef
+Patchreef =  x.3 %>%
+  ggplot(.,aes(x=YEAR, y=value.mean, col=STRAT, group=STRAT))+
+  geom_point(size=3)+
+  geom_errorbar(aes(ymax=value.mean+value.se,ymin=value.mean-value.se),width=0.1)+
+   geom_line(aes(group=STRAT),lwd=1)+
+  facet_wrap(~variable,scales="free",ncol=2)+
+  labs(title= "", x="Year", y="", colour = "Strata")+
+  scale_colour_manual(labels=c("INPR","MCPR","OFPR"), values= c("red", "green", "blue"))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+    theme(
+      strip.text=element_text(hjust = 0),
+      strip.background = element_blank(),
+      panel.spacing.x=unit(3, "lines"),
+      legend.position=c(0.75,0.1))
+Patchreef
+ggsave(file="all_indices_by_year_all_patchreef.pdf", Patchreef, width=7, height=10, path="big_csv/plots")
+
+##High reef 
+df.4 = all_matrices_data %>% 
+  select(YEAR, STRAT, PRIMARY_SAMPLE_UNIT, abundance_sum, biomass_sum, evenness, richness, simpson, shannon, func.div) %>%
+  filter(STRAT == "HRRF")
+         
+#Melt dataframe so diversity indices are in a single column
+  x.4 = reshape2::melt(df.4, id.vars = c("YEAR", "STRAT"), measure.vars=c("abundance_sum", "biomass_sum", "evenness","richness","simpson","shannon","func.div")) # 31024 x 5
+
+#Summarize means and SEs by year, subregion, and variable
+  x.4=plyr::ddply(x.4, c("YEAR", "STRAT", "variable"), summarize, value.mean=mean(value), value.se=plotrix::std.error(value))
+
+#Rename levels for figure plotting
+  levels(x.4$variable)=c("A) Abundance", "B) Biomass", "C) Evenness", "D) Richness", "E) Simpson", "F) Shannon", "G) Functional")
+
+#Rename regions for figure plotting
+x.4$STRAT=factor(x.4$STRAT)
+levels(x.4$STRAT)=c("HRRF")
+
+#Plot line graph
+#Highreef
+Highreef =  x.4 %>%
+  ggplot(.,aes(x=YEAR, y=value.mean, col=STRAT, group=STRAT))+
+  geom_point(size=3)+
+  geom_errorbar(aes(ymax=value.mean+value.se,ymin=value.mean-value.se),width=0.1)+
+   geom_line(aes(group=STRAT),lwd=1)+
+  facet_wrap(~variable,scales="free",ncol=2)+
+  labs(title= "", x="Year", y="", colour = "Strata")+
+  scale_colour_manual(labels=c("HRRF"), values= c("red"))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+    theme(
+      strip.text=element_text(hjust = 0),
+      strip.background = element_blank(),
+      panel.spacing.x=unit(3, "lines"),
+      legend.position=c(0.75,0.1))
+Highreef
+ggsave(file="all_indices_by_year_all_highreef.pdf", Highreef, width=7, height=10, path="big_csv/plots")
+
+```
+
+Plots by subregions, grouped strata and years  
 
 Group strata by: patch reef, forereef, and high relief
 Subregions: UK, MK, LK
 
-```{r Plot by year and subregion and grouped strat} 
+```{r Plot by grouped strata subregion and year} 
 
 if(!file.exists("matrices_strat_grouped_with_subregion_rds")){
   
@@ -1715,211 +1932,9 @@ ggsave(file="richness_by_subregion_and_year_Patch_Reef.pdf", path="big_csv/plots
 
 ```
 
-- tried using lapply, seq_along, and for( i in blank) but couldn't get it to work. Then tried melt and came close to what we want, but still need to facet by grouped strata. 
+Plots by subregion across years (without strata type)
 
-```{r plot test with melt}
-
-all_matrices_data_with_subregion = readRDS("psu_matrices_data_with_subregion_rds")
-
-df = all_matrices_data_with_subregion %>% 
-  mutate(
-    STRAT_GROUPED = 
-      ifelse(grepl("FMLR|FSLR|FDLR", STRAT), 'LINEAR_REEF', 
-             ifelse(grepl("OFPR|MCPR|INPR", STRAT), 'PATCH_REEF',
-                    ifelse(grepl('HRRF', STRAT), 'HIGH_RELIEF', "IDK")))) %>%
-  group_by(SUBREGION_DOMAIN, STRAT_GROUPED, YEAR) %>%
-  filter(SUBREGION_DOMAIN !="BiscBay") # 4432 x 25
-
-#Melt dataframe so diversity indices are in a single column
-  x = reshape2::melt(df, id.vars = c("YEAR", "SUBREGION_DOMAIN", "STRAT_GROUPED"), measure.vars=c("abundance_sum", "biomass_sum", "evenness","richness","simpson","shannon","func.div")) # 31024 x 5
-
-#Summarize means and SEs by year, subregion, and variable
-  x=plyr::ddply(x, c("YEAR", "SUBREGION_DOMAIN", "STRAT_GROUPED", "variable"), summarize, value.mean=mean(value), value.se=plotrix::std.error(value))
-
-#Rename levels for figure plotting
-  levels(x$variable)=c("A) Abundance", "B) Biomass", "C) Evenness", "D) Richness", "E) Simpson", "F) Shannon", "G) Functional")
-
-#Rename regions for figure plotting
-x$SUBREGION_DOMAIN=factor(x$SUBREGION_DOMAIN)
-levels(x$SUBREGION_DOMAIN)=c("Upper Keys", "Middle Keys", "Lower Keys")
-
-#Plot line graph
-#HIGH RELIEF
-HR = x %>% filter(STRAT_GROUPED=="HIGH_RELIEF") %>% ggplot(.,aes(x=YEAR, y=value.mean, col=SUBREGION_DOMAIN, group=SUBREGION_DOMAIN))+
-  geom_point(size=3)+
-  geom_errorbar(aes(ymax=value.mean+value.se,ymin=value.mean-value.se),width=0.1)+
-   geom_line(aes(group=SUBREGION_DOMAIN),lwd=1)+
-  facet_wrap(~variable,scales="free",ncol=2)+
-  labs(title= "", x="Year", y="", colour = "Subregion")+
-  scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("red", "green", "blue"))+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-    theme(
-      strip.text=element_text(hjust = 0),
-      strip.background = element_blank(),
-      panel.spacing.x=unit(3, "lines"),
-      legend.position=c(0.75,0.1))
-HR
-ggsave(file="all_indices_by_subregion_and_year_HIGH_RELIEF.pdf", HR, width=7, height=10, path="big_csv/plots")
-
-#LINEAR REEF
-LR = x %>% filter(STRAT_GROUPED=="LINEAR_REEF") %>% ggplot(.,aes(x=YEAR, y=value.mean, col=SUBREGION_DOMAIN, group=SUBREGION_DOMAIN))+
-  geom_point(size=3)+
-  geom_errorbar(aes(ymax=value.mean+value.se,ymin=value.mean-value.se),width=0.1)+
-   geom_line(aes(group=SUBREGION_DOMAIN),lwd=1)+
-  facet_wrap(~variable,scales="free",ncol=2)+
-  labs(title= "", x="Year", y="", colour = "Subregion")+
-  scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("red", "green", "blue"))+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-    theme(
-      strip.text=element_text(hjust = 0),
-      strip.background = element_blank(),
-      panel.spacing.x=unit(3, "lines"),
-      legend.position=c(0.75,0.1))
-ggsave(file="all_indices_by_subregion_and_year_LINEAR_REEF.pdf", LR, width=7, height=10, path="big_csv/plots")
-LR
-#PATCH REEF
-PR = x %>% filter(STRAT_GROUPED=="PATCH_REEF") %>% ggplot(.,aes(x=YEAR, y=value.mean, col=SUBREGION_DOMAIN, group=SUBREGION_DOMAIN))+
-  geom_point(size=3)+
-  geom_errorbar(aes(ymax=value.mean+value.se,ymin=value.mean-value.se),width=0.1)+
-   geom_line(aes(group=SUBREGION_DOMAIN),lwd=1)+
-  facet_wrap(~variable,scales="free",ncol=2)+
-  labs(title= "", x="Year", y="", colour = "Subregion")+
-  scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("red", "green", "blue"))+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-    theme(
-      strip.text=element_text(hjust = 0),
-      strip.background = element_blank(),
-      panel.spacing.x=unit(3, "lines"),
-      legend.position=c(0.75,0.1))
-ggsave(file="all_indices_by_subregion_and_year_PATCH_REEF.pdf", PR, width=7, height=10, path="big_csv/plots")
-PR
-```
-
-```{r Plot of all strat}
-
-all_matrices_data = read_rds("psu_matrices_data_rds")
-
-#all_matrices_data_with_subregion = readRDS("psu_matrices_data_with_subregion_rds")
-
-df.2 = all_matrices_data %>% 
-  select(YEAR, STRAT, PRIMARY_SAMPLE_UNIT, abundance_sum, biomass_sum, evenness, richness, simpson, shannon, func.div) %>%
-  filter(STRAT != "INPR") %>%
-  filter(STRAT != "MCPR") %>%
-  filter(STRAT != "OFPR") %>%
-  filter(STRAT != "HRRF")
-         
-#Melt dataframe so diversity indices are in a single column
-  x.2 = reshape2::melt(df.2, id.vars = c("YEAR", "STRAT"), measure.vars=c("abundance_sum", "biomass_sum", "evenness","richness","simpson","shannon","func.div")) # 31024 x 5
-
-#Summarize means and SEs by year, subregion, and variable
-  x.2=plyr::ddply(x.2, c("YEAR", "STRAT", "variable"), summarize, value.mean=mean(value), value.se=plotrix::std.error(value))
-
-#Rename levels for figure plotting
-  levels(x.2$variable)=c("A) Abundance", "B) Biomass", "C) Evenness", "D) Richness", "E) Simpson", "F) Shannon", "G) Functional")
-
-#Rename regions for figure plotting
-x.2$STRAT=factor(x.2$STRAT)
-levels(x.2$STRAT)=c("FDLR","FMLR", "FSLR")
-
-#Plot line graph
-#HIGH RELIEF
-Forereef =  x.2 %>%
-  ggplot(.,aes(x=YEAR, y=value.mean, col=STRAT, group=STRAT))+
-  geom_point(size=3)+
-  geom_errorbar(aes(ymax=value.mean+value.se,ymin=value.mean-value.se),width=0.1)+
-   geom_line(aes(group=STRAT),lwd=1)+
-  facet_wrap(~variable,scales="free",ncol=2)+
-  labs(title= "", x="Year", y="", colour = "Strata")+
-  scale_colour_manual(labels=c("FDLR","FMLR", "FSLR"), values= c("red", "green", "blue"))+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-    theme(
-      strip.text=element_text(hjust = 0),
-      strip.background = element_blank(),
-      panel.spacing.x=unit(3, "lines"),
-      legend.position=c(0.75,0.1))
-Forereef
-ggsave(file="all_indices_by_year_all_forereef.pdf", Forereef, width=7, height=10, path="big_csv/plots")
-
-### PATCH REEF 
-df.3 = all_matrices_data %>% 
-  select(YEAR, STRAT, PRIMARY_SAMPLE_UNIT, abundance_sum, biomass_sum, evenness, richness, simpson, shannon, func.div) %>%
-  filter(STRAT != "FDLR") %>%
-  filter(STRAT != "FMLR") %>%
-  filter(STRAT != "FSLR") %>%
-  filter(STRAT != "HRRF")
-         
-#Melt dataframe so diversity indices are in a single column
-  x.3 = reshape2::melt(df.3, id.vars = c("YEAR", "STRAT"), measure.vars=c("abundance_sum", "biomass_sum", "evenness","richness","simpson","shannon","func.div")) # 31024 x 5
-
-#Summarize means and SEs by year, subregion, and variable
-  x.3=plyr::ddply(x.3, c("YEAR", "STRAT", "variable"), summarize, value.mean=mean(value), value.se=plotrix::std.error(value))
-
-#Rename levels for figure plotting
-  levels(x.3$variable)=c("A) Abundance", "B) Biomass", "C) Evenness", "D) Richness", "E) Simpson", "F) Shannon", "G) Functional")
-
-#Rename regions for figure plotting
-x.3$STRAT=factor(x.3$STRAT)
-levels(x.3$STRAT)=c("OFPR","MCPR", "INPR")
-
-#Plot line graph
-#Patchreef
-Patchreef =  x.3 %>%
-  ggplot(.,aes(x=YEAR, y=value.mean, col=STRAT, group=STRAT))+
-  geom_point(size=3)+
-  geom_errorbar(aes(ymax=value.mean+value.se,ymin=value.mean-value.se),width=0.1)+
-   geom_line(aes(group=STRAT),lwd=1)+
-  facet_wrap(~variable,scales="free",ncol=2)+
-  labs(title= "", x="Year", y="", colour = "Strata")+
-  scale_colour_manual(labels=c("INPR","MCPR","OFPR"), values= c("red", "green", "blue"))+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-    theme(
-      strip.text=element_text(hjust = 0),
-      strip.background = element_blank(),
-      panel.spacing.x=unit(3, "lines"),
-      legend.position=c(0.75,0.1))
-Patchreef
-ggsave(file="all_indices_by_year_all_patchreef.pdf", Patchreef, width=7, height=10, path="big_csv/plots")
-
-##High reef 
-df.4 = all_matrices_data %>% 
-  select(YEAR, STRAT, PRIMARY_SAMPLE_UNIT, abundance_sum, biomass_sum, evenness, richness, simpson, shannon, func.div) %>%
-  filter(STRAT == "HRRF")
-         
-#Melt dataframe so diversity indices are in a single column
-  x.4 = reshape2::melt(df.4, id.vars = c("YEAR", "STRAT"), measure.vars=c("abundance_sum", "biomass_sum", "evenness","richness","simpson","shannon","func.div")) # 31024 x 5
-
-#Summarize means and SEs by year, subregion, and variable
-  x.4=plyr::ddply(x.4, c("YEAR", "STRAT", "variable"), summarize, value.mean=mean(value), value.se=plotrix::std.error(value))
-
-#Rename levels for figure plotting
-  levels(x.4$variable)=c("A) Abundance", "B) Biomass", "C) Evenness", "D) Richness", "E) Simpson", "F) Shannon", "G) Functional")
-
-#Rename regions for figure plotting
-x.4$STRAT=factor(x.4$STRAT)
-levels(x.4$STRAT)=c("HRRF")
-
-#Plot line graph
-#Highreef
-Highreef =  x.4 %>%
-  ggplot(.,aes(x=YEAR, y=value.mean, col=STRAT, group=STRAT))+
-  geom_point(size=3)+
-  geom_errorbar(aes(ymax=value.mean+value.se,ymin=value.mean-value.se),width=0.1)+
-   geom_line(aes(group=STRAT),lwd=1)+
-  facet_wrap(~variable,scales="free",ncol=2)+
-  labs(title= "", x="Year", y="", colour = "Strata")+
-  scale_colour_manual(labels=c("HRRF"), values= c("red"))+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-    theme(
-      strip.text=element_text(hjust = 0),
-      strip.background = element_blank(),
-      panel.spacing.x=unit(3, "lines"),
-      legend.position=c(0.75,0.1))
-Highreef
-ggsave(file="all_indices_by_year_all_highreef.pdf", Highreef, width=7, height=10, path="big_csv/plots")
-
-```
-
-```{r plot by subregion with all data}
+```{r plot by subregion and year (no strata)}
 
 all_matrices_data_with_subregion = read_rds("psu_matrices_data_with_subregion_rds")
   
@@ -2130,10 +2145,9 @@ legend_g_horiz <- get_legend(for_legend_g_horiz)
 g_g <- grid.arrange(ab_g,bio_g,eve_g,rich_g,sim_g,shan_g,func_g,for_legend_g,ncol=2)
 ggsave(file="all_indices_by_year_and_grouped.pdf", g_g, width=7, height=10, path="big_csv/plots")
 
-
 ```
 
-## Plots of diversity indices by grouped strata and years across subregions  
+- tried using lapply, seq_along, and for( i in blank) but couldn't get it to work. Then tried melt and came close to what we want, but still need to facet by grouped strata. 
 
 Group strata by: patch reef, forereef, and high relief
 Group years by: all years combined
@@ -2413,9 +2427,7 @@ ggplot(data = matrices_strat_grouped) +
 
 ```
 
-## Plots of diversity indices by level of protection (NTMR) across all years 
-
-```{r plots by PROT}
+```{r plots by PROT and year}
 
 if(!file.exists("matrices_strat_grouped_rds")){
   
@@ -2728,26 +2740,6 @@ mean(func_ntmr$ratio) #0.1005665
 
 # Map of diversity indices 
 
-```{r mapping libraries}
-
-library(automap) #Calls: autoKrige
-library(ggplot2) #Calls: ggplot
-library(gridExtra) #Calls: grid.arrange
-library(parallel) #Calls: clusterEvalQ,clusterExport,detectCores,makeCluster,parLapply
-library(raster)
-library(rgdal) #readOGR 
-library(rgeos)
-library(sp) #Calls: coordinates, spsample
-library(tidyverse)
-
-#Create socket cluster of multiple cores 
-cl=makeCluster(detectCores()) #shouls i make type = "base" or "FORK"??
-
-#Load automap on all cores (to access function `autoKrige`)
-clusterEvalQ(cl,c(library(automap),library(mgcv),library(plotrix)))
-
-```
-
 ```{r Map matrices}
 
 #Generate figure legend based on FKNMS map 
@@ -2984,8 +2976,6 @@ Modified from [https://stat.ethz.ch/pipermail/r-help/2011-November/295324.html]
 
 ```{r GAM and Partial deviances}
 
-library(mgcv) #gam
-
 # 1. Read in data and remove years (optional)
 all_matrices_data = read_rds("psu_matrices_data_rds")
 
@@ -3002,7 +2992,7 @@ class(data)
 
 #Send all_matrices_data to each core
 clusterExport(cl,varlist=c("data")) 
-  #cl - a cluster object
+  #cl - a cluster object - socket cluster with 8 nodes on host ‘localhost’
   #varlist - character vector of names of objects to export
 
 partial.deviance.list=parLapply(cl, data, function(i){ #data needs to be a vector (atomic or list)
