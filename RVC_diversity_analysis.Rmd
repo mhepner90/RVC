@@ -2758,6 +2758,7 @@ saveRDS(fk.shp.fortify, 'fk.shp.fortify_rds')
 Examine spatial and temporal trends in the different dimensions of reef fish diversity. 
 
 - Interpolate diversity for each strata/region/year groupings using kriging 
+- baseon krigging 
 ```{r Kriging}
 
 #read in data 
@@ -2974,6 +2975,9 @@ Fit GAM to each index separately.
 
 Modified from [https://stat.ethz.ch/pipermail/r-help/2011-November/295324.html]
 
+- look into mixed effect model GAMM 
+- ran GAMM with each combination of variables, weight of AIC
+
 ```{r GAM and Partial deviances}
 
 # 1. Read in data and remove years (optional)
@@ -3011,10 +3015,6 @@ partial.deviance.list=parLapply(cl, data, function(i){ #data needs to be a vecto
       fullmod = gam(formula(paste("log(",j,")~YEAR+STRAT+PROT+s(LONG_DEGREES,LAT_DEGREES, by=YEAR, bs='ts')+s(DEPTH, by='ts')")), data=data)
       nullmod = gam(formula(paste("log(",j,")~1")), data=data)
    }
-    
-    }
-   ))
-  }) 
 
   #Set up empty vectors for deviances
   time.dev=c(); space.dev=c(); env.dev=c(); mngt.dev=c()
