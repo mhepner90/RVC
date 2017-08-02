@@ -3029,16 +3029,15 @@ partial.deviance.list = for(j in names(data[,8:14])) {
     column_data = as.data.frame(data[[j]])
     #Build full model and null model based on (transformed) response variable
     if(j=="richness") {
-      fullmod = gam(formula(paste(column_data,"~YEAR+STRAT+PROT+s(LONG_DEGREES,LAT_DEGREES,by=YEAR, bs='ts')+s(DEPTH, by='ts')")), family=poisson, data=data)
-      nullmod = gam(formula(paste(column_data,"~1")), family=poisson, data=data)
-      
+      fullmod = gam(formula(paste(j,"~YEAR+STRAT+PROT+s(LON_DEGREES,LAT_DEGREES,by=YEAR, bs='ts')+s(DEPTH, bs='ts')")), family=poisson, data=data)
+      nullmod = gam(formula(paste(j,"~1")), family=poisson, data=data)
       } else if(j=="evenness") {
-    fullmod=gam(formula(paste("asin(sqrt(",column_data,"))~YEAR+STRAT+PROT+s(LONG_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')+s(DEPTH,bs='ts')")), data=data)
-    nullmod = gam(formula(paste("asin(sqrt(",column_data,"))~1")),data=data)
+    fullmod=gam(formula(paste("asin(sqrt(",j,"))~YEAR+STRAT+PROT+s(LON_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')+s(DEPTH,bs='ts')")), data=data)
+    nullmod = gam(formula(paste("asin(sqrt(",j,"))~1")),data=data)
     
    } else { 
-      fullmod = gam(formula(paste("log(",column_data,")~YEAR+STRAT+PROT+s(LONG_DEGREES,LAT_DEGREES, by=YEAR, bs='ts')+s(DEPTH, by='ts')")), data=data)
-      nullmod = gam(formula(paste("log(",column_data,")~1")), data=data)
+      fullmod = gam(formula(paste("log(",j,")~YEAR+STRAT+PROT+s(LON_DEGREES,LAT_DEGREES, by=YEAR, bs='ts')+s(DEPTH, bs='ts')")), data=data)
+      nullmod = gam(formula(paste("log(",j,")~1")), data=data)
    }
 }
 
