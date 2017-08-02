@@ -125,7 +125,7 @@ cl=makeCluster(detectCores()) #shouls i make type = "base" or "FORK"??
 #Load automap on all cores (to access function `autoKrige`)
 clusterEvalQ(cl,c(library(automap),library(mgcv),library(plotrix)))
 
-#RVCdata_FK = read_rds('big_csv/RVCdata_FK.rds')
+RVCdata_FK = read_rds('big_csv/RVCdata_FK.rds')
 
 map = purrr::map # override maps::map
 select = dplyr::select #override MASS::select 
@@ -571,6 +571,27 @@ if(!file.exists("psu_abun_sum_rds")){
 } else{
   psu_abun = read_rds("psu_abun_sum_rds")
 }
+
+family = RVCdata_FK$taxonomic_data
+psu_family = left_join(psu_fk_abun_no_spp, family, by= "SPECIES_CD")
+
+psu_family_group <- psu_family %>%
+    group_by(FAMILY) %>%
+    summarize(abundance_sum = sum(abundance)) %>%
+    filter(abundance_sum != "0") %>%
+  mutate(fam_percent = (abundance_sum/sum(abundance_sum))*100) %>%
+  arrange(desc(fam_percent))
+
+write_csv(psu_family_group, "psu_family_group.csv")
+
+#FAMILY abundance_sum fam_percent
+#           <fctr>         <dbl>       <dbl>
+# 1       Labridae     433089.31  20.4584806
+# 2  Pomacentridae     367204.18  17.3461672
+# 3     Haemulidae     356922.01  16.8604533
+# 4       Gobiidae     227345.17  10.7394402
+# 5       Scaridae     195407.42   9.2307494
+
 
 ```
 
