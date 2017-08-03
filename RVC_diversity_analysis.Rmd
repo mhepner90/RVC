@@ -779,7 +779,10 @@ if(!file.exists("psu_matrices_data_rds")){
   saveRDS(all_matrices_data, "psu_matrices_data_rds")
   
   } else{
-  all_matrices_data = read_rds("psu_matrices_data_rds") #5238, 32
+  all_matrices_data = all_matrices_data %>%
+    select(-data, -data_wide)
+  
+    all_matrices_data = read_rds("psu_matrices_data_rds") #5238, 32
   }
 
 ```
