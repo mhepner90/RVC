@@ -2794,13 +2794,14 @@ partial.deviance.list = for(j in names(data[,8:14])) {
       nullmod = gam(formula(paste(j,"~1")), family=poisson, data=data)
       
       } else if(j=="evenness") {
-    fullmod=gam(formula(paste("asin(sqrt(",j,"))~YEAR+STRAT+PROT+s(LON_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')+s(DEPTH,bs='ts')")), data=data)
-    nullmod = gam(formula(paste("asin(sqrt(",j,"))~1")),data=data)
+    fullmod1=gam(formula(paste("asin(sqrt(",j,"))~YEAR+STRAT+PROT+s(LON_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')+s(DEPTH,bs='ts')")), data=data)
+    nullmod1 = gam(formula(paste("asin(sqrt(",j,"))~1")),data=data)
     
    } else { 
-      fullmod = gam(formula(paste("log(",j,")~YEAR+STRAT+PROT+s(LON_DEGREES,LAT_DEGREES, by=YEAR, bs='ts')+s(DEPTH, bs='ts')")), data=data)
-      nullmod = gam(formula(paste("log(",j,")~1")), data=data)
+      fullmod2 = gam(formula(paste("log(",j,")~YEAR+STRAT+PROT+s(LON_DEGREES,LAT_DEGREES, by=YEAR, bs='ts')+s(DEPTH, bs='ts')")), data=data)
+      nullmod2 = gam(formula(paste("log(",j,")~1")), data=data)
    }
+  
 
   #Set up empty vectors for deviances
   time.dev=c(); space.dev=c(); env.dev=c(); mngt.dev=c()
@@ -2840,8 +2841,8 @@ partial.deviance.list = for(j in names(data[,8:14])) {
     
     space.dev[2]= #(deviance(-time-space)-deviance(-time))/deviance(null)
       (deviance(update(fullmod,.~.-YEAR-s(LON_DEGREES,LAT_DEGREES,by=YEAR,bs='ts'),
-                       sp=fullmod$sp[1]))-
-         deviance(update(fullmod,.~.-YEAR,sp=fullmod$sp[1])))/deviance(nullmod)
+                       sp=fullmod$sp))-
+         deviance(update(fullmod,.~.-YEAR,sp=fullmod$sp)))/deviance(nullmod)
     #Supplied smoothing parameter vector is too short - ignored.
     
     env.dev[2]= #(deviance(-time-space-env)-deviance(-time))/deviance(null)
