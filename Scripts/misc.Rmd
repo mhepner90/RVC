@@ -17,6 +17,25 @@ library(ade4) #mantel.rtest
 library(ggplot2) #geom_boxplot and other plots
 library(nortest) #checks for normality 
 library(psych) #pairs.panels 
+#install.packages("dygraphs")
+#library(dygraphs)
+#install.packages("plotly")
+#library(plotly)
+#install.packages("webshot")
+#library(webshot)
+#install.packages("htmlwidgets")
+#library(htmlwidgets)
+#library(automap) #Calls: autoKrige
+#Create socket cluster of multiple cores 
+#cl=makeCluster(detectCores()) #shouls i make type = "base" or "FORK"??
+#Load automap on all cores (to access function `autoKrige`)
+#clusterEvalQ(cl,c(library(automap),library(mgcv),library(plotrix)))
+#RVCdata_FK = read_rds('big_csv/RVCdata_FK.rds')
+#library(raster)
+#library(rgdal) #readOGR 
+#library(rgeos)
+#library(sp) #Calls: coordinates, spsample
+#library(phytools)
 
 #library(magrittr) # needed to call this library separately from one in tidyverse in order to get functionality of github version not found in CRAN version
 ```

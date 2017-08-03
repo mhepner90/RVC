@@ -84,53 +84,43 @@ $Shannon = - \sum_{i=1}^S p_i \log_b p_i$
 $Rao Q = \sum_{i=1}^S-1 \sum_{j=i+1}^S d_i p_i p_j$
 
 ```{r setup, include= F}
-knitr::opts_chunk$set(echo = T)
+
 #ln -s ~/Dropbox/big_csv big_csv - write in terminal window to link to 'big_csv' folder
 #rm(list = ls())
 
-#install.packages('devtools')
-#devtools::install_github('jeremiaheb/rvc')
-library(rvc) #calls RVC data from SEFSC server 
-#install.packages("tidyverse")
-library(tidyverse)
-#install.packages("vegan")
-library(vegan) # biodiveristy functions for richness, simpson, and shannon 
-#install.packages("dygraphs")
-library(dygraphs)
-#install.packages("plotly")
-#library(plotly)
-#install.packages("webshot")
-library(webshot)
-#install.packages("htmlwidgets")
-library(htmlwidgets)
-#install.packages("FD")
-library(FD)
-#install.packages("iNEXT")
+library(ape) #read.tree, as.phylo 
+library(devtools) #install_github
+library(FD) #gowdis
+library(fpc) #pamk
+library(clue) #cl_consensus, cl_ultrametric, cl_dissimilarity,cl_ultrametric
 library(cowplot) #get_legend 
-
-library(automap) #Calls: autoKrige
-library(ggplot2) #Calls: ggplot
-library(gridExtra) #Calls: grid.arrange
-library(parallel) #Calls: clusterEvalQ,clusterExport,detectCores,makeCluster,parLapply
-library(raster)
-library(rgdal) #readOGR 
-library(rgeos)
-library(sp) #Calls: coordinates, spsample
-library(tidyverse)
+library(ggplot2) #ggplot
+library(gridExtra) #grid.arrange
 library(mgcv) #gam
+library(parallel) #clusterEvalQ,clusterExport,detectCores,makeCluster,parLapply
+library(plotrix) #std.error
+library(purrr) #map
+library(readr) #saveRDS, read_rds, readRDS 
+library(reshape2) #melt
+#devtools::install_github('jeremiaheb/rvc')
+library(rvc) #getPSUAbundance, getStrataAbundance, getDomainAbundance 
+library(tidyverse) #select, filter, mutate, group_by, summarize  
+library(vegan) #spec, diversity 
 
-#Create socket cluster of multiple cores 
-cl=makeCluster(detectCores()) #shouls i make type = "base" or "FORK"??
-
-#Load automap on all cores (to access function `autoKrige`)
-clusterEvalQ(cl,c(library(automap),library(mgcv),library(plotrix)))
-
-RVCdata_FK = read_rds('big_csv/RVCdata_FK.rds')
+#devtools::install_github("timelyportfolio/d3treeR")
+#library(d3treeR)
+#library(treemap)
+#devtools::install_github("gluc/data.tree")
+#devtools::install_github("GuangchuangYu/ggtree") #requires R>= 3.3.2
+#library(ggtree)
+#biocLite("BiocUpgrade") ## you may need this
+#biocLite("ggtree", type = "source")
 
 map = purrr::map # override maps::map
 select = dplyr::select #override MASS::select 
 group_by =  dplyr::group_by #override plotly::group_by
 summarise = dplyr::summarise #override plotly::summarise
+
 ```
 
 ## Functional distance trait based matrix (from Lefcheck et al., 2014 ChessMap.Rmd)
@@ -139,21 +129,6 @@ Gowdis computes the Gower (1971) similarity coefficient exactly as described by 
 
 ```{r Functional distance matrix, eval = F}
 knitr::opts_chunk$set(echo = TRUE)
-
-#install.packages("clue")
-library(clue) #calls cl_ultrametric 
-#install.packages("fpc")
-library(fpc) #calls pamk
-#install.packages("ape")
-library(ape)
-#install.packages("phytools")
-library(phytools)
-#install.packages("FD")
-library(FD)
-#biocLite("BiocUpgrade") ## you may need this
-#biocLite("ggtree", type = "source")
-library(tidyverse)
-
 
 if (!file.exists("functional_diversity/func_dist_rds")){
  
@@ -375,14 +350,6 @@ orditorp(traits_nmds,dis="sites",pcex=0,air=0.5,col="grey10",cex=0.8)
 [http://www.buildingwidgets.com/blog/2015/7/22/week-29-d3treer-v2]
 
 ```{r trait visualization}
-
-library(tidyverse)
-library(treemap)
-devtools::install_github("gluc/data.tree")
-devtools::install_github("timelyportfolio/d3treeR")
-library(d3treeR)
-devtools::install_github("GuangchuangYu/ggtree") #requires R>= 3.3.2
-library(ggtree)
 
 trait_matrix = read_csv('functional_diversity/species_trait_matrix_348_spp.csv')
 
@@ -3010,10 +2977,12 @@ data = all_matrices_data %>%
 #as.data.frame(data)
 
 partial.deviance.list = for(j in names(data[,8:14])) { 
+  
     #Build full model and null model based on (transformed) response variable
     if(j=="richness") {
       fullmod = gam(formula(paste(j,"~YEAR+STRAT+PROT+s(LON_DEGREES,LAT_DEGREES,by=YEAR, bs='ts')+s(DEPTH, bs='ts')")), family=poisson, data=data)
       nullmod = gam(formula(paste(j,"~1")), family=poisson, data=data)
+      
       } else if(j=="evenness") {
     fullmod=gam(formula(paste("asin(sqrt(",j,"))~YEAR+STRAT+PROT+s(LON_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')+s(DEPTH,bs='ts')")), data=data)
     nullmod = gam(formula(paste("asin(sqrt(",j,"))~1")),data=data)
@@ -3031,7 +3000,7 @@ partial.deviance.list = for(j in names(data[,8:14])) {
     ###Sequence 1: time->space->mangement->environment 
 
    time.dev[1]= #(deviance(-time)-deviance(full))/deviance(null)
-      (deviance(update(fullmod,.~.-YEAR, sp=fullmod$sp)) - #- TIME
+      (deviance(update(fullmod,.~.-YEAR, sp=fullmod$sp)) - #-TIME
          deviance(fullmod))/
         deviance(nullmod)
     
@@ -3048,7 +3017,7 @@ partial.deviance.list = for(j in names(data[,8:14])) {
     env.dev[1]= #(deviance(null)-deviance(-time,-space,-mngt))/deviance(null) 
       (deviance(nullmod)-
       deviance(update(fullmod,.~.-YEAR-s(LON_DEGREES,LAT_DEGREES,by=YEAR,bs='ts')-PROT,sp=fullmod$sp[6:9])))/ deviance(nullmod)
-}
+
     ###Sequence 2: time->space->environment->mangement
     
     time.dev[2]= #(deviance(-time)-deviance(full))/deviance(null)
