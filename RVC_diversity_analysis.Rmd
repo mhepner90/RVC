@@ -800,7 +800,7 @@ if(!file.exists("psu_matrices_data_rds")){
 - Are diversity values and subregions related? 
 - Are diversity values and protection level related?
 
-```{r Plot by 7 strata and year}
+```{r Plot by 7 strata and year in 1 line graph}
 
 library(cowplot)
 library(gridExtra)
@@ -1164,9 +1164,1475 @@ ggplot(stats_all_matrices_data, aes(x=YEAR, y=evenness_mean, group=YEAR)) +
 
 ```
 
+```{r Plot by 7 strata by year into 2 line graphs}
+
+all_matrices_data = read_rds("psu_matrices_data_rds")
+
+if(!file.exists("stats_all_matrices_data_rds")){
+  
+  stats_all_matrices_data = all_matrices_data %>%
+    group_by(YEAR, STRAT) %>% #110 groups 
+    summarize(
+      abundance_mean = mean(abundance_sum),
+      abundance_n = length(abundance_sum),
+      abundance_sd = sd(abundance_sum),
+      abundance_se = abundance_sd / sqrt(abundance_n),
+      abundance_min = min(abundance_sum),
+      abundance_max = max(abundance_sum),
+      biomass_mean = mean(biomass_sum),
+      biomass_n = length(biomass_sum),
+      biomass_sd = sd(biomass_sum),
+      biomass_se = biomass_sd / sqrt(biomass_n),
+      biomass_min = min(biomass_sum),
+      biomass_max = max(biomass_sum),
+      richness_mean = mean(richness),
+      richness_n = length(richness),
+      richness_sd = sd(richness),
+      richness_se = richness_sd / sqrt(richness_n),
+      richness_min = min(richness),
+      richness_max = max(richness),
+      simpson_mean = mean(simpson),
+      simpson_n = length(simpson),
+      simpson_sd = sd(simpson),
+      simpson_se = simpson_sd / sqrt(simpson_n),
+      simpson_min = min(simpson),
+      simpson_max = max(simpson),
+      shannon_mean = mean(shannon),
+      shannon_n = length(shannon),
+      shannon_sd = sd(shannon),
+      shannon_se = shannon_sd / sqrt(shannon_n),
+      shannon_min = min(shannon),
+      shannon_max = max(shannon),
+      func.div_mean = mean(func.div),
+      func.div_n = length(func.div),
+      func.div_sd = sd(func.div),
+      func.div_se = func.div_sd / sqrt(func.div_n),
+      func.div_min = min(func.div),
+      func.div_max = max(func.div),
+      evenness_mean = mean(evenness),
+      evenness_n = length(evenness),
+      evenness_sd = sd(evenness),
+      evenness_se = evenness_sd / sqrt(evenness_n),
+      evenness_min = min(evenness),
+      evenness_max = max(evenness))
+  
+  saveRDS(stats_all_matrices_data, "stats_all_matrices_data_rds")
+  
+  write_csv(stats_all_matrices_data, "big_csv/stats_all_matrices_data.csv")
+  
+  } else{ 
+  stats_all_matrices_data = read_rds("stats_all_matrices_data_rds")
+  }
+
+forereef_indices = stats_all_matrices_data %>%
+  filter(STRAT != "INPR") %>%
+  filter(STRAT != "MCPR") %>%
+  filter(STRAT != "OFPR")
+
+patchreef_indices = stats_all_matrices_data %>%
+  filter(STRAT != "FMLR") %>%
+  filter(STRAT != "FSLR") %>%
+  filter(STRAT != "FDLR") %>%
+  filter(STRAT != "HRRF") 
+
+# BY STRAT and YEAR
+#abundance 
+ab_ys_forereef = ggplot(forereef_indices,aes(x=YEAR,y=abundance_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
+  geom_line(aes(group=STRAT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=abundance_mean+abundance_se,ymin=abundance_mean-abundance_se),width=0.1)+
+  labs(title= "A) Abundance", x="Year", y="Mean abundance", colour = "Strata")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+#ggsave(file="abundance_by_year_and_strata.pdf", path="big_csv/plots")
+
+#abundance 
+ab_ys_patchreef = ggplot(patchreef_indices,aes(x=YEAR,y=abundance_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
+  geom_line(aes(group=STRAT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=abundance_mean+abundance_se,ymin=abundance_mean-abundance_se),width=0.1)+
+  labs(title= "", x="Year", y="", colour = "Strata")+
+  scale_y_continuous(limits= c(200,1000))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+#biomass
+bio_ys_forereef = ggplot(forereef_indices,aes(x=YEAR,y=biomass_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
+  geom_line(aes(group=STRAT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2) +
+  labs(title= "B) Biomass", x="Year", y="Mean biomass", colour = "Strata")+
+  scale_y_continuous(limits= c(0,80))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  theme_bw()+
+  theme(
+      legend.position="none",
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+#ggsave(file="biomass_by_year_and_strata.pdf", path="big_csv/plots")
+
+bio_ys_patchreef = ggplot(patchreef_indices,aes(x=YEAR,y=biomass_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
+  geom_line(aes(group=STRAT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2) +
+  labs(title= "", x="Year", y="", colour = "Strata")+
+  scale_y_continuous(limits= c(0,80))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  theme_bw()+
+  theme(
+      legend.position="none",
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+#ggsave(file="biomass_by_year_and_strata.pdf", path="big_csv/plots")
+
+# evenness
+eve_ys_forereef = ggplot(forereef_indices,aes(x=YEAR,y=evenness_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
+  geom_line(aes(group=STRAT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=evenness_mean+evenness_se,ymin=evenness_mean-evenness_se),width=0.1)+
+  labs(title= "C) Evenness", x="Year", y="Mean relative evenness",colour = "Strata")+
+  scale_y_continuous(limits= c(0.25,0.75))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  theme_bw()+
+  theme(
+      legend.position="none", #right
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+#ggsave(file="evenness_by_year_and_strata.pdf", path="big_csv/plots")
+
+eve_ys_patchreef = ggplot(patchreef_indices,aes(x=YEAR,y=evenness_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
+  geom_line(aes(group=STRAT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=evenness_mean+evenness_se,ymin=evenness_mean-evenness_se),width=0.1)+
+  labs(title= "", x="Year", y="",colour = "Strata")+
+  scale_y_continuous(limits= c(0.25,0.75))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  theme_bw()+
+  theme(
+      legend.position="none", #right
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+#ggsave(file="evenness_by_year_and_strata.pdf", path="big_csv/plots")
+
+#richness
+rich_ys_forereef = ggplot(forereef_indices,aes(x=YEAR,y=richness_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
+  geom_line(aes(group=STRAT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2)+
+  labs(title= "D) Richness", x="Year", y="Mean ENS", colour = "Strata")+
+  scale_y_continuous(limits= c(15,60))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  theme_bw()+
+  theme(
+      legend.position="none",
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+#ggsave(file="richness_by_year_and_strata.pdf", path="big_csv/plots")
+
+rich_ys_patchreef = ggplot(patchreef_indices,aes(x=YEAR,y=richness_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
+  geom_line(aes(group=STRAT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2)+
+  labs(title= "", x="Year", y="", colour = "Strata")+
+  scale_y_continuous(limits= c(15,60))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  theme_bw()+
+  theme(
+      legend.position="none",
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+#ggsave(file="richness_by_year_and_strata.pdf", path="big_csv/plots")
+
+#simpson
+sim_ys_forereef = ggplot(forereef_indices,aes(x=YEAR,y=simpson_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
+  geom_line(aes(group=STRAT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymin=simpson_mean-simpson_se, ymax=simpson_mean+simpson_se), width=.2)+
+  labs(title= "E) Simpson", x="Year", y="Mean ENS", colour = "Strata")+
+  scale_y_continuous(limits= c(0,14))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  theme_bw()+
+  theme(
+      legend.position="none",
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+#ggsave(file="simpson_diversity_by_year_and_strata.pdf", path="big_csv/plots")
+
+sim_ys_patchreef = ggplot(patchreef_indices,aes(x=YEAR,y=simpson_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
+  geom_line(aes(group=STRAT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymin=simpson_mean-simpson_se, ymax=simpson_mean+simpson_se), width=.2)+
+  labs(title= "", x="Year", y="", colour = "Strata")+
+  scale_y_continuous(limits= c(0,14))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  theme_bw()+
+  theme(
+      legend.position="none",
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+#ggsave(file="simpson_diversity_by_year_and_strata.pdf", path="big_csv/plots")
+
+# shannon
+shan_ys_forereef = ggplot(forereef_indices,aes(x=YEAR,y=shannon_mean, colour=STRAT, group=STRAT))+ 
+  geom_line(aes(group=STRAT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=shannon_mean+shannon_se,ymin=shannon_mean-shannon_se),width=0.1)+
+  labs(title= "F) Shannon", x="Year", y="Mean ENS", colour = "Strata")+
+  scale_y_continuous(limits= c(0,25))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  theme_bw()+
+  theme(
+      legend.position="none",
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+#ggsave(file="shannon_diversity_by_year_and_strata.pdf", path="big_csv/plots")
+
+shan_ys_patchreef = ggplot(patchreef_indices,aes(x=YEAR,y=shannon_mean, colour=STRAT, group=STRAT))+ 
+  geom_line(aes(group=STRAT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=shannon_mean+shannon_se,ymin=shannon_mean-shannon_se),width=0.1)+
+  labs(title= "", x="Year", y="", colour = "Strata")+
+  scale_y_continuous(limits= c(0,25))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  theme_bw()+
+  theme(
+      legend.position="none",
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+#ggsave(file="shannon_diversity_by_year_and_strata.pdf", path="big_csv/plots")
+
+# functional
+func_ys_forereef= ggplot(forereef_indices,aes(x=YEAR,y=func.div_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
+  geom_line(aes(group=STRAT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=func.div_mean+func.div_se,ymin=func.div_mean-func.div_se),width=0.1)+
+  labs(title= "G) Functional", x="Year", y="Mean ENS", colour = "Strata")+
+  scale_y_continuous(limits= c(0,4))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  theme_bw()+
+  theme(
+      legend.position="none",
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+#ggsave(file="functional_diversity_by_year_and_strata.pdf", path="big_csv/plots")
+
+func_ys_patchreef= ggplot(patchreef_indices,aes(x=YEAR,y=func.div_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
+  geom_line(aes(group=STRAT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=func.div_mean+func.div_se,ymin=func.div_mean-func.div_se),width=0.1)+
+  labs(title= "", x="Year", y="", colour = "Strata")+
+  scale_y_continuous(limits= c(0,4))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  theme_bw()+
+  theme(
+      legend.position="none",
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+#ggsave(file="functional_diversity_by_year_and_strata.pdf", path="big_csv/plots")
+
+#save legend
+for_legend_vert_patchreef = ggplot(patchreef_indices,aes(x=YEAR,y=abundance_mean, colour=STRAT, group=STRAT))+
+  geom_line(aes(group=STRAT),lwd=1) +
+  geom_point(size=3) +
+  labs(colour = "Strata")+
+  theme(
+      legend.position="right", #"none", "right",c(0.8,0.68),
+      legend.text=element_text(size=11),
+      legend.key.size=unit(5,"mm"))
+legend_vert_patchreef <- get_legend(for_legend_vert_patchreef)
+
+# for_legend_horiz = ggplot(stats_all_matrices_data,aes(x=YEAR,y=abundance_mean, colour=STRAT, group=STRAT))+
+#   geom_line(aes(group=STRAT),lwd=1) +
+#   geom_point(size=3) +
+#   labs(colour = "Strata")+
+#   theme(
+#       legend.position="bottom", #"none", "right",c(0.8,0.68),
+#       legend.text=element_text(size=11),
+#       legend.key.size=unit(5,"mm"))
+# legend_horiz <- get_legend(for_legend_horiz)
+
+#combine multiple plots
+#all plots on one page
+g_ys_ab_bio_eve <- grid.arrange(ab_ys_forereef, ab_ys_patchreef, bio_ys_forereef, bio_ys_patchreef, eve_ys_forereef, eve_ys_patchreef, ncol=2)
+
+ggsave(file="g_ys_ab_bio_eve.pdf", g_ys_ab_bio_eve, width=7, height=10, path="big_csv/plots")
+
+g_ys_rich_simp_shan_func <- grid.arrange(rich_ys_forereef, rich_ys_patchreef, sim_ys_forereef, sim_ys_patchreef, shan_ys_forereef, shan_ys_patchreef, func_ys_forereef, func_ys_patchreef, ncol=2)
+
+ggsave(file="g_ys_rich_simp_shan_func.pdf", g_ys_rich_simp_shan_func, width=7, height=10, path="big_csv/plots")
+
+#plots on two pages - letters in plot titles will need to be changed so they make sense on two pages (i.e., A-C and A-D)
+g1 <- grid.arrange(ab_ys,bio_ys,eve_ys,legend_vert,ncol=2)
+ggsave(file="ab_bio_eve_by_year_and_strata.pdf", g1, width=7, height=5, path="big_csv/plots")
+
+g2 <- grid.arrange(arrangeGrob(rich_ys,sim_ys,ncol=2),arrangeGrob(shan_ys,func_ys,ncol=2),legend_horiz,nrow=3,heights=c(2,2,.4))
+ggsave(file="rich_shan_sim_func_by_year_and_strata.pdf", g2, width=7, height=6, path="big_csv/plots")
+
+#left=textGrob("Mean number of effective species", gp=gpar(fontsize=12), rot=90), bottom=textGrob("Year",gp=gpar(fontsize=12))) #code to insert global x and y axis labels
+
+### ***Don't need to combine plots by STRAT and by YEAR just YEAR & STRAT for now***
+
+# plot mean and se by years across strat and by strat across years using bar graphs
+
+# by STRAT
+#abundance 
+ggplot(stats_all_matrices_data, aes(x=STRAT, y=abundance_mean)) +
+  geom_bar(position=position_dodge(), stat="identity") +
+  geom_errorbar(aes(ymin=abundance_mean-abundance_se, ymax=abundance_mean+abundance_se), width=.2, position=position_dodge(.9)) + 
+  theme_classic() + 
+  theme(axis.text.x = element_text(angle=90)) + 
+  facet_wrap(~YEAR, scales='free_y')
+#ggsave(file=".pdf", path="big_csv/plots")
+
+#biomass
+ggplot(stats_all_matrices_data, aes(x=STRAT, y=biomass_mean)) + 
+  geom_bar(position=position_dodge(), stat="identity") + 
+  geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2, position=position_dodge(.9)) + 
+  theme_classic() + 
+  theme(axis.text.x = element_text(angle=90)) + 
+  facet_wrap(~YEAR, scales='free_y')
+#ggsave(file=".pdf", path="big_csv/plots")
+
+#richness 
+ggplot(stats_all_matrices_data, aes(x=STRAT, y=richness_mean)) +
+  geom_bar(position=position_dodge(), stat="identity") +
+  geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2, position=position_dodge(.9)) + 
+  theme_classic() +
+  theme(axis.text.x = element_text(angle=90)) + 
+  facet_wrap(~YEAR, scales='free_y')
+#ggsave(file=".pdf", path="big_csv/plots")
+
+#simpson 
+ggplot(stats_all_matrices_data, aes(x=STRAT, y=simpson_mean)) +
+  geom_bar(position=position_dodge(), stat="identity") +
+  geom_errorbar(aes(ymin=simpson_mean-simpson_se, ymax=simpson_mean+simpson_se), width=.2, position=position_dodge(.9)) + 
+  theme_classic() +
+  theme(axis.text.x = element_text(angle=90)) + 
+  facet_wrap(~YEAR, scales='free_y')
+#ggsave(file=".pdf", path="big_csv/plots")
+
+#shannon 
+ggplot(stats_all_matrices_data, aes(x=STRAT, y=shannon_mean)) +
+  geom_bar(position=position_dodge(), stat="identity") +
+  geom_errorbar(aes(ymin=shannon_mean-shannon_se, ymax=shannon_mean+shannon_se), width=.2, position=position_dodge(.9)) + 
+  theme_classic() +
+  theme(axis.text.x = element_text(angle=90)) + 
+  facet_wrap(~YEAR, scales='free_y')
+#ggsave(file=".pdf", path="big_csv/plots")
+
+# functional 
+ggplot(stats_all_matrices_data,aes(x=STRAT,y=func.div_mean))+ 
+  geom_bar(position=position_dodge(), stat="identity") +
+  geom_errorbar(aes(ymin=func.div_mean-func.div_se, ymax=func.div_mean+func.div_se), width=.2,  position=position_dodge(.9))+ 
+  theme_classic() +
+  theme(axis.text.x = element_text(angle=90)) + 
+  facet_wrap(~YEAR, scales='free_y')
+#ggsave(file=".pdf", path="big_csv/plots")
+
+# evenness
+ggplot(stats_all_matrices_data,aes(x=STRAT,y=evenness_mean))+ 
+  geom_bar(position=position_dodge(), stat="identity") +
+  geom_errorbar(aes(ymin=evenness_mean-evenness_se, ymax=evenness_mean+evenness_se), width=.2,  position=position_dodge(.9))+ 
+  theme_classic() +
+  theme(axis.text.x = element_text(angle=90)) + 
+  facet_wrap(~YEAR, scales='free_y')
+#ggsave(file=".pdf", path="big_csv/plots")
+
+# by YEAR
+#abundance 
+ggplot(stats_all_matrices_data, aes(x=YEAR, y=abundance_mean, group=YEAR)) + 
+  geom_bar(position=position_dodge(), stat="identity") + 
+  geom_errorbar(aes(ymin=abundance_mean-abundance_se, ymax=abundance_mean+abundance_se), width=.2, position=position_dodge(.9)) + 
+  theme_classic() + 
+  theme(axis.text.x = element_text(angle=90)) + 
+  facet_wrap(~STRAT, scales='free_y')
+#ggsave(file=".pdf", path="big_csv/plots")
+
+#biomass 
+ggplot(stats_all_matrices_data, aes(x=YEAR, y=biomass_mean, group=YEAR)) + 
+  geom_bar(position=position_dodge(), stat="identity") + 
+  geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2, position=position_dodge(.9)) +
+  theme_classic() + 
+  theme(axis.text.x = element_text(angle=90)) +
+  facet_wrap(~STRAT, scales='free_y')
+#ggsave(file=".pdf", path="big_csv/plots")
+
+#richness 
+ggplot(stats_all_matrices_data, aes(x=YEAR, y=richness_mean, group=YEAR)) +  
+  geom_bar(position=position_dodge(), stat="identity") + 
+  geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2, position=position_dodge(.9)) + 
+  theme_classic() + 
+  theme(axis.text.x = element_text(angle=90)) + 
+  facet_wrap(~STRAT, scales='free_y')
+#ggsave(file=".pdf", path="big_csv/plots")
+
+#simpson 
+ggplot(stats_all_matrices_data, aes(x=YEAR, y=simpson_mean, group=YEAR)) +  
+  geom_bar(position=position_dodge(), stat="identity") + 
+  geom_errorbar(aes(ymin=simpson_mean-simpson_se, ymax=simpson_mean+simpson_se), width=.2, position=position_dodge(.9)) + 
+  theme_classic() + 
+  theme(axis.text.x = element_text(angle=90)) + 
+  facet_wrap(~STRAT, scales='free_y')
+#ggsave(file=".pdf", path="big_csv/plots")
+
+#shannon
+ggplot(stats_all_matrices_data, aes(x=YEAR, y=shannon_mean, group=YEAR)) +  
+  geom_bar(position=position_dodge(), stat="identity") + 
+  geom_errorbar(aes(ymin=shannon_mean-shannon_se, ymax=shannon_mean+shannon_se), width=.2, position=position_dodge(.9)) + 
+  theme_classic() + 
+  theme(axis.text.x = element_text(angle=90)) + 
+  facet_wrap(~STRAT, scales='free_y')
+#ggsave(file=".pdf", path="big_csv/plots")
+
+#functional
+ggplot(stats_all_matrices_data, aes(x=YEAR, y=func.div_mean, group=YEAR)) +  
+  geom_bar(position=position_dodge(), stat="identity") + 
+  geom_errorbar(aes(ymin=func.div_mean-func.div_se, ymax=func.div_mean+func.div_se), width=.2, position=position_dodge(.9)) + 
+  theme_classic() + 
+  theme(axis.text.x = element_text(angle=90)) + 
+  facet_wrap(~STRAT, scales='free_y')
+#ggsave(file=".pdf", path="big_csv/plots")
+
+#evenness
+ggplot(stats_all_matrices_data, aes(x=YEAR, y=evenness_mean, group=YEAR)) +  
+  geom_bar(position=position_dodge(), stat="identity") + 
+  geom_errorbar(aes(ymin=evenness_mean-evenness_se, ymax=evenness_mean+evenness_se), width=.2, position=position_dodge(.9)) + 
+  theme_classic() + 
+  theme(axis.text.x = element_text(angle=90)) + 
+  facet_wrap(~STRAT, scales='free_y')
+#ggsave(file=".pdf", path="big_csv/plots")
+
+```
+
+Plot each strata individually by index 
+
+```{r plot abundance by strata indv in 7 line graphs}
+
+all_matrices_data = read_rds("psu_matrices_data_rds")
+
+if(!file.exists("stats_all_matrices_data_rds")){
+  
+  stats_all_matrices_data = all_matrices_data %>%
+    group_by(YEAR, STRAT) %>% #110 groups 
+    summarize(
+      abundance_mean = mean(abundance_sum),
+      abundance_n = length(abundance_sum),
+      abundance_sd = sd(abundance_sum),
+      abundance_se = abundance_sd / sqrt(abundance_n),
+      abundance_min = min(abundance_sum),
+      abundance_max = max(abundance_sum),
+      biomass_mean = mean(biomass_sum),
+      biomass_n = length(biomass_sum),
+      biomass_sd = sd(biomass_sum),
+      biomass_se = biomass_sd / sqrt(biomass_n),
+      biomass_min = min(biomass_sum),
+      biomass_max = max(biomass_sum),
+      richness_mean = mean(richness),
+      richness_n = length(richness),
+      richness_sd = sd(richness),
+      richness_se = richness_sd / sqrt(richness_n),
+      richness_min = min(richness),
+      richness_max = max(richness),
+      simpson_mean = mean(simpson),
+      simpson_n = length(simpson),
+      simpson_sd = sd(simpson),
+      simpson_se = simpson_sd / sqrt(simpson_n),
+      simpson_min = min(simpson),
+      simpson_max = max(simpson),
+      shannon_mean = mean(shannon),
+      shannon_n = length(shannon),
+      shannon_sd = sd(shannon),
+      shannon_se = shannon_sd / sqrt(shannon_n),
+      shannon_min = min(shannon),
+      shannon_max = max(shannon),
+      func.div_mean = mean(func.div),
+      func.div_n = length(func.div),
+      func.div_sd = sd(func.div),
+      func.div_se = func.div_sd / sqrt(func.div_n),
+      func.div_min = min(func.div),
+      func.div_max = max(func.div),
+      evenness_mean = mean(evenness),
+      evenness_n = length(evenness),
+      evenness_sd = sd(evenness),
+      evenness_se = evenness_sd / sqrt(evenness_n),
+      evenness_min = min(evenness),
+      evenness_max = max(evenness))
+  
+  saveRDS(stats_all_matrices_data, "stats_all_matrices_data_rds")
+  
+  write_csv(stats_all_matrices_data, "big_csv/stats_all_matrices_data.csv")
+  
+  } else{ 
+  stats_all_matrices_data = read_rds("stats_all_matrices_data_rds")
+  }
+
+# BY STRAT and YEAR
+#abundance 
+ab_INPR = stats_all_matrices_data %>% filter(STRAT=="INPR") %>%
+  ggplot(.,aes(x=YEAR,y=abundance_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=abundance_mean+abundance_se,ymin=abundance_mean-abundance_se),width=0.1)+
+  labs(title= "INPR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+ab_MCPR = stats_all_matrices_data %>% filter(STRAT=="MCPR") %>%
+  ggplot(.,aes(x=YEAR,y=abundance_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=abundance_mean+abundance_se,ymin=abundance_mean-abundance_se),width=0.1)+
+  labs(title= "MCPR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+#ggsave(file="abundance_by_year_and_strata.pdf", path="big_csv/plots")
+
+ab_OFPR = stats_all_matrices_data %>% filter(STRAT=="OFPR") %>%
+  ggplot(.,aes(x=YEAR,y=abundance_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=abundance_mean+abundance_se,ymin=abundance_mean-abundance_se),width=0.1)+
+  labs(title= "OFPR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+ab_FDLR = stats_all_matrices_data %>% filter(STRAT=="FDLR") %>%
+  ggplot(.,aes(x=YEAR,y=abundance_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=abundance_mean+abundance_se,ymin=abundance_mean-abundance_se),width=0.1)+
+  labs(title= "FDLR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+ab_FSLR = stats_all_matrices_data %>% filter(STRAT=="FSLR") %>%
+  ggplot(.,aes(x=YEAR,y=abundance_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=abundance_mean+abundance_se,ymin=abundance_mean-abundance_se),width=0.1)+
+  labs(title= "FSLR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+ab_FMLR = stats_all_matrices_data %>% filter(STRAT=="FMLR") %>%
+  ggplot(.,aes(x=YEAR,y=abundance_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=abundance_mean+abundance_se,ymin=abundance_mean-abundance_se),width=0.1)+
+  labs(title= "FMLR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+ab_HRRF = stats_all_matrices_data %>% filter(STRAT=="HRRF") %>%
+  ggplot(.,aes(x=YEAR,y=abundance_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=abundance_mean+abundance_se,ymin=abundance_mean-abundance_se),width=0.1)+
+  labs(title= "HRRF", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+#all plots on one page
+abundance_strata <- grid.arrange(ab_INPR, ab_MCPR, ab_OFPR, ab_FSLR, ab_FMLR, ab_FDLR, ab_HRRF, ncol=2, left = "Mean Abundance", bottom = "Year")
+
+ggsave(file="abundance_strata_title.pdf", abundance_strata, width=7, height=10, path="big_csv/plots")
+
+```
+
+```{r plot biomass by strata indv in 7 line graphs}
+
+# BY STRAT and YEAR
+#biomass 
+bio_INPR = stats_all_matrices_data %>% filter(STRAT=="INPR") %>%
+  ggplot(.,aes(x=YEAR,y=biomass_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=biomass_mean+biomass_se,ymin=biomass_mean-biomass_se),width=0.1)+
+  labs(title= "INPR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+bio_MCPR = stats_all_matrices_data %>% filter(STRAT=="MCPR") %>%
+  ggplot(.,aes(x=YEAR,y=biomass_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=biomass_mean+biomass_se,ymin=biomass_mean-biomass_se),width=0.1)+
+  labs(title= "MCPR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+#ggsave(file="biomass_by_year_and_strata.pdf", path="big_csv/plots")
+
+bio_OFPR = stats_all_matrices_data %>% filter(STRAT=="OFPR") %>%
+  ggplot(.,aes(x=YEAR,y=biomass_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=biomass_mean+biomass_se,ymin=biomass_mean-biomass_se),width=0.1)+
+  labs(title= "OFPR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+bio_FDLR = stats_all_matrices_data %>% filter(STRAT=="FDLR") %>%
+  ggplot(.,aes(x=YEAR,y=biomass_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=biomass_mean+biomass_se,ymin=biomass_mean-biomass_se),width=0.1)+
+  labs(title= "FDLR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+bio_FSLR = stats_all_matrices_data %>% filter(STRAT=="FSLR") %>%
+  ggplot(.,aes(x=YEAR,y=biomass_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=biomass_mean+biomass_se,ymin=biomass_mean-biomass_se),width=0.1)+
+  labs(title= "FSLR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+bio_FMLR = stats_all_matrices_data %>% filter(STRAT=="FMLR") %>%
+  ggplot(.,aes(x=YEAR,y=biomass_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=biomass_mean+biomass_se,ymin=biomass_mean-biomass_se),width=0.1)+
+  labs(title= "FMLR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+bio_HRRF = stats_all_matrices_data %>% filter(STRAT=="HRRF") %>%
+  ggplot(.,aes(x=YEAR,y=biomass_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=biomass_mean+biomass_se,ymin=biomass_mean-biomass_se),width=0.1)+
+  labs(title= "HRRF", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+#all plots on one page
+biomass_strata <- grid.arrange(bio_INPR, bio_MCPR, bio_OFPR, bio_FSLR, bio_FMLR, bio_FDLR, bio_HRRF, ncol=2, left = "Mean Biomass", bottom = "Year")
+
+ggsave(file="biomass_strata_title.pdf", biomass_strata, width=7, height=10, path="big_csv/plots")
+
+```
+
+```{r plot richness by strata indv in 7 line graphs}
+
+# BY STRAT and YEAR
+#richness 
+rich_INPR = stats_all_matrices_data %>% filter(STRAT=="INPR") %>%
+  ggplot(.,aes(x=YEAR,y=richness_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=richness_mean+richness_se,ymin=richness_mean-richness_se),width=0.1)+
+  labs(title= "INPR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+rich_MCPR = stats_all_matrices_data %>% filter(STRAT=="MCPR") %>%
+  ggplot(.,aes(x=YEAR,y=richness_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=richness_mean+richness_se,ymin=richness_mean-richness_se),width=0.1)+
+  labs(title= "MCPR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+#ggsave(file="richness_by_year_and_strata.pdf", path="big_csv/plots")
+
+rich_OFPR = stats_all_matrices_data %>% filter(STRAT=="OFPR") %>%
+  ggplot(.,aes(x=YEAR,y=richness_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=richness_mean+richness_se,ymin=richness_mean-richness_se),width=0.1)+
+  labs(title= "OFPR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+rich_FDLR = stats_all_matrices_data %>% filter(STRAT=="FDLR") %>%
+  ggplot(.,aes(x=YEAR,y=richness_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=richness_mean+richness_se,ymin=richness_mean-richness_se),width=0.1)+
+  labs(title= "FDLR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+rich_FSLR = stats_all_matrices_data %>% filter(STRAT=="FSLR") %>%
+  ggplot(.,aes(x=YEAR,y=richness_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=richness_mean+richness_se,ymin=richness_mean-richness_se),width=0.1)+
+  labs(title= "FSLR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+rich_FMLR = stats_all_matrices_data %>% filter(STRAT=="FMLR") %>%
+  ggplot(.,aes(x=YEAR,y=richness_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=richness_mean+richness_se,ymin=richness_mean-richness_se),width=0.1)+
+  labs(title= "FMLR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+rich_HRRF = stats_all_matrices_data %>% filter(STRAT=="HRRF") %>%
+  ggplot(.,aes(x=YEAR,y=richness_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=richness_mean+richness_se,ymin=richness_mean-richness_se),width=0.1)+
+  labs(title= "HRRF", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+#all plots on one page
+richness_strata <- grid.arrange(rich_INPR, rich_MCPR, rich_OFPR, rich_FSLR, rich_FMLR, rich_FDLR, rich_HRRF, ncol=2, left = "Mean Effective Number of Species", bottom = "Year")
+
+ggsave(file="richness_strata_title.pdf", richness_strata, width=7, height=10, path="big_csv/plots")
+
+```
+
+```{r plot evenness by strata indv in 7 line graphs}
+
+# BY STRAT and YEAR
+#evenness 
+eve_INPR = stats_all_matrices_data %>% filter(STRAT=="INPR") %>%
+  ggplot(.,aes(x=YEAR,y=evenness_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=evenness_mean+evenness_se,ymin=evenness_mean-evenness_se),width=0.1)+
+  labs(title= "INPR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+eve_MCPR = stats_all_matrices_data %>% filter(STRAT=="MCPR") %>%
+  ggplot(.,aes(x=YEAR,y=evenness_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=evenness_mean+evenness_se,ymin=evenness_mean-evenness_se),width=0.1)+
+  labs(title= "MCPR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+#ggsave(file="evenness_by_year_and_strata.pdf", path="big_csv/plots")
+
+eve_OFPR = stats_all_matrices_data %>% filter(STRAT=="OFPR") %>%
+  ggplot(.,aes(x=YEAR,y=evenness_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=evenness_mean+evenness_se,ymin=evenness_mean-evenness_se),width=0.1)+
+  labs(title= "OFPR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+eve_FDLR = stats_all_matrices_data %>% filter(STRAT=="FDLR") %>%
+  ggplot(.,aes(x=YEAR,y=evenness_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=evenness_mean+evenness_se,ymin=evenness_mean-evenness_se),width=0.1)+
+  labs(title= "FDLR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+eve_FSLR = stats_all_matrices_data %>% filter(STRAT=="FSLR") %>%
+  ggplot(.,aes(x=YEAR,y=evenness_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=evenness_mean+evenness_se,ymin=evenness_mean-evenness_se),width=0.1)+
+  labs(title= "FSLR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+eve_FMLR = stats_all_matrices_data %>% filter(STRAT=="FMLR") %>%
+  ggplot(.,aes(x=YEAR,y=evenness_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=evenness_mean+evenness_se,ymin=evenness_mean-evenness_se),width=0.1)+
+  labs(title= "FMLR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+eve_HRRF = stats_all_matrices_data %>% filter(STRAT=="HRRF") %>%
+  ggplot(.,aes(x=YEAR,y=evenness_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=evenness_mean+evenness_se,ymin=evenness_mean-evenness_se),width=0.1)+
+  labs(title= "HRRF", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+#all plots on one page
+evenness_strata <- grid.arrange(eve_INPR, eve_MCPR, eve_OFPR, eve_FSLR, eve_FMLR, eve_FDLR, eve_HRRF, ncol=2, left = "Mean Relative Evenness", bottom = "Year")
+
+ggsave(file="evenness_strata_title.pdf", evenness_strata, width=7, height=10, path="big_csv/plots")
+
+```
+
+```{r plot simpson by strata indv in 7 line graphs}
+
+# BY STRAT and YEAR
+#simpson 
+simp_INPR = stats_all_matrices_data %>% filter(STRAT=="INPR") %>%
+  ggplot(.,aes(x=YEAR,y=simpson_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=simpson_mean+simpson_se,ymin=simpson_mean-simpson_se),width=0.1)+
+  labs(title= "INPR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+simp_MCPR = stats_all_matrices_data %>% filter(STRAT=="MCPR") %>%
+  ggplot(.,aes(x=YEAR,y=simpson_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=simpson_mean+simpson_se,ymin=simpson_mean-simpson_se),width=0.1)+
+  labs(title= "MCPR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+#ggsave(file="simpson_by_year_and_strata.pdf", path="big_csv/plots")
+
+simp_OFPR = stats_all_matrices_data %>% filter(STRAT=="OFPR") %>%
+  ggplot(.,aes(x=YEAR,y=simpson_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=simpson_mean+simpson_se,ymin=simpson_mean-simpson_se),width=0.1)+
+  labs(title= "OFPR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+simp_FDLR = stats_all_matrices_data %>% filter(STRAT=="FDLR") %>%
+  ggplot(.,aes(x=YEAR,y=simpson_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=simpson_mean+simpson_se,ymin=simpson_mean-simpson_se),width=0.1)+
+  labs(title= "FDLR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+simp_FSLR = stats_all_matrices_data %>% filter(STRAT=="FSLR") %>%
+  ggplot(.,aes(x=YEAR,y=simpson_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=simpson_mean+simpson_se,ymin=simpson_mean-simpson_se),width=0.1)+
+  labs(title= "FSLR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+simp_FMLR = stats_all_matrices_data %>% filter(STRAT=="FMLR") %>%
+  ggplot(.,aes(x=YEAR,y=simpson_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=simpson_mean+simpson_se,ymin=simpson_mean-simpson_se),width=0.1)+
+  labs(title= "FMLR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+simp_HRRF = stats_all_matrices_data %>% filter(STRAT=="HRRF") %>%
+  ggplot(.,aes(x=YEAR,y=simpson_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=simpson_mean+simpson_se,ymin=simpson_mean-simpson_se),width=0.1)+
+  labs(title= "HRRF", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+#all plots on one page
+simpson_strata <- grid.arrange(simp_INPR, simp_MCPR, simp_OFPR, simp_FSLR, simp_FMLR, simp_FDLR, simp_HRRF, ncol=2, left = "Effective Number of Species", bottom = "Year")
+
+ggsave(file="simpson_strata_title.pdf", simpson_strata, width=7, height=10, path="big_csv/plots")
+
+```
+
+```{r plot shannon by strata indv in 7 line graphs}
+
+# BY STRAT and YEAR
+#shannon 
+shan_INPR = stats_all_matrices_data %>% filter(STRAT=="INPR") %>%
+  ggplot(.,aes(x=YEAR,y=shannon_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=shannon_mean+shannon_se,ymin=shannon_mean-shannon_se),width=0.1)+
+  labs(title= "INPR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+shan_MCPR = stats_all_matrices_data %>% filter(STRAT=="MCPR") %>%
+  ggplot(.,aes(x=YEAR,y=shannon_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=shannon_mean+shannon_se,ymin=shannon_mean-shannon_se),width=0.1)+
+  labs(title= "MCPR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+#ggsave(file="shannon_by_year_and_strata.pdf", path="big_csv/plots")
+
+shan_OFPR = stats_all_matrices_data %>% filter(STRAT=="OFPR") %>%
+  ggplot(.,aes(x=YEAR,y=shannon_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=shannon_mean+shannon_se,ymin=shannon_mean-shannon_se),width=0.1)+
+  labs(title= "OFPR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+shan_FDLR = stats_all_matrices_data %>% filter(STRAT=="FDLR") %>%
+  ggplot(.,aes(x=YEAR,y=shannon_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=shannon_mean+shannon_se,ymin=shannon_mean-shannon_se),width=0.1)+
+  labs(title= "FDLR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+shan_FSLR = stats_all_matrices_data %>% filter(STRAT=="FSLR") %>%
+  ggplot(.,aes(x=YEAR,y=shannon_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=shannon_mean+shannon_se,ymin=shannon_mean-shannon_se),width=0.1)+
+  labs(title= "FSLR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+shan_FMLR = stats_all_matrices_data %>% filter(STRAT=="FMLR") %>%
+  ggplot(.,aes(x=YEAR,y=shannon_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=shannon_mean+shannon_se,ymin=shannon_mean-shannon_se),width=0.1)+
+  labs(title= "FMLR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+shan_HRRF = stats_all_matrices_data %>% filter(STRAT=="HRRF") %>%
+  ggplot(.,aes(x=YEAR,y=shannon_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=shannon_mean+shannon_se,ymin=shannon_mean-shannon_se),width=0.1)+
+  labs(title= "HRRF", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+#all plots on one page
+shannon_strata <- grid.arrange(shan_INPR, shan_MCPR, shan_OFPR, shan_FSLR, shan_FMLR, shan_FDLR, shan_HRRF, ncol=2, left = "Effective Number of Species", bottom = "Year")
+
+ggsave(file="shannon_strata_title.pdf", shannon_strata, width=7, height=10, path="big_csv/plots")
+
+```
+
+```{r plot functional by strata indv in 7 line graphs}
+# BY STRAT and YEAR
+#func.div 
+func_INPR = stats_all_matrices_data %>% filter(STRAT=="INPR") %>%
+  ggplot(.,aes(x=YEAR,y=func.div_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=func.div_mean+func.div_se,ymin=func.div_mean-func.div_se),width=0.1)+
+  labs(title= "INPR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+func_MCPR = stats_all_matrices_data %>% filter(STRAT=="MCPR") %>%
+  ggplot(.,aes(x=YEAR,y=func.div_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=func.div_mean+func.div_se,ymin=func.div_mean-func.div_se),width=0.1)+
+  labs(title= "MCPR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+func_OFPR = stats_all_matrices_data %>% filter(STRAT=="OFPR") %>%
+  ggplot(.,aes(x=YEAR,y=func.div_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=func.div_mean+func.div_se,ymin=func.div_mean-func.div_se),width=0.1)+
+  labs(title= "OFPR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+func_FDLR = stats_all_matrices_data %>% filter(STRAT=="FDLR") %>%
+  ggplot(.,aes(x=YEAR,y=func.div_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=func.div_mean+func.div_se,ymin=func.div_mean-func.div_se),width=0.1)+
+  labs(title= "FDLR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+func_FSLR = stats_all_matrices_data %>% filter(STRAT=="FSLR") %>%
+  ggplot(.,aes(x=YEAR,y=func.div_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=func.div_mean+func.div_se,ymin=func.div_mean-func.div_se),width=0.1)+
+  labs(title= "FSLR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+func_FMLR = stats_all_matrices_data %>% filter(STRAT=="FMLR") %>%
+  ggplot(.,aes(x=YEAR,y=func.div_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=func.div_mean+func.div_se,ymin=func.div_mean-func.div_se),width=0.1)+
+  labs(title= "FMLR", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+func_HRRF = stats_all_matrices_data %>% filter(STRAT=="HRRF") %>%
+  ggplot(.,aes(x=YEAR,y=func.div_mean))+ #shape=STRAT
+  geom_line(lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=func.div_mean+func.div_se,ymin=func.div_mean-func.div_se),width=0.1)+
+  labs(title= "HRRF", x="", y="")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+
+#all plots on one page
+func.div_strata <- grid.arrange(func_INPR, func_MCPR, func_OFPR, func_FSLR, func_FMLR, func_FDLR, func_HRRF, ncol=2, left = "Effective Number of Species", bottom = "Year")
+
+ggsave(file="func.div_strata_title.pdf", func.div_strata, width=7, height=10, path="big_csv/plots")
+
+```
+
 Group strata by: patch reef, forereef, and high relief 
 
-```{r Plot by grouped strata and year} 
+```{r Plot by strata grouped and year} 
 
 if(!file.exists("matrices_strat_grouped_rds")){
   
@@ -1515,7 +2981,7 @@ HR = x %>% filter(STRAT_GROUPED=="HIGH_RELIEF") %>% ggplot(.,aes(x=YEAR, y=value
   geom_errorbar(aes(ymax=value.mean+value.se,ymin=value.mean-value.se),width=0.1)+
    geom_line(aes(group=SUBREGION_DOMAIN),lwd=1)+
   facet_wrap(~variable,scales="free",ncol=2)+
-  labs(title= "", x="Year", y="", colour = "Subregion")+
+  labs(title= "High Relief", x="Year", y="", colour = "Subregion")+
   scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("red", "green", "blue"))+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
     theme(
@@ -1532,7 +2998,7 @@ LR = x %>% filter(STRAT_GROUPED=="LINEAR_REEF") %>% ggplot(.,aes(x=YEAR, y=value
   geom_errorbar(aes(ymax=value.mean+value.se,ymin=value.mean-value.se),width=0.1)+
    geom_line(aes(group=SUBREGION_DOMAIN),lwd=1)+
   facet_wrap(~variable,scales="free",ncol=2)+
-  labs(title= "", x="Year", y="", colour = "Subregion")+
+  labs(title= "Linear Reef", x="Year", y="", colour = "Subregion")+
   scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("red", "green", "blue"))+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
     theme(
@@ -1541,14 +3007,14 @@ LR = x %>% filter(STRAT_GROUPED=="LINEAR_REEF") %>% ggplot(.,aes(x=YEAR, y=value
       panel.spacing.x=unit(3, "lines"),
       legend.position=c(0.75,0.1))
 ggsave(file="all_indices_by_subregion_and_year_LINEAR_REEF.pdf", LR, width=7, height=10, path="big_csv/plots")
-LR
+
 #PATCH REEF
 PR = x %>% filter(STRAT_GROUPED=="PATCH_REEF") %>% ggplot(.,aes(x=YEAR, y=value.mean, col=SUBREGION_DOMAIN, group=SUBREGION_DOMAIN))+
   geom_point(size=3)+
   geom_errorbar(aes(ymax=value.mean+value.se,ymin=value.mean-value.se),width=0.1)+
    geom_line(aes(group=SUBREGION_DOMAIN),lwd=1)+
   facet_wrap(~variable,scales="free",ncol=2)+
-  labs(title= "", x="Year", y="", colour = "Subregion")+
+  labs(title= "Patch Reef", x="Year", y="", colour = "Subregion")+
   scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("red", "green", "blue"))+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
     theme(
@@ -1562,7 +3028,7 @@ PR
 
 Plots of indices by subregions, 7 strata and across all years  
 
-```{r Plot by 7 strata subregion and year}
+```{r Plots of 7 strata grouped by year}
 
 all_matrices_data = read_rds("psu_matrices_data_rds")
 
@@ -1596,7 +3062,7 @@ Forereef =  x.2 %>%
   geom_errorbar(aes(ymax=value.mean+value.se,ymin=value.mean-value.se),width=0.1)+
    geom_line(aes(group=STRAT),lwd=1)+
   facet_wrap(~variable,scales="free",ncol=2)+
-  labs(title= "", x="Year", y="", colour = "Strata")+
+  labs(title= "Forereef", x="Year", y="", colour = "Strata")+
   scale_colour_manual(labels=c("FDLR","FMLR", "FSLR"), values= c("red", "green", "blue"))+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
     theme(
@@ -3371,1445 +4837,3 @@ lapply(seq_along(partial.deviance.list),function(i) {
 Examine spatial and temporal trends in the different dimensions of reef fish diversity. 
 
 - Interpolate diversity for all years using kriging in ArcGIS
-
-```{r Plot by 7 strata in sections by year}
-
-all_matrices_data = read_rds("psu_matrices_data_rds")
-
-if(!file.exists("stats_all_matrices_data_rds")){
-  
-  stats_all_matrices_data = all_matrices_data %>%
-    group_by(YEAR, STRAT) %>% #110 groups 
-    summarize(
-      abundance_mean = mean(abundance_sum),
-      abundance_n = length(abundance_sum),
-      abundance_sd = sd(abundance_sum),
-      abundance_se = abundance_sd / sqrt(abundance_n),
-      abundance_min = min(abundance_sum),
-      abundance_max = max(abundance_sum),
-      biomass_mean = mean(biomass_sum),
-      biomass_n = length(biomass_sum),
-      biomass_sd = sd(biomass_sum),
-      biomass_se = biomass_sd / sqrt(biomass_n),
-      biomass_min = min(biomass_sum),
-      biomass_max = max(biomass_sum),
-      richness_mean = mean(richness),
-      richness_n = length(richness),
-      richness_sd = sd(richness),
-      richness_se = richness_sd / sqrt(richness_n),
-      richness_min = min(richness),
-      richness_max = max(richness),
-      simpson_mean = mean(simpson),
-      simpson_n = length(simpson),
-      simpson_sd = sd(simpson),
-      simpson_se = simpson_sd / sqrt(simpson_n),
-      simpson_min = min(simpson),
-      simpson_max = max(simpson),
-      shannon_mean = mean(shannon),
-      shannon_n = length(shannon),
-      shannon_sd = sd(shannon),
-      shannon_se = shannon_sd / sqrt(shannon_n),
-      shannon_min = min(shannon),
-      shannon_max = max(shannon),
-      func.div_mean = mean(func.div),
-      func.div_n = length(func.div),
-      func.div_sd = sd(func.div),
-      func.div_se = func.div_sd / sqrt(func.div_n),
-      func.div_min = min(func.div),
-      func.div_max = max(func.div),
-      evenness_mean = mean(evenness),
-      evenness_n = length(evenness),
-      evenness_sd = sd(evenness),
-      evenness_se = evenness_sd / sqrt(evenness_n),
-      evenness_min = min(evenness),
-      evenness_max = max(evenness))
-  
-  saveRDS(stats_all_matrices_data, "stats_all_matrices_data_rds")
-  
-  write_csv(stats_all_matrices_data, "big_csv/stats_all_matrices_data.csv")
-  
-  } else{ 
-  stats_all_matrices_data = read_rds("stats_all_matrices_data_rds")
-  }
-
-forereef_indices = stats_all_matrices_data %>%
-  filter(STRAT != "INPR") %>%
-  filter(STRAT != "MCPR") %>%
-  filter(STRAT != "OFPR")
-
-patchreef_indices = stats_all_matrices_data %>%
-  filter(STRAT != "FMLR") %>%
-  filter(STRAT != "FSLR") %>%
-  filter(STRAT != "FDLR") %>%
-  filter(STRAT != "HRRF") 
-
-# BY STRAT and YEAR
-#abundance 
-ab_ys_forereef = ggplot(forereef_indices,aes(x=YEAR,y=abundance_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
-  geom_line(aes(group=STRAT),lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=abundance_mean+abundance_se,ymin=abundance_mean-abundance_se),width=0.1)+
-  labs(title= "A) Abundance", x="Year", y="Mean abundance", colour = "Strata")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-#ggsave(file="abundance_by_year_and_strata.pdf", path="big_csv/plots")
-
-#abundance 
-ab_ys_patchreef = ggplot(patchreef_indices,aes(x=YEAR,y=abundance_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
-  geom_line(aes(group=STRAT),lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=abundance_mean+abundance_se,ymin=abundance_mean-abundance_se),width=0.1)+
-  labs(title= "", x="Year", y="", colour = "Strata")+
-  scale_y_continuous(limits= c(200,1000))+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-#biomass
-bio_ys_forereef = ggplot(forereef_indices,aes(x=YEAR,y=biomass_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
-  geom_line(aes(group=STRAT),lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2) +
-  labs(title= "B) Biomass", x="Year", y="Mean biomass", colour = "Strata")+
-  scale_y_continuous(limits= c(0,80))+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  theme_bw()+
-  theme(
-      legend.position="none",
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-#ggsave(file="biomass_by_year_and_strata.pdf", path="big_csv/plots")
-
-bio_ys_patchreef = ggplot(patchreef_indices,aes(x=YEAR,y=biomass_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
-  geom_line(aes(group=STRAT),lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2) +
-  labs(title= "", x="Year", y="", colour = "Strata")+
-  scale_y_continuous(limits= c(0,80))+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  theme_bw()+
-  theme(
-      legend.position="none",
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-#ggsave(file="biomass_by_year_and_strata.pdf", path="big_csv/plots")
-
-# evenness
-eve_ys_forereef = ggplot(forereef_indices,aes(x=YEAR,y=evenness_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
-  geom_line(aes(group=STRAT),lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=evenness_mean+evenness_se,ymin=evenness_mean-evenness_se),width=0.1)+
-  labs(title= "C) Evenness", x="Year", y="Mean relative evenness",colour = "Strata")+
-  scale_y_continuous(limits= c(0.25,0.75))+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  theme_bw()+
-  theme(
-      legend.position="none", #right
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-#ggsave(file="evenness_by_year_and_strata.pdf", path="big_csv/plots")
-
-eve_ys_patchreef = ggplot(patchreef_indices,aes(x=YEAR,y=evenness_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
-  geom_line(aes(group=STRAT),lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=evenness_mean+evenness_se,ymin=evenness_mean-evenness_se),width=0.1)+
-  labs(title= "", x="Year", y="",colour = "Strata")+
-  scale_y_continuous(limits= c(0.25,0.75))+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  theme_bw()+
-  theme(
-      legend.position="none", #right
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-#ggsave(file="evenness_by_year_and_strata.pdf", path="big_csv/plots")
-
-#richness
-rich_ys_forereef = ggplot(forereef_indices,aes(x=YEAR,y=richness_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
-  geom_line(aes(group=STRAT),lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2)+
-  labs(title= "D) Richness", x="Year", y="Mean ENS", colour = "Strata")+
-  scale_y_continuous(limits= c(15,60))+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  theme_bw()+
-  theme(
-      legend.position="none",
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-#ggsave(file="richness_by_year_and_strata.pdf", path="big_csv/plots")
-
-rich_ys_patchreef = ggplot(patchreef_indices,aes(x=YEAR,y=richness_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
-  geom_line(aes(group=STRAT),lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2)+
-  labs(title= "", x="Year", y="", colour = "Strata")+
-  scale_y_continuous(limits= c(15,60))+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  theme_bw()+
-  theme(
-      legend.position="none",
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-#ggsave(file="richness_by_year_and_strata.pdf", path="big_csv/plots")
-
-#simpson
-sim_ys_forereef = ggplot(forereef_indices,aes(x=YEAR,y=simpson_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
-  geom_line(aes(group=STRAT),lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymin=simpson_mean-simpson_se, ymax=simpson_mean+simpson_se), width=.2)+
-  labs(title= "E) Simpson", x="Year", y="Mean ENS", colour = "Strata")+
-  scale_y_continuous(limits= c(0,14))+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  theme_bw()+
-  theme(
-      legend.position="none",
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-#ggsave(file="simpson_diversity_by_year_and_strata.pdf", path="big_csv/plots")
-
-sim_ys_patchreef = ggplot(patchreef_indices,aes(x=YEAR,y=simpson_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
-  geom_line(aes(group=STRAT),lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymin=simpson_mean-simpson_se, ymax=simpson_mean+simpson_se), width=.2)+
-  labs(title= "", x="Year", y="", colour = "Strata")+
-  scale_y_continuous(limits= c(0,14))+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  theme_bw()+
-  theme(
-      legend.position="none",
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-#ggsave(file="simpson_diversity_by_year_and_strata.pdf", path="big_csv/plots")
-
-# shannon
-shan_ys_forereef = ggplot(forereef_indices,aes(x=YEAR,y=shannon_mean, colour=STRAT, group=STRAT))+ 
-  geom_line(aes(group=STRAT),lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=shannon_mean+shannon_se,ymin=shannon_mean-shannon_se),width=0.1)+
-  labs(title= "F) Shannon", x="Year", y="Mean ENS", colour = "Strata")+
-  scale_y_continuous(limits= c(0,25))+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  theme_bw()+
-  theme(
-      legend.position="none",
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-#ggsave(file="shannon_diversity_by_year_and_strata.pdf", path="big_csv/plots")
-
-shan_ys_patchreef = ggplot(patchreef_indices,aes(x=YEAR,y=shannon_mean, colour=STRAT, group=STRAT))+ 
-  geom_line(aes(group=STRAT),lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=shannon_mean+shannon_se,ymin=shannon_mean-shannon_se),width=0.1)+
-  labs(title= "", x="Year", y="", colour = "Strata")+
-  scale_y_continuous(limits= c(0,25))+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  theme_bw()+
-  theme(
-      legend.position="none",
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-#ggsave(file="shannon_diversity_by_year_and_strata.pdf", path="big_csv/plots")
-
-# functional
-func_ys_forereef= ggplot(forereef_indices,aes(x=YEAR,y=func.div_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
-  geom_line(aes(group=STRAT),lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=func.div_mean+func.div_se,ymin=func.div_mean-func.div_se),width=0.1)+
-  labs(title= "G) Functional", x="Year", y="Mean ENS", colour = "Strata")+
-  scale_y_continuous(limits= c(0,4))+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  theme_bw()+
-  theme(
-      legend.position="none",
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-#ggsave(file="functional_diversity_by_year_and_strata.pdf", path="big_csv/plots")
-
-func_ys_patchreef= ggplot(patchreef_indices,aes(x=YEAR,y=func.div_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
-  geom_line(aes(group=STRAT),lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=func.div_mean+func.div_se,ymin=func.div_mean-func.div_se),width=0.1)+
-  labs(title= "", x="Year", y="", colour = "Strata")+
-  scale_y_continuous(limits= c(0,4))+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  theme_bw()+
-  theme(
-      legend.position="none",
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-#ggsave(file="functional_diversity_by_year_and_strata.pdf", path="big_csv/plots")
-
-#save legend
-for_legend_vert_patchreef = ggplot(patchreef_indices,aes(x=YEAR,y=abundance_mean, colour=STRAT, group=STRAT))+
-  geom_line(aes(group=STRAT),lwd=1) +
-  geom_point(size=3) +
-  labs(colour = "Strata")+
-  theme(
-      legend.position="right", #"none", "right",c(0.8,0.68),
-      legend.text=element_text(size=11),
-      legend.key.size=unit(5,"mm"))
-legend_vert_patchreef <- get_legend(for_legend_vert_patchreef)
-
-# for_legend_horiz = ggplot(stats_all_matrices_data,aes(x=YEAR,y=abundance_mean, colour=STRAT, group=STRAT))+
-#   geom_line(aes(group=STRAT),lwd=1) +
-#   geom_point(size=3) +
-#   labs(colour = "Strata")+
-#   theme(
-#       legend.position="bottom", #"none", "right",c(0.8,0.68),
-#       legend.text=element_text(size=11),
-#       legend.key.size=unit(5,"mm"))
-# legend_horiz <- get_legend(for_legend_horiz)
-
-#combine multiple plots
-#all plots on one page
-g_ys_ab_bio_eve <- grid.arrange(ab_ys_forereef, ab_ys_patchreef, bio_ys_forereef, bio_ys_patchreef, eve_ys_forereef, eve_ys_patchreef, ncol=2)
-
-ggsave(file="g_ys_ab_bio_eve.pdf", g_ys_ab_bio_eve, width=7, height=10, path="big_csv/plots")
-
-g_ys_rich_simp_shan_func <- grid.arrange(rich_ys_forereef, rich_ys_patchreef, sim_ys_forereef, sim_ys_patchreef, shan_ys_forereef, shan_ys_patchreef, func_ys_forereef, func_ys_patchreef, ncol=2)
-
-ggsave(file="g_ys_rich_simp_shan_func.pdf", g_ys_rich_simp_shan_func, width=7, height=10, path="big_csv/plots")
-
-#plots on two pages - letters in plot titles will need to be changed so they make sense on two pages (i.e., A-C and A-D)
-g1 <- grid.arrange(ab_ys,bio_ys,eve_ys,legend_vert,ncol=2)
-ggsave(file="ab_bio_eve_by_year_and_strata.pdf", g1, width=7, height=5, path="big_csv/plots")
-
-g2 <- grid.arrange(arrangeGrob(rich_ys,sim_ys,ncol=2),arrangeGrob(shan_ys,func_ys,ncol=2),legend_horiz,nrow=3,heights=c(2,2,.4))
-ggsave(file="rich_shan_sim_func_by_year_and_strata.pdf", g2, width=7, height=6, path="big_csv/plots")
-
-#left=textGrob("Mean number of effective species", gp=gpar(fontsize=12), rot=90), bottom=textGrob("Year",gp=gpar(fontsize=12))) #code to insert global x and y axis labels
-
-### ***Don't need to combine plots by STRAT and by YEAR just YEAR & STRAT for now***
-
-# plot mean and se by years across strat and by strat across years using bar graphs
-
-# by STRAT
-#abundance 
-ggplot(stats_all_matrices_data, aes(x=STRAT, y=abundance_mean)) +
-  geom_bar(position=position_dodge(), stat="identity") +
-  geom_errorbar(aes(ymin=abundance_mean-abundance_se, ymax=abundance_mean+abundance_se), width=.2, position=position_dodge(.9)) + 
-  theme_classic() + 
-  theme(axis.text.x = element_text(angle=90)) + 
-  facet_wrap(~YEAR, scales='free_y')
-#ggsave(file=".pdf", path="big_csv/plots")
-
-#biomass
-ggplot(stats_all_matrices_data, aes(x=STRAT, y=biomass_mean)) + 
-  geom_bar(position=position_dodge(), stat="identity") + 
-  geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2, position=position_dodge(.9)) + 
-  theme_classic() + 
-  theme(axis.text.x = element_text(angle=90)) + 
-  facet_wrap(~YEAR, scales='free_y')
-#ggsave(file=".pdf", path="big_csv/plots")
-
-#richness 
-ggplot(stats_all_matrices_data, aes(x=STRAT, y=richness_mean)) +
-  geom_bar(position=position_dodge(), stat="identity") +
-  geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2, position=position_dodge(.9)) + 
-  theme_classic() +
-  theme(axis.text.x = element_text(angle=90)) + 
-  facet_wrap(~YEAR, scales='free_y')
-#ggsave(file=".pdf", path="big_csv/plots")
-
-#simpson 
-ggplot(stats_all_matrices_data, aes(x=STRAT, y=simpson_mean)) +
-  geom_bar(position=position_dodge(), stat="identity") +
-  geom_errorbar(aes(ymin=simpson_mean-simpson_se, ymax=simpson_mean+simpson_se), width=.2, position=position_dodge(.9)) + 
-  theme_classic() +
-  theme(axis.text.x = element_text(angle=90)) + 
-  facet_wrap(~YEAR, scales='free_y')
-#ggsave(file=".pdf", path="big_csv/plots")
-
-#shannon 
-ggplot(stats_all_matrices_data, aes(x=STRAT, y=shannon_mean)) +
-  geom_bar(position=position_dodge(), stat="identity") +
-  geom_errorbar(aes(ymin=shannon_mean-shannon_se, ymax=shannon_mean+shannon_se), width=.2, position=position_dodge(.9)) + 
-  theme_classic() +
-  theme(axis.text.x = element_text(angle=90)) + 
-  facet_wrap(~YEAR, scales='free_y')
-#ggsave(file=".pdf", path="big_csv/plots")
-
-# functional 
-ggplot(stats_all_matrices_data,aes(x=STRAT,y=func.div_mean))+ 
-  geom_bar(position=position_dodge(), stat="identity") +
-  geom_errorbar(aes(ymin=func.div_mean-func.div_se, ymax=func.div_mean+func.div_se), width=.2,  position=position_dodge(.9))+ 
-  theme_classic() +
-  theme(axis.text.x = element_text(angle=90)) + 
-  facet_wrap(~YEAR, scales='free_y')
-#ggsave(file=".pdf", path="big_csv/plots")
-
-# evenness
-ggplot(stats_all_matrices_data,aes(x=STRAT,y=evenness_mean))+ 
-  geom_bar(position=position_dodge(), stat="identity") +
-  geom_errorbar(aes(ymin=evenness_mean-evenness_se, ymax=evenness_mean+evenness_se), width=.2,  position=position_dodge(.9))+ 
-  theme_classic() +
-  theme(axis.text.x = element_text(angle=90)) + 
-  facet_wrap(~YEAR, scales='free_y')
-#ggsave(file=".pdf", path="big_csv/plots")
-
-# by YEAR
-#abundance 
-ggplot(stats_all_matrices_data, aes(x=YEAR, y=abundance_mean, group=YEAR)) + 
-  geom_bar(position=position_dodge(), stat="identity") + 
-  geom_errorbar(aes(ymin=abundance_mean-abundance_se, ymax=abundance_mean+abundance_se), width=.2, position=position_dodge(.9)) + 
-  theme_classic() + 
-  theme(axis.text.x = element_text(angle=90)) + 
-  facet_wrap(~STRAT, scales='free_y')
-#ggsave(file=".pdf", path="big_csv/plots")
-
-#biomass 
-ggplot(stats_all_matrices_data, aes(x=YEAR, y=biomass_mean, group=YEAR)) + 
-  geom_bar(position=position_dodge(), stat="identity") + 
-  geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2, position=position_dodge(.9)) +
-  theme_classic() + 
-  theme(axis.text.x = element_text(angle=90)) +
-  facet_wrap(~STRAT, scales='free_y')
-#ggsave(file=".pdf", path="big_csv/plots")
-
-#richness 
-ggplot(stats_all_matrices_data, aes(x=YEAR, y=richness_mean, group=YEAR)) +  
-  geom_bar(position=position_dodge(), stat="identity") + 
-  geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2, position=position_dodge(.9)) + 
-  theme_classic() + 
-  theme(axis.text.x = element_text(angle=90)) + 
-  facet_wrap(~STRAT, scales='free_y')
-#ggsave(file=".pdf", path="big_csv/plots")
-
-#simpson 
-ggplot(stats_all_matrices_data, aes(x=YEAR, y=simpson_mean, group=YEAR)) +  
-  geom_bar(position=position_dodge(), stat="identity") + 
-  geom_errorbar(aes(ymin=simpson_mean-simpson_se, ymax=simpson_mean+simpson_se), width=.2, position=position_dodge(.9)) + 
-  theme_classic() + 
-  theme(axis.text.x = element_text(angle=90)) + 
-  facet_wrap(~STRAT, scales='free_y')
-#ggsave(file=".pdf", path="big_csv/plots")
-
-#shannon
-ggplot(stats_all_matrices_data, aes(x=YEAR, y=shannon_mean, group=YEAR)) +  
-  geom_bar(position=position_dodge(), stat="identity") + 
-  geom_errorbar(aes(ymin=shannon_mean-shannon_se, ymax=shannon_mean+shannon_se), width=.2, position=position_dodge(.9)) + 
-  theme_classic() + 
-  theme(axis.text.x = element_text(angle=90)) + 
-  facet_wrap(~STRAT, scales='free_y')
-#ggsave(file=".pdf", path="big_csv/plots")
-
-#functional
-ggplot(stats_all_matrices_data, aes(x=YEAR, y=func.div_mean, group=YEAR)) +  
-  geom_bar(position=position_dodge(), stat="identity") + 
-  geom_errorbar(aes(ymin=func.div_mean-func.div_se, ymax=func.div_mean+func.div_se), width=.2, position=position_dodge(.9)) + 
-  theme_classic() + 
-  theme(axis.text.x = element_text(angle=90)) + 
-  facet_wrap(~STRAT, scales='free_y')
-#ggsave(file=".pdf", path="big_csv/plots")
-
-#evenness
-ggplot(stats_all_matrices_data, aes(x=YEAR, y=evenness_mean, group=YEAR)) +  
-  geom_bar(position=position_dodge(), stat="identity") + 
-  geom_errorbar(aes(ymin=evenness_mean-evenness_se, ymax=evenness_mean+evenness_se), width=.2, position=position_dodge(.9)) + 
-  theme_classic() + 
-  theme(axis.text.x = element_text(angle=90)) + 
-  facet_wrap(~STRAT, scales='free_y')
-#ggsave(file=".pdf", path="big_csv/plots")
-
-```
-
-```{r plot strata indv}
-
-all_matrices_data = read_rds("")
-
-#Melt dataframe so diversity indices are in a single column
-  strata = reshape2::melt(all_matrices_data, id.vars = c("YEAR","STRAT"), measure.vars=c("abundance_sum", "biomass_sum", "evenness","richness","simpson","shannon","func.div")) # 31024 x 5
-  
-  #Summarize means and SEs by year, subregion, and variable
-  strata=plyr::ddply(strata, c("YEAR", "STRAT", "variable"), summarize, value.mean=mean(value), value.se=plotrix::std.error(value))
-
-#Rename levels for figure plotting
-  levels(strata$variable)=c("A) Abundance", "B) Biomass", "C) Evenness", "D) Richness", "E) Simpson", "F) Shannon", "G) Functional")
-
-#Rename regions for figure plotting
-strata$STRAT=factor(strata$STRAT)
-levels(strata$STRAT)=c("INPR", "MCPR", "OFPR", "FSLR","FMLR", "FDLR", "HRRF")
-  
-#Plot line graph
-#INPR
-INPR = strata %>% filter(STRAT=="INPR") %>% ggplot(.,aes(x=YEAR, y=value.mean))+
-  geom_point(size=3)+
-  geom_errorbar(aes(ymax=value.mean+value.se,ymin=value.mean-value.se),width=0.1)+
-   geom_line(lwd=1)+
-  facet_wrap(~variable,scales="free",ncol=2)+
-  labs(title= "", x="Year", y="", colour = "Subregion")+
-  scale_colour_manual(labels=c("INPR"), values= c("red"))+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-    theme(
-      strip.text=element_text(hjust = 0),
-      strip.background = element_blank(),
-      panel.spacing.x=unit(3, "lines"),
-      legend.position=c(0.75,0.1))
-
-#ggsave(file="all_indices_by_subregion_and_year_HIGH_RELIEF.pdf", HR, width=7, height=10, path="big_csv/plots")
-
-```
-
-```{r plot abundance by strata indv}
-
-# BY STRAT and YEAR
-#abundance 
-ab_INPR = stats_all_matrices_data %>% filter(STRAT=="INPR") %>%
-  ggplot(.,aes(x=YEAR,y=abundance_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=abundance_mean+abundance_se,ymin=abundance_mean-abundance_se),width=0.1)+
-  labs(title= "INPR", x="Year", y="Mean abundance")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-ab_MCPR = stats_all_matrices_data %>% filter(STRAT=="MCPR") %>%
-  ggplot(.,aes(x=YEAR,y=abundance_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=abundance_mean+abundance_se,ymin=abundance_mean-abundance_se),width=0.1)+
-  labs(title= "MCPR", x="Year", y="Mean abundance")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-#ggsave(file="abundance_by_year_and_strata.pdf", path="big_csv/plots")
-
-ab_OFPR = stats_all_matrices_data %>% filter(STRAT=="OFPR") %>%
-  ggplot(.,aes(x=YEAR,y=abundance_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=abundance_mean+abundance_se,ymin=abundance_mean-abundance_se),width=0.1)+
-  labs(title= "OFPR", x="Year", y="Mean abundance")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-ab_FDLR = stats_all_matrices_data %>% filter(STRAT=="FDLR") %>%
-  ggplot(.,aes(x=YEAR,y=abundance_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=abundance_mean+abundance_se,ymin=abundance_mean-abundance_se),width=0.1)+
-  labs(title= "FDLR", x="Year", y="Mean abundance")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-ab_FSLR = stats_all_matrices_data %>% filter(STRAT=="FSLR") %>%
-  ggplot(.,aes(x=YEAR,y=abundance_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=abundance_mean+abundance_se,ymin=abundance_mean-abundance_se),width=0.1)+
-  labs(title= "FSLR", x="Year", y="Mean abundance")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-ab_FMLR = stats_all_matrices_data %>% filter(STRAT=="FMLR") %>%
-  ggplot(.,aes(x=YEAR,y=abundance_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=abundance_mean+abundance_se,ymin=abundance_mean-abundance_se),width=0.1)+
-  labs(title= "FMLR", x="Year", y="Mean abundance")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-ab_HRRF = stats_all_matrices_data %>% filter(STRAT=="HRRF") %>%
-  ggplot(.,aes(x=YEAR,y=abundance_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=abundance_mean+abundance_se,ymin=abundance_mean-abundance_se),width=0.1)+
-  labs(title= "HRRF", x="Year", y="Mean abundance")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-#all plots on one page
-abundance_strata <- grid.arrange(ab_INPR, ab_MCPR, ab_OFPR, ab_FSLR, ab_FMLR, ab_FDLR, ab_HRRF, ncol=2)
-
-ggsave(file="abundance_strata.pdf", abundance_strata, width=7, height=10, path="big_csv/plots")
-
-```
-
-```{r plot biomass by strata indv}
-
-# BY STRAT and YEAR
-#biomass 
-bio_INPR = stats_all_matrices_data %>% filter(STRAT=="INPR") %>%
-  ggplot(.,aes(x=YEAR,y=biomass_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=biomass_mean+biomass_se,ymin=biomass_mean-biomass_se),width=0.1)+
-  labs(title= "INPR", x="Year", y="Mean biomass")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-bio_MCPR = stats_all_matrices_data %>% filter(STRAT=="MCPR") %>%
-  ggplot(.,aes(x=YEAR,y=biomass_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=biomass_mean+biomass_se,ymin=biomass_mean-biomass_se),width=0.1)+
-  labs(title= "MCPR", x="Year", y="Mean biomass")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-#ggsave(file="biomass_by_year_and_strata.pdf", path="big_csv/plots")
-
-bio_OFPR = stats_all_matrices_data %>% filter(STRAT=="OFPR") %>%
-  ggplot(.,aes(x=YEAR,y=biomass_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=biomass_mean+biomass_se,ymin=biomass_mean-biomass_se),width=0.1)+
-  labs(title= "OFPR", x="Year", y="Mean biomass")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-bio_FDLR = stats_all_matrices_data %>% filter(STRAT=="FDLR") %>%
-  ggplot(.,aes(x=YEAR,y=biomass_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=biomass_mean+biomass_se,ymin=biomass_mean-biomass_se),width=0.1)+
-  labs(title= "FDLR", x="Year", y="Mean biomass")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-bio_FSLR = stats_all_matrices_data %>% filter(STRAT=="FSLR") %>%
-  ggplot(.,aes(x=YEAR,y=biomass_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=biomass_mean+biomass_se,ymin=biomass_mean-biomass_se),width=0.1)+
-  labs(title= "FSLR", x="Year", y="Mean biomass")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-bio_FMLR = stats_all_matrices_data %>% filter(STRAT=="FMLR") %>%
-  ggplot(.,aes(x=YEAR,y=biomass_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=biomass_mean+biomass_se,ymin=biomass_mean-biomass_se),width=0.1)+
-  labs(title= "FMLR", x="Year", y="Mean biomass")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-bio_HRRF = stats_all_matrices_data %>% filter(STRAT=="HRRF") %>%
-  ggplot(.,aes(x=YEAR,y=biomass_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=biomass_mean+biomass_se,ymin=biomass_mean-biomass_se),width=0.1)+
-  labs(title= "HRRF", x="Year", y="Mean biomass")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-#all plots on one page
-biomass_strata <- grid.arrange(bio_INPR, bio_MCPR, bio_OFPR, bio_FSLR, bio_FMLR, bio_FDLR, bio_HRRF, ncol=2)
-ggsave(file="biomass_strata.pdf", biomass_strata, width=7, height=10, path="big_csv/plots")
-
-```
-
-```{r plot richness by strata indv}
-
-# BY STRAT and YEAR
-#richness 
-rich_INPR = stats_all_matrices_data %>% filter(STRAT=="INPR") %>%
-  ggplot(.,aes(x=YEAR,y=richness_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=richness_mean+richness_se,ymin=richness_mean-richness_se),width=0.1)+
-  labs(title= "INPR", x="Year", y="Mean ENS")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-rich_MCPR = stats_all_matrices_data %>% filter(STRAT=="MCPR") %>%
-  ggplot(.,aes(x=YEAR,y=richness_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=richness_mean+richness_se,ymin=richness_mean-richness_se),width=0.1)+
-  labs(title= "MCPR", x="Year", y="Mean ENS")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-#ggsave(file="richness_by_year_and_strata.pdf", path="big_csv/plots")
-
-rich_OFPR = stats_all_matrices_data %>% filter(STRAT=="OFPR") %>%
-  ggplot(.,aes(x=YEAR,y=richness_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=richness_mean+richness_se,ymin=richness_mean-richness_se),width=0.1)+
-  labs(title= "OFPR", x="Year", y="Mean ENS")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-rich_FDLR = stats_all_matrices_data %>% filter(STRAT=="FDLR") %>%
-  ggplot(.,aes(x=YEAR,y=richness_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=richness_mean+richness_se,ymin=richness_mean-richness_se),width=0.1)+
-  labs(title= "FDLR", x="Year", y="Mean ENS")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-rich_FSLR = stats_all_matrices_data %>% filter(STRAT=="FSLR") %>%
-  ggplot(.,aes(x=YEAR,y=richness_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=richness_mean+richness_se,ymin=richness_mean-richness_se),width=0.1)+
-  labs(title= "FSLR", x="Year", y="Mean ENS")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-rich_FMLR = stats_all_matrices_data %>% filter(STRAT=="FMLR") %>%
-  ggplot(.,aes(x=YEAR,y=richness_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=richness_mean+richness_se,ymin=richness_mean-richness_se),width=0.1)+
-  labs(title= "FMLR", x="Year", y="Mean ENS")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-rich_HRRF = stats_all_matrices_data %>% filter(STRAT=="HRRF") %>%
-  ggplot(.,aes(x=YEAR,y=richness_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=richness_mean+richness_se,ymin=richness_mean-richness_se),width=0.1)+
-  labs(title= "HRRF", x="Year", y="Mean ENS")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-#all plots on one page
-richness_strata <- grid.arrange(rich_INPR, rich_MCPR, rich_OFPR, rich_FSLR, rich_FMLR, rich_FDLR, rich_HRRF, ncol=2)
-
-ggsave(file="richness_strata.pdf", richness_strata, width=7, height=10, path="big_csv/plots")
-
-```
-
-```{r plot evenness by strata indv}
-
-# BY STRAT and YEAR
-#evenness 
-eve_INPR = stats_all_matrices_data %>% filter(STRAT=="INPR") %>%
-  ggplot(.,aes(x=YEAR,y=evenness_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=evenness_mean+evenness_se,ymin=evenness_mean-evenness_se),width=0.1)+
-  labs(title= "INPR", x="Year", y="Mean relative evenness")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-eve_MCPR = stats_all_matrices_data %>% filter(STRAT=="MCPR") %>%
-  ggplot(.,aes(x=YEAR,y=evenness_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=evenness_mean+evenness_se,ymin=evenness_mean-evenness_se),width=0.1)+
-  labs(title= "MCPR", x="Year", y="Mean relative evenness")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-#ggsave(file="evenness_by_year_and_strata.pdf", path="big_csv/plots")
-
-eve_OFPR = stats_all_matrices_data %>% filter(STRAT=="OFPR") %>%
-  ggplot(.,aes(x=YEAR,y=evenness_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=evenness_mean+evenness_se,ymin=evenness_mean-evenness_se),width=0.1)+
-  labs(title= "OFPR", x="Year", y="Mean relative evenness")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-eve_FDLR = stats_all_matrices_data %>% filter(STRAT=="FDLR") %>%
-  ggplot(.,aes(x=YEAR,y=evenness_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=evenness_mean+evenness_se,ymin=evenness_mean-evenness_se),width=0.1)+
-  labs(title= "FDLR", x="Year", y="Mean relative evenness")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-eve_FSLR = stats_all_matrices_data %>% filter(STRAT=="FSLR") %>%
-  ggplot(.,aes(x=YEAR,y=evenness_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=evenness_mean+evenness_se,ymin=evenness_mean-evenness_se),width=0.1)+
-  labs(title= "FSLR", x="Year", y="Mean relative evenness")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-eve_FMLR = stats_all_matrices_data %>% filter(STRAT=="FMLR") %>%
-  ggplot(.,aes(x=YEAR,y=evenness_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=evenness_mean+evenness_se,ymin=evenness_mean-evenness_se),width=0.1)+
-  labs(title= "FMLR", x="Year", y="Mean relative evenness")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-eve_HRRF = stats_all_matrices_data %>% filter(STRAT=="HRRF") %>%
-  ggplot(.,aes(x=YEAR,y=evenness_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=evenness_mean+evenness_se,ymin=evenness_mean-evenness_se),width=0.1)+
-  labs(title= "HRRF", x="Year", y="Mean relative evenness")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-#all plots on one page
-evenness_strata <- grid.arrange(eve_INPR, eve_MCPR, eve_OFPR, eve_FSLR, eve_FMLR, eve_FDLR, eve_HRRF, ncol=2)
-
-ggsave(file="evenness_strata.pdf", evenness_strata, width=7, height=10, path="big_csv/plots")
-
-```
-
-```{r plot simpson by strata indv}
-
-# BY STRAT and YEAR
-#simpson 
-simp_INPR = stats_all_matrices_data %>% filter(STRAT=="INPR") %>%
-  ggplot(.,aes(x=YEAR,y=simpson_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=simpson_mean+simpson_se,ymin=simpson_mean-simpson_se),width=0.1)+
-  labs(title= "INPR", x="Year", y="Mean ENS")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-simp_MCPR = stats_all_matrices_data %>% filter(STRAT=="MCPR") %>%
-  ggplot(.,aes(x=YEAR,y=simpson_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=simpson_mean+simpson_se,ymin=simpson_mean-simpson_se),width=0.1)+
-  labs(title= "MCPR", x="Year", y="Mean ENS")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-#ggsave(file="simpson_by_year_and_strata.pdf", path="big_csv/plots")
-
-simp_OFPR = stats_all_matrices_data %>% filter(STRAT=="OFPR") %>%
-  ggplot(.,aes(x=YEAR,y=simpson_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=simpson_mean+simpson_se,ymin=simpson_mean-simpson_se),width=0.1)+
-  labs(title= "OFPR", x="Year", y="Mean ENS")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-simp_FDLR = stats_all_matrices_data %>% filter(STRAT=="FDLR") %>%
-  ggplot(.,aes(x=YEAR,y=simpson_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=simpson_mean+simpson_se,ymin=simpson_mean-simpson_se),width=0.1)+
-  labs(title= "FDLR", x="Year", y="Mean ENS")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-simp_FSLR = stats_all_matrices_data %>% filter(STRAT=="FSLR") %>%
-  ggplot(.,aes(x=YEAR,y=simpson_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=simpson_mean+simpson_se,ymin=simpson_mean-simpson_se),width=0.1)+
-  labs(title= "FSLR", x="Year", y="Mean ENS")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-simp_FMLR = stats_all_matrices_data %>% filter(STRAT=="FMLR") %>%
-  ggplot(.,aes(x=YEAR,y=simpson_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=simpson_mean+simpson_se,ymin=simpson_mean-simpson_se),width=0.1)+
-  labs(title= "FMLR", x="Year", y="Mean ENS")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-simp_HRRF = stats_all_matrices_data %>% filter(STRAT=="HRRF") %>%
-  ggplot(.,aes(x=YEAR,y=simpson_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=simpson_mean+simpson_se,ymin=simpson_mean-simpson_se),width=0.1)+
-  labs(title= "HRRF", x="Year", y="Mean ENS")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-#all plots on one page
-simpson_strata <- grid.arrange(simp_INPR, simp_MCPR, simp_OFPR, simp_FSLR, simp_FMLR, simp_FDLR, simp_HRRF, ncol=2)
-
-ggsave(file="simpson_strata.pdf", simpson_strata, width=7, height=10, path="big_csv/plots")
-```
-
-```{r plot shannon by strata indv}
-
-# BY STRAT and YEAR
-#shannon 
-shan_INPR = stats_all_matrices_data %>% filter(STRAT=="INPR") %>%
-  ggplot(.,aes(x=YEAR,y=shannon_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=shannon_mean+shannon_se,ymin=shannon_mean-shannon_se),width=0.1)+
-  labs(title= "INPR", x="Year", y="Mean shannon")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-shan_MCPR = stats_all_matrices_data %>% filter(STRAT=="MCPR") %>%
-  ggplot(.,aes(x=YEAR,y=shannon_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=shannon_mean+shannon_se,ymin=shannon_mean-shannon_se),width=0.1)+
-  labs(title= "MCPR", x="Year", y="Mean ENS")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-#ggsave(file="shannon_by_year_and_strata.pdf", path="big_csv/plots")
-
-shan_OFPR = stats_all_matrices_data %>% filter(STRAT=="OFPR") %>%
-  ggplot(.,aes(x=YEAR,y=shannon_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=shannon_mean+shannon_se,ymin=shannon_mean-shannon_se),width=0.1)+
-  labs(title= "OFPR", x="Year", y="Mean ENS")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-shan_FDLR = stats_all_matrices_data %>% filter(STRAT=="FDLR") %>%
-  ggplot(.,aes(x=YEAR,y=shannon_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=shannon_mean+shannon_se,ymin=shannon_mean-shannon_se),width=0.1)+
-  labs(title= "FDLR", x="Year", y="Mean ENS")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-shan_FSLR = stats_all_matrices_data %>% filter(STRAT=="FSLR") %>%
-  ggplot(.,aes(x=YEAR,y=shannon_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=shannon_mean+shannon_se,ymin=shannon_mean-shannon_se),width=0.1)+
-  labs(title= "FSLR", x="Year", y="Mean ENS")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-shan_FMLR = stats_all_matrices_data %>% filter(STRAT=="FMLR") %>%
-  ggplot(.,aes(x=YEAR,y=shannon_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=shannon_mean+shannon_se,ymin=shannon_mean-shannon_se),width=0.1)+
-  labs(title= "FMLR", x="Year", y="Mean ENS")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-shan_HRRF = stats_all_matrices_data %>% filter(STRAT=="HRRF") %>%
-  ggplot(.,aes(x=YEAR,y=shannon_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=shannon_mean+shannon_se,ymin=shannon_mean-shannon_se),width=0.1)+
-  labs(title= "HRRF", x="Year", y="Mean ENS")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-#all plots on one page
-shannon_strata <- grid.arrange(shan_INPR, shan_MCPR, shan_OFPR, shan_FSLR, shan_FMLR, shan_FDLR, shan_HRRF, ncol=2)
-
-ggsave(file="shannon_strata.pdf", shannon_strata, width=7, height=10, path="big_csv/plots")
-
-```
-
-```{r plot functional by strata indv}
-# BY STRAT and YEAR
-#func.div 
-func_INPR = stats_all_matrices_data %>% filter(STRAT=="INPR") %>%
-  ggplot(.,aes(x=YEAR,y=func.div_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=func.div_mean+func.div_se,ymin=func.div_mean-func.div_se),width=0.1)+
-  labs(title= "INPR", x="Year", y="Mean ENS")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-func_MCPR = stats_all_matrices_data %>% filter(STRAT=="MCPR") %>%
-  ggplot(.,aes(x=YEAR,y=func.div_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=func.div_mean+func.div_se,ymin=func.div_mean-func.div_se),width=0.1)+
-  labs(title= "MCPR", x="Year", y="Mean ENS")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-func_OFPR = stats_all_matrices_data %>% filter(STRAT=="OFPR") %>%
-  ggplot(.,aes(x=YEAR,y=func.div_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=func.div_mean+func.div_se,ymin=func.div_mean-func.div_se),width=0.1)+
-  labs(title= "OFPR", x="Year", y="Mean ENS")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-func_FDLR = stats_all_matrices_data %>% filter(STRAT=="FDLR") %>%
-  ggplot(.,aes(x=YEAR,y=func.div_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=func.div_mean+func.div_se,ymin=func.div_mean-func.div_se),width=0.1)+
-  labs(title= "FDLR", x="Year", y="Mean ENS")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-func_FSLR = stats_all_matrices_data %>% filter(STRAT=="FSLR") %>%
-  ggplot(.,aes(x=YEAR,y=func.div_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=func.div_mean+func.div_se,ymin=func.div_mean-func.div_se),width=0.1)+
-  labs(title= "FSLR", x="Year", y="Mean ENS")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-func_FMLR = stats_all_matrices_data %>% filter(STRAT=="FMLR") %>%
-  ggplot(.,aes(x=YEAR,y=func.div_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=func.div_mean+func.div_se,ymin=func.div_mean-func.div_se),width=0.1)+
-  labs(title= "FMLR", x="Year", y="Mean ENS")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-func_HRRF = stats_all_matrices_data %>% filter(STRAT=="HRRF") %>%
-  ggplot(.,aes(x=YEAR,y=func.div_mean))+ #shape=STRAT
-  geom_line(lwd=1) +
-  geom_point(size=3) +
-  geom_errorbar(aes(ymax=func.div_mean+func.div_se,ymin=func.div_mean-func.div_se),width=0.1)+
-  labs(title= "HRRF", x="Year", y="Mean ENS")+
-  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  #scale_y_continuous(limits= c(200,1000))+
-  theme_bw()+
-  theme(
-      legend.position="none", #"none", "right",c(0.8,0.68),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank(),
-      axis.title.x=element_text(size=12),
-      axis.title.y=element_text(size=12),
-      title=element_text(size=12))
-
-#all plots on one page
-func.div_strata <- grid.arrange(func_INPR, func_MCPR, func_OFPR, func_FSLR, func_FMLR, func_FDLR, func_HRRF, ncol=2)
-
-ggsave(file="func.div_strata.pdf", func.div_strata, width=7, height=10, path="big_csv/plots")
-
-```
-
