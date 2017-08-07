@@ -375,7 +375,6 @@ lapply(alphadiv.list,function(i) {
 
 ```
 
-
 ```{r CHARACTERIZING BIVARIATE RELATIONSHIPS}
 
 #Create scatterplot matrix of different diversity measures against one another (9" x 9")
