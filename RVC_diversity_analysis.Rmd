@@ -4247,7 +4247,7 @@ Modified from [https://stat.ethz.ch/pipermail/r-help/2011-November/295324.html]
 # 1. Read in data and remove years (optional)
 all_matrices_data = read_rds("psu_matrices_data_rds")
 
-data = all_matrices_data %>%
+gam_data = all_matrices_data %>%
   select(YEAR, PRIMARY_SAMPLE_UNIT, LON_DEGREES, LAT_DEGREES, DEPTH, STRAT, PROT, abundance_sum, biomass_sum, evenness, richness, simpson, shannon, func.div)
 
 #as.data.frame(data)
@@ -4255,7 +4255,7 @@ data = all_matrices_data %>%
 #Compute models and store summary table of partial deviances in a list
 #list= do.call(rbind,lapply(list("abundance_sum", "biomass_sum","richness","evenness","simpson","shannon", "func.div"),function(j) {
 
-partial.deviance.list = for(j in names(data[,8:14])) { 
+partial.deviance.list = for(j in names(gam_data[,8:14])) { 
   
     #Build full model and null model based on (transformed) response variable
     if(j=="richness") {
