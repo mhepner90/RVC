@@ -8196,4 +8196,34 @@ setnames(func_prop.deviance, old=c("diversity","predictor","func_partial_devianc
 
 partial_deviance_list = rbind(abun_prop.deviance, bio_prop.deviance,even_prop.deviance, even_prop.deviance, richness_prop.deviance, simp_prop.deviance, shan_prop.deviance, func_prop.deviance)
 
+library(car)
+
+partial_deviance_list$Diversity = car::recode(partial_deviance_list$Diversity, "'abundance_sum'='Abundance'; 'biomass_sum'='Biomass'; 'evenness'='Evenness'; 'richness'='Richness'; 'simpson'='Simpson'; 'shannon'='Shannon'; 'func.div'='Functional'")
+
+```
+
+```{r deviance barplot}
+
+levels=c("Abundance","Biomass","Evenness","Richness","Simpson","Shannon","Functional")
+
+partial_deviance_data=subset(partial_deviance_list, Predictor!="All")
+
+partial_deviance_data= partial_deviance_list %>%
+  filter(Predictor != "All") 
+
+partial_deviance_explained = ggplot(partial_deviance_data,aes(x= Diversity, y= Partial_Deviance*100, fill=Predictor))+
+    geom_bar(position="dodge", color="black", stat = "identity")+
+    geom_errorbar(aes(max=(Partial_Deviance+Partial_Deviance_SE)*100,
+                      min=(Partial_Deviance-Partial_Deviance_SE)*100),
+                  width=0.3,size=0.6, position=position_dodge(width=0.9))+
+    labs(x="", y="Total % Deviance Explained\n")+
+    #scale_fill_manual(values=c("grey50","grey80","white"))+
+    theme_bw(base_size=18)+theme(
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      legend.position="bottom",
+      legend.title=element_blank())
+
+ggsave(file="partial_deviance_explained.pdf", partial_deviance_explained, width=8.5, height=11, path="big_csv/plots")
+
 ```
