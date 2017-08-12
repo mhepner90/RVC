@@ -6545,10 +6545,8 @@ if(!file.exists("simp_prop.deviance_rds","simp_model_summary_rds")){
   simp_partial_deviance_list = for(j in names(gam_data[,12])) { 
     
     #Build full model and null model based on (transformed) response variable
-    if(j=="richness") {
       fullmod = gam(formula(paste(j,"~YEAR+STRAT+PROT+s(LON_DEGREES,LAT_DEGREES,by=YEAR, bs='ts')+s(DEPTH, bs='ts')")), family=poisson, data=gam_data)
       nullmod = gam(formula(paste(j,"~1")), family=poisson, data=gam_data)
-    } 
     
     #Set up empty vectors for deviances
     time.dev=c(); space.dev=c(); env.dev=c(); mngt.dev=c()
@@ -7117,10 +7115,9 @@ gam_data = all_matrices_data %>%
 shan_partial_deviance_list = for(j in names(gam_data[,13])) { 
   
     #Build full model and null model based on (transformed) response variable
-    if(j=="richness") {
       fullmod = gam(formula(paste(j,"~YEAR+STRAT+PROT+s(LON_DEGREES,LAT_DEGREES,by=YEAR, bs='ts')+s(DEPTH, bs='ts')")), family=poisson, data=gam_data)
       nullmod = gam(formula(paste(j,"~1")), family=poisson, data=gam_data)
-      } 
+       
   
   #Set up empty vectors for deviances
   time.dev=c(); space.dev=c(); env.dev=c(); mngt.dev=c()
@@ -7689,10 +7686,8 @@ gam_data = all_matrices_data %>%
 func_partial_deviance_list = for(j in names(gam_data[,14])) { 
   
     #Build full model and null model based on (transformed) response variable
-    if(j=="richness") {
       fullmod = gam(formula(paste(j,"~YEAR+STRAT+PROT+s(LON_DEGREES,LAT_DEGREES,by=YEAR, bs='ts')+s(DEPTH, bs='ts')")), family=poisson, data=gam_data)
       nullmod = gam(formula(paste(j,"~1")), family=poisson, data=gam_data)
-      } 
   
   #Set up empty vectors for deviances
   time.dev=c(); space.dev=c(); env.dev=c(); mngt.dev=c()
@@ -8269,7 +8264,10 @@ setnames(shan_prop.deviance, old=c("diversity","predictor","shan_partial_devianc
 
 setnames(func_prop.deviance, old=c("diversity","predictor","func_partial_deviance", "func_partial_deviance_SE"), new=c("Diversity", "Predictor", "Partial_Deviance", "Partial_Deviance_SE"))
 
-partial_deviance_list = rbind(abun_prop.deviance, bio_prop.deviance,even_prop.deviance, even_prop.deviance, richness_prop.deviance, simp_prop.deviance, shan_prop.deviance, func_prop.deviance)
+partial_deviance_list = rbind(abun_prop.deviance, bio_prop.deviance, even_prop.deviance, richness_prop.deviance, simp_prop.deviance, shan_prop.deviance, func_prop.deviance)
+
+  partial_deviance_list = partial_deviance_list %>%
+    mutate(Percent_Partial_Deviance = Partial_Deviance*100)
 
 write_csv(partial_deviance_list, "partial_deviance_list.csv")
 
