@@ -110,15 +110,6 @@ library(tidyverse) #select, filter, mutate, group_by, summarize
 library(vegan) #spec, diversity 
 library(cowplot)
 
-#devtools::install_github("timelyportfolio/d3treeR")
-#library(d3treeR)
-#library(treemap)
-#devtools::install_github("gluc/data.tree")
-#devtools::install_github("GuangchuangYu/ggtree") #requires R>= 3.3.2
-#library(ggtree)
-#biocLite("BiocUpgrade") ## you may need this
-#biocLite("ggtree", type = "source")
-
 map = purrr::map # override maps::map
 select = dplyr::select #override MASS::select 
 group_by =  dplyr::group_by #override plotly::group_by
@@ -547,7 +538,7 @@ if(!file.exists("psu_abun_sum_rds")){
 } else{
   psu_abun = read_rds("psu_abun_sum_rds")
 }
-
+RVCdata_FK = read_rds('big_csv/RVCdata_FK.rds')
 family = RVCdata_FK$taxonomic_data
 psu_family = left_join(psu_fk_abun_no_spp, family, by= "SPECIES_CD")
 
@@ -568,6 +559,44 @@ write_csv(psu_family_group, "psu_family_group.csv")
 # 4       Gobiidae     227345.17  10.7394402
 # 5       Scaridae     195407.42   9.2307494
 
+
+#INPR 2002 PSU 472U detected abundance sum 10,414 species (abnormally large)
+INPR_2002 = psu_fk_abun_no_spp %>% 
+  filter(YEAR == "2002") %>% 
+  filter(STRAT == "INPR") %>%
+  filter(PRIMARY_SAMPLE_UNIT == "472U") %>%
+  arrange(desc(abundance))
+#HYP HARR abundance 9999.5 
+
+#OFPR 2003 PSU 119U detected abundance sum 5,698 species (abnormally large)
+OFPR_2003 = psu_fk_abun_no_spp %>% 
+  filter(YEAR == "2003") %>% 
+  filter(STRAT == "OFPR") %>%
+  filter(PRIMARY_SAMPLE_UNIT == "119U") %>%
+  arrange(desc(abundance))
+#DEC PUNC abundance 5000.0 
+
+#MCPR 2004 PSU 403U detected abundance sum 5,698 species (abnormally large)
+MCPR_2004 = psu_fk_abun_no_spp %>% 
+  filter(YEAR == "2004") %>% 
+  filter(STRAT == "MCPR") %>%
+  filter(PRIMARY_SAMPLE_UNIT == "403U") %>%
+  arrange(desc(abundance))
+#HYP HARR abundance 5000.0 
+
+FMLR_2001 = psu_fk_abun_no_spp %>% 
+  filter(YEAR == "2001") %>% 
+  filter(STRAT == "FMLR") %>%
+  filter(PRIMARY_SAMPLE_UNIT == "220U") %>%
+  arrange(desc(abundance))
+#ATH STIP abundance 10,000.0 Hardhead Silverside, Atherinidae Atherinomorus
+
+FDLR_2002 = psu_fk_abun_no_spp %>% 
+  filter(YEAR == "2001") %>% 
+  filter(STRAT == "FDLR") %>%
+  filter(PRIMARY_SAMPLE_UNIT == "120U") %>%
+  arrange(desc(abundance))
+#COR PERS 1,690 #Masked Goby, Coryphopterus personatus
 
 ```
 
