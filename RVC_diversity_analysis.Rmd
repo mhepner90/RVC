@@ -126,7 +126,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 if (!file.exists("functional_diversity/func_dist_rds")){
  
-  trait_matrix = read_csv('functional_diversity/species_trait_matrix_348_spp.csv')
+  trait_matrix = read_csv('functional_diversity/species_trait_matrix_316_spp.csv')
   
   trait_matrix = trait_matrix %>%
     as.tibble() %>%
@@ -151,6 +151,28 @@ if (!file.exists("functional_diversity/func_dist_rds")){
   #Calculate Gower distances. Variables have equal weight. 
   traits.dist = gowdis(trait_matrix, ord="podani")
   
+  trait_matrix_common = trait_matrix %>%
+    as.tibble() %>%
+    mutate(
+      Common_name = toupper(as.character(Common_name))) %>% 
+    arrange(Common_name)%>% 
+    select(Common_name, Maxlength, Trophic_level, Trophic_group, Water_column, Diel_activity, Substrate_type, Complexity, Gregariousness) %>% #348*9
+    group_by(
+      Common_name, Maxlength, Trophic_level, Trophic_group, Water_column, Diel_activity, Substrate_type, Complexity, Gregariousness) %>%
+    #summarize(n = n()) %>%
+    #select(-n) %>%
+    ungroup() %>%
+    mutate(
+      # ordinal traits
+      Complexity = ordered(Complexity, levels=c("Low","Medium","High")),
+      Gregariousness = ordered(Gregariousness, levels=c("1","2","3"))) %>%
+    as.data.frame()
+  
+  #Set species names as row.names and remove extra columns
+  rownames(trait_matrix_common)=trait_matrix_common$Common_name 
+  
+  #Calculate Gower distances. Variables have equal weight. 
+  traits.dist.common = gowdis(trait_matrix_common, ord="podani")
   #Use clustering method to produce ultrametric dendrogram because values of Rao's Q can be maximized when fewer than the max number of functional types are present unless distances are ultramtetric 
   
   #to account for sensitivity in clustering use multiple algorithms  (Mouchet et al., 2008) 
@@ -197,10 +219,9 @@ if (!file.exists("functional_diversity/func_dist_rds")){
   
   #Scale by the max value so that all values are between 0-1
   func.dist=func.dist/max(func.dist)
-  
   saveRDS(func.dist, "functional_diversity/func_dist_rds")
-} 
-else { #read data 
+  
+} else { #read data 
   func.dist = read_rds("functional_diversity/func_dist_rds")
 } 
 
@@ -306,12 +327,16 @@ head(tree_data)
 #Perform k-means clustering with no a priori specification for k
 traits.kclus= pamk(traits.dist, krange=2:10) 
 
+traits.kclus.common= pamk(traits.dist.common, krange=2:10)
+
 #krange: integer vector. Numbers of clusters which are to be compared by the average silhouette width criterion.
 #traits.kclus$nc = 10 
 #traits.kclus$crit 0.0000000 0.2374706 0.2362513 0.2355555 0.2681756 0.2581352 0.2759547 0.2852216 0.3006077 0.3062123
 
-# #Perform multidimensional scaling on functional dendrogram
+# #Perform nonmetric multidimensional scaling (NMDS) on functional dendrogram
 traits_nmds = metaMDS(traits.dist,k=traits.kclus$nc,trymax=20)
+
+traits_nmds.common = metaMDS(traits.dist.common,k=traits.kclus.common$nc,trymax=300)
 #k = Number of dimensions
 
 #*** No convergence -- monoMDS stopping criteria:
@@ -328,18 +353,18 @@ traits_nmds = metaMDS(traits.dist,k=traits.kclus$nc,trymax=20)
 
 # #Plot in two dimensions - doesn't work 
 par(mar=c(4,4,1,1))
-ordiplot(traits_nmds,type="n")
+ordiplot(traits_nmds.common,type="n")
 
 #Assign colors to different groups
-groups=levels(factor(traits.kclus$pamobject$clustering))
+groups=levels(factor(traits.kclus.common$pamobject$clustering))
 points.symbols=15:16
 points.colors=c("firebrick3","cornflowerblue")
 for(i in seq_along(groups)) {
-  points(traits_nmds$points[traits.kclus$pamobject$clustering==groups[i],],
-         pch=points.symbols[i],col=points.colors[i],cex=1.4) }
-ordispider(traits_nmds,factor(traits.kclus$pamobject$clustering),label=F)
-ordihull(traits_nmds,factor(traits.kclus$pamobject$clustering),lty="dotted")
-orditorp(traits_nmds,dis="sites",pcex=0,air=0.5,col="grey10",cex=0.8)
+  points(traits_nmds.common$points[traits.kclus.common$pamobject$clustering==groups[i],],
+         pch=points.symbols[i],col=points.colors[i],cex=1.4) } 
+ordispider(traits_nmds.common,factor(traits.kclus.common$pamobject$clustering),label=F)
+ordihull(traits_nmds.common,factor(traits.kclus.common$pamobject$clustering),lty="dotted")
+orditorp(traits_nmds.common,dis="sites",pcex=0,air=0.5,col="grey10",cex=0.8)
 
 ```
 
@@ -510,9 +535,14 @@ if(!file.exists("psu_abun_sum_rds")){
 
   #remove species not identified in species level and protected status all 
   psu_fk_abun_no_spp = psu_fk_abun %>%
-    filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$'))  %>%
+    filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$'))  %>% #348 species
     filter(stringr::str_detect(protected_status, 'all')) 
   #dim(psu_fk_abun_no_spp) #1,689,982 x 10
+  
+  abun_spp = psu_fk_abun_no_spp %>% filter(!abundance == "0")
+  spp_316 = unique(abun_spp$SPECIES_CD) %>% #316 species 
+    as.data.frame()
+  colnames(spp_316)[1] = "SPECIES_CD"
   
   #sum the abundance values and remove any PSU's with no species
   psu_abun_sum <- psu_fk_abun_no_spp %>%
@@ -550,6 +580,22 @@ psu_family_group <- psu_family %>%
   arrange(desc(fam_percent))
 
 write_csv(psu_family_group, "psu_family_group.csv")
+
+psu_common <- psu_family %>%
+    group_by(COMNAME) %>%
+    summarize(abundance_sum = sum(abundance)) %>%
+    filter(abundance_sum != "0") %>% #removes 32 species 
+  mutate(com_percent = (abundance_sum/sum(abundance_sum))*100) %>%
+  arrange(desc(com_percent))
+
+psu_sciname <- psu_family %>%
+    group_by(SCINAME) %>%
+    summarize(abundance_sum = sum(abundance)) %>%
+    filter(abundance_sum != "0") %>% #removes 32 species 
+  mutate(com_percent = (abundance_sum/sum(abundance_sum))*100) %>%
+  arrange(desc(com_percent))
+
+write_csv(psu_common, "psu_common.csv")
 
 #FAMILY abundance_sum fam_percent
 #           <fctr>         <dbl>       <dbl>
@@ -611,8 +657,8 @@ if(!file.exists("psu_bio_sum_rds")){
 
   #remove species not identified in species level and protected status all   
   psu_fk_bio_no_spp = psu_fk_bio %>%
-    filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) %>% #348 species  
-    filter(stringr::str_detect(protected_status, 'all')) 
+    filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) %>% #328 species  
+    filter(stringr::str_detect(protected_status, 'all'))  
     #dim(psu_fk_bio_no_spp) 1,609,672 x 10
   
   #sum the biomass values and remove any PSU's with no species 
@@ -621,6 +667,9 @@ if(!file.exists("psu_bio_sum_rds")){
     summarize(biomass_sum = sum(biomass)) %>%
     filter(!biomass_sum == "0")
     #dim(psu_bio_sum) #5241    5
+  
+  bio_spp = psu_fk_bio_no_spp %>% filter(!biomass == "0")
+  length(unique((bio_spp$SPECIES_CD))) #308 species 
   
   #remove PSU's with 1 species [2006,602U INPR] [2016,  1010U, INPR]
   psu_bio_sum = psu_bio_sum[!(psu_bio_sum$YEAR == "2006" &
@@ -3017,7 +3066,7 @@ HR = x %>% filter(STRAT_GROUPED=="HIGH_RELIEF") %>% ggplot(.,aes(x=YEAR, y=value
    geom_line(aes(group=SUBREGION_DOMAIN),lwd=1)+
   facet_wrap(~variable,scales="free",ncol=2)+
   labs(title= "High Relief", x="Year", y="", colour = "Subregion")+
-  scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("red", "green", "blue"))+
+  scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("blue", "deeppink", "darkviolet"))+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
     theme(
       strip.text=element_text(hjust = 0),
@@ -3034,7 +3083,7 @@ LR = x %>% filter(STRAT_GROUPED=="LINEAR_REEF") %>% ggplot(.,aes(x=YEAR, y=value
    geom_line(aes(group=SUBREGION_DOMAIN),lwd=1)+
   facet_wrap(~variable,scales="free",ncol=2)+
   labs(title= "Linear Reef", x="Year", y="", colour = "Subregion")+
-  scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("red", "green", "blue"))+
+  scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("blue", "deeppink", "darkviolet"))+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
     theme(
       strip.text=element_text(hjust = 0),
@@ -3050,7 +3099,7 @@ PR = x %>% filter(STRAT_GROUPED=="PATCH_REEF") %>% ggplot(.,aes(x=YEAR, y=value.
    geom_line(aes(group=SUBREGION_DOMAIN),lwd=1)+
   facet_wrap(~variable,scales="free",ncol=2)+
   labs(title= "Patch Reef", x="Year", y="", colour = "Subregion")+
-  scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("red", "green", "blue"))+
+  scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("blue", "deeppink", "darkviolet"))+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
     theme(
       strip.text=element_text(hjust = 0),
@@ -3492,7 +3541,7 @@ ab_g= ggplot(matrices_strat_grouped_with_subregion,aes(x=YEAR,y=abundance_mean, 
   geom_point(size=3) +
  geom_errorbar(aes(ymax=abundance_mean+abundance_se,ymin=abundance_mean-abundance_se),width=0.1)+
   labs(title= "A) Abundance", x="Year", y="Mean abundance", colour = "Subregion")+
-  scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("red", "green", "blue"))+
+  scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("blue", "deeppink", "darkviolet"))+ #("grey15", "grey45", "grey75")
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
   theme_bw()+
   theme(
@@ -3510,7 +3559,7 @@ bio_g= ggplot(matrices_strat_grouped_with_subregion,aes(x=YEAR,y=biomass_mean, c
   geom_point(size=3) +
  geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.1)+
   labs(title= "B) Biomass", x="Year", y="Mean biomass", colour = "Subregion")+
-  scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("red", "green", "blue"))+
+  scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("blue", "deeppink", "darkviolet"))+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
   theme_bw()+
   theme(
@@ -3528,7 +3577,7 @@ eve_g = ggplot(matrices_strat_grouped_with_subregion,aes(x=YEAR,y=evenness_mean,
   geom_point(size=3) +
   geom_errorbar(aes(ymax=evenness_mean+evenness_se,ymin=evenness_mean-evenness_se),width=0.1)+
   labs(title= "C) Evenness", x="Year", y="Mean relative evenness",colour = "Subregion")+
-  scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("red", "green", "blue"))+
+  scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("blue", "deeppink", "darkviolet"))+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
   theme_bw()+
   theme(
@@ -3546,7 +3595,7 @@ rich_g= ggplot(matrices_strat_grouped_with_subregion,aes(x=YEAR,y=richness_mean,
   geom_point(size=3) +
  geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.1)+
   labs(title= "D) Richness", x="Year", y="Mean ENS", colour = "Subregion")+
-  scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("red", "green", "blue"))+
+  scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("blue", "deeppink", "darkviolet"))+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
   theme_bw()+
   theme(
@@ -3564,7 +3613,7 @@ sim_g= ggplot(matrices_strat_grouped_with_subregion,aes(x=YEAR,y=simpson_mean, c
   geom_point(size=3) +
   geom_errorbar(aes(ymin=simpson_mean-simpson_se, ymax=simpson_mean+simpson_se), width=.1)+
   labs(title= "E) Simpson", x="Year", y="Mean ENS", colour = "Subregion")+
-  scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("red", "green", "blue"))+
+  scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("blue", "deeppink", "darkviolet"))+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
   theme_bw()+
   theme(
@@ -3582,7 +3631,7 @@ shan_g= ggplot(matrices_strat_grouped_with_subregion,aes(x=YEAR,y=shannon_mean, 
   geom_point(size=3) +
   geom_errorbar(aes(ymin=shannon_mean-shannon_se, ymax=shannon_mean+shannon_se), width=.1)+
   labs(title= "F) Shannon", x="Year", y="Mean ENS", colour = "Strata")+
-  scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("red", "green", "blue"))+
+  scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("blue", "deeppink", "darkviolet"))+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
   theme_bw()+
   theme(
@@ -3600,7 +3649,7 @@ func_g= ggplot(matrices_strat_grouped_with_subregion,aes(x=YEAR,y=func.div_mean,
   geom_point(size=3) +
   geom_errorbar(aes(ymax=func.div_mean+func.div_se,ymin=func.div_mean-func.div_se),width=0.1)+
   labs(title= "G) Functional", x="Year", y="Mean ENS", colour = "Strata")+
-  scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("red", "green", "blue"))+
+  scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("blue", "deeppink", "darkviolet"))+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
   theme_bw()+
   theme(
@@ -3617,7 +3666,7 @@ for_legend_g = ggplot(matrices_strat_grouped_with_subregion,aes(x=YEAR,y=abundan
   geom_line(aes(group=SUBREGION_DOMAIN),lwd=1) +
   geom_point(size=3) +
   labs(colour = "Subregion")+
-  scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("red", "green", "blue"))+
+  scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("blue", "deeppink", "darkviolet"))+
     theme(
       legend.position="right", #"none", "right",c(0.8,0.68),
       legend.text=element_text(size=11),
@@ -3628,7 +3677,7 @@ for_legend_g_horiz = ggplot(matrices_strat_grouped_with_subregion,aes(x=YEAR,y=a
   geom_line(aes(group=SUBREGION_DOMAIN),lwd=1) +
   geom_point(size=3) +
   labs(colour = "Subregion")+
-  scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("red", "green", "blue"))+
+  scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("blue", "deeppink", "darkviolet"))+
     theme(
       legend.position="bottom", #"none", "right",c(0.8,0.68),
       legend.text=element_text(size=11),
@@ -8351,10 +8400,15 @@ partial_deviance_list$Diversity = car::recode(partial_deviance_list$Diversity, "
 
 ```{r deviance barplot}
 
+partial_deviance_list = read_csv("partial_deviance_list.csv")
+
 partial_deviance_data=subset(partial_deviance_list, Predictor!="All")
 
+diversity_order = c("Abundance", "Biomass", "Evenness","Richness", "Simpson", "Shannon", "Functional")
+
 partial_deviance_data= partial_deviance_list %>%
-  filter(Predictor != "All") 
+  filter(Predictor != "All") %>%
+  mutate(Diversity = factor(Diversity, levels=diversity_order))
 
 partial_deviance_explained = ggplot(partial_deviance_data,aes(x= Diversity, y= Partial_Deviance*100, fill=Predictor))+
     geom_bar(position="dodge", color="black", stat = "identity")+

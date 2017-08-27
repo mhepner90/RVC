@@ -1,0 +1,317 @@
+Species_code,SPECIES_CD,Latin_name,Common_name,Maxlength,Trophic_level,Trophic_group,Water_column,Diel_activity,Substrate_type,Complexity,Gregariousness
+157,ABU SAXA,Abudefduf saxatilis,Sergeant major,22.9,3.4,Planktivore,Demersal,Day,Hard bottom,Medium,3
+53,ACA ASPE,Acanthemblemaria aspera,Roughhead blenny,4,3.1,Benthic invertivore,Benthic,Day,Hard bottom,Medium,1
+7,ACA BAHI,Acanthurus bahianus,Ocean surgeon,38.1,2,Browsing herbivore,Demersal,Day,Hard bottom,Low,1
+54,ACA CHAP,Acanthemblemaria chaplini,Papillose blenny,4.5,3.3,Benthic invertivore,Benthic,Day,Hard bottom,Medium,1
+8,ACA CHIR,Acanthurus chirurgus,Doctorfish,39,2,Browsing herbivore,Demersal,Day,Hard bottom,Low,1
+9,ACA COER,Acanthurus coeruleus,Blue tang,39,2,Browsing herbivore,Demersal,Day,Hard bottom,Low,1
+393,ACA MARI,Acanthemblemaria maria,Secretary blenny,5.1,3.4,Benthic invertivore,Benthic,Day,Hard bottom,Medium,1
+146,ACA POLY,Acanthostracion polygonia,Honeycomb cowfish,50,2,Benthic invertivore,Demersal,Day,Hard bottom,Medium,1
+147,ACA QUAD,Acanthostracion quadricornis,Scrawled cowfish,55,3,Benthic invertivore,Demersal,Day,Hard bottom,Medium,1
+141,AET NARI,Aetobatus narinari,Spotted eagle ray,330,3.2,Benthic invertivore,Demersal,Day,Hard bottom,Low,1
+444,AHL EGMO,Ahlia egmontis,Key worm eel,38,4.1,Higher carnivore,Benthic,Night ,Soft sediment,Low,1
+34,ALE CILI,Alectis ciliaris,African pompano,150,3.8,Higher carnivore,Pelagic non-site attached,Day,Soft sediment,Low,3
+383,ALP AFER,Alphestes afer,Mutton hamlet,33,3.6,Higher carnivore,Demersal,Day,Hard bottom,Medium,1
+76,ALU MONO,Aluterus monoceros,Unicorn filefish,76.2,3.8,Omnivore,Demersal,Day,Hard bottom,Medium,2
+14,ALU SCHO,Aluterus schoepfii,Orange filefish,61,2,Omnivore,Demersal,Day,Hard bottom,Medium,2
+15,ALU SCRI,Aluterus scriptus,Scrawled filefish,110,2.8,Omnivore,Demersal,Day,Hard bottom,Medium,2
+52,AMB PINO,Amblycirrhitus pinos,Redspotted hawkfish,9.5,3.2,Benthic invertivore,Benthic,Day,Hard bottom,Medium,1
+382,ANC LYOL,Anchoa lyolepis,Dusky anchovy,12,3.4,Planktivore,Pelagic non-site attached,Day,Soft sediment,Low,3
+87,ANI SURI,Anisotremus surinamensis,Black margate,76,3.3,Benthic invertivore,Demersal,Night,Hard bottom,Medium,3
+88,ANI VIRG,Anisotremus virginicus,Porkfish,40.6,3.4,Benthic invertivore,Demersal,Night,Hard bottom,Medium,3
+1,ANT OCEL,Antennarius ocellatus,Ocellated frogfish,38,4.1,Higher carnivore,Benthic,Day,Hard bottom,Medium,1
+385,APO AURO,Apogon aurolineatus,Bridle cardinalfish,6.5,3.4,Benthic invertivore,Pelagic site attached,Night,Hard bottom,Medium,2
+2,APO BINO,Apogon binotatus,Barred cardinalfish,13,3.4,Benthic invertivore,Pelagic site attached,Night,Hard bottom,Medium,2
+26,APO MACU,Apogon maculatus,Flamefish,11.1,3.5,Benthic invertivore,Pelagic site attached,Night,Hard bottom,Medium,2
+10,APO PSEU,Apogon pseudomaculatus,Twospot cardinalfish,11,3.4,Benthic invertivore,Pelagic site attached,Night,Hard bottom,Medium,2
+44,APO QUAD,Apogon quadrisquamatus,Sawcheek cardinalfish,7,3.4,Benthic invertivore,Pelagic site attached,Night,Hard bottom,Medium,2
+388,APO TOWN,Apogon townsendi,Belted cardinalfish,6.5,3.4,Benthic invertivore,Pelagic site attached,Night,Hard bottom,Medium,2
+257,ARC PROB,Archosargus probatocephalus,Sheepshead,91,3.5,Benthic invertivore,Demersal,Day,Hard bottom,Low,2
+225,ARC RHOM,Archosargus rhomboidalis,Sea bream,33,2.9,Benthic invertivore,Demersal,Day,Hard bottom,Low,2
+429,AST GUTT,Astroscopus guttatus ,Northern stargazzer ,59,4.5,Higher carnivore,Benthic,Day,Hard bottom,Low,1
+319,AST STEL,Astrapogon stellatus,Conchfish,8,3.5,Benthic invertivore,Pelagic site attached,Night,Hard bottom,Medium,2
+11,ATH STIP,Atherinomorus stipes,Hardhead silverside,10,3.3,Planktivore,Pelagic site attached,Day,Hard bottom,Low,3
+13,AUL MACU,Aulostomus maculatus,Atlantic trumpetfish,100,4.3,Higher carnivore,Demersal,Day,Hard bottom,Low,1
+16,BAL CAPR,Balistes capriscus,Gray triggerfish,60,3.6,Benthic invertivore,Demersal,Day,Soft sediment,Medium,1
+17,BAL VETU,Balistes vetula,Queen triggerfish,60,3.4,Benthic invertivore,Demersal,Day,Soft sediment,Medium,1
+248,BOD PULC,Bodianus pulchellus,Spotfin hogfish,28.5,3.6,Benthic invertivore,Demersal,Day,Hard bottom,Low,2
+110,BOD RUFU,Bodianus rufus,Spanish hogfish,40,3.4,Benthic invertivore,Demersal,Day,Hard bottom,Low,1
+31,BOT LUNA,Bothus lunatus,Peacock flounder,46,4.5,Higher carnivore,Benthic,Day,Soft sediment,Low,1
+32,BOT OCEL,Bothus ocellatus,Eyed flounder,18,3.8,Higher carnivore,Benthic,Day,Soft sediment,Low,1
+226,CAL BAJO,Calamus bajonado,Jolthead porgy,76,3.2,Benthic invertivore,Demersal,Day,Hard bottom,Low,2
+227,CAL CALA,Calamus calamus,Saucereye porgy,56,3.3,Benthic invertivore,Demersal,Day,Hard bottom,Low,2
+312,CAL NODO,Calamus nodosus,Knobbed porgy,54.4,3.6,Benthic invertivore,Demersal,Day,Hard bottom,Low,2
+228,CAL PENN,Calamus penna,Sheepshead porgy,46,4.4,Benthic invertivore,Demersal,Day,Hard bottom,Low,2
+229,CAL PROR,Calamus proridens,Littlehead porgy,46,3.5,Benthic invertivore,Demersal,Day,Hard bottom,Low,2
+18,CAN MACR,Cantherhines macrocerus,Whitespotted filefish,46,3,Omnivore,Demersal,Day,Hard bottom,Medium,2
+19,CAN PULL,Cantherhines pullus,Orangespotted filefish,20,2.6,Omnivore,Demersal,Day,Hard bottom,Medium,1
+238,CAN ROST,Canthigaster rostrata,Sharpnose puffer,12,3,Omnivore,Demersal,Day,Hard bottom,Low,1
+20,CAN SUFF,Canthidermis sufflamen,Ocean triggerfish,65,3.2,Benthic invertivore,Demersal,Day,Hard bottom,Medium,1
+35,CAR BART,Caranx bartholomaei,Yellow jack,100,4.5,Higher carnivore,Pelagic non-site attached,Day,Hard bottom,Low,2
+36,CAR CRYS,Caranx crysos,Blue runner,70,4.4,Higher carnivore,Pelagic non-site attached,Day,Hard bottom,Low,3
+279,CAR FALC,Carcharhinus falciformis,Silky shark,350,4.5,Higher carnivore,Pelagic non-site attached,Day,Hard bottom,Low,1
+37,CAR HIPP,Caranx hippos,Crevalle jack,124,3.6,Higher carnivore,Pelagic non-site attached,Day,Hard bottom,Low,3
+38,CAR LATU,Caranx latus,Horse-eye jack,101,4.1,Higher carnivore,Pelagic non-site attached,Day,Hard bottom,Low,3
+142,CAR LEUC,Carcharhinus leucas,Bull shark,360,4.3,Higher carnivore,Pelagic non-site attached,Day,Hard bottom,Low,1
+46,CAR LIMB,Carcharhinus limbatus,Blacktip shark,275,4.2,Higher carnivore,Pelagic non-site attached,Day,Hard bottom,Low,1
+386,CAR LUGU,Caranx lugubris,Black jack,100,4.5,Higher carnivore,Pelagic non-site attached,Day,Hard bottom,Low,2
+387,CAR PERE,Carcharhinus perezii,Reef shark,300,4.5,Higher carnivore,Pelagic non-site attached,Day,Hard bottom,Low,
+39,CAR RUBE,Caranx ruber,Bar jack,69,4.3,Higher carnivore,Pelagic non-site attached,Day,Hard bottom,Low,2
+151,CEN ARGI,Centropyge argi,Cherubfish,8,2,Browsing herbivore,Demersal,Day,Hard bottom,Medium,1
+47,CEN UNDE,Centropomus undecimalis,Common snook,140,4.2,Higher carnivore,Pelagic non-site attached,Day,Soft sediment,Low,2
+199,CEP CRUE,Cephalopholis cruentata,Graysby,42.6,4.2,Higher carnivore,Demersal,Day,Hard bottom,Medium,1
+200,CEP FULV,Cephalopholis fulva,Coney,41,4.1,Higher carnivore,Demersal,Day,Hard bottom,Medium,1
+48,CHA CAPI,Chaetodon capistratus,Foureye butterflyfish,7.5,3,Benthic invertivore,Demersal,Day,Hard bottom,Medium,2
+67,CHA FABE,Chaetodipterus faber,Atlantic spadefish,91,4.5,Higher carnivore,Demersal,Day,Hard bottom,Medium,2
+230,CHA LIMB,Chaenopsis limbaughi,Yellowface pikeblenny,8.5,3.7,Benthic invertivore,Benthic,Day,Hard bottom,Medium,1
+49,CHA OCEL,Chaetodon ocellatus,Spotfin butterflyfish,20,3.2,Corallivore,Demersal,Day,Hard bottom,High,2
+50,CHA SEDE,Chaetodon sedentarius,Reef butterflyfish,15,2.8,Benthic invertivore,Demersal,Day,Hard bottom,Medium,2
+51,CHA STRI,Chaetodon striatus,Banded butterflyfish,16,3.2,Benthic invertivore,Demersal,Day,Hard bottom,Medium,2
+239,CHI ANTE,Chilomycterus antennatus,Bridled burrfish,38,3.4,Benthic invertivore,Demersal,Day,Hard bottom,Medium,1
+449,CHI ATIN,Chilomycterus atinga,Spotted burrfish,34,3.5,Benthic invertivore,Demersal,Day,Hard bottom,Medium,1
+263,CHI SCHO,Chilomycterus schoepfii,Striped burrfish,27.9,3.5,Benthic invertivore,Demersal,Day,Hard bottom,Medium,1
+447,CHL CHRY,Chloroscombus chrysurus,Atlantic bumper,65,3.5,Omnivore,Pelagic non-site attached,Day,Soft sediment,Low,3
+332,CHR ATHE,Chriodorus atherinoides,Hardhead halfbeak,26,3,Omnivore,Pelagic non-site attached,Day,Hard bottom,Medium,3
+158,CHR CYAN,Chromis cyanea,Blue chromis,15,3.1,Planktivore,Demersal,Day,Hard bottom,Medium,2
+159,CHR ENCH,Chromis enchrysura,Yellowtail reeffish,10,3.4,Planktivore,Demersal,Day,Hard bottom,Medium,3
+160,CHR INSO,Chromis insolata,Sunshinefish,16,3.4,Planktivore,Demersal,Day,Hard bottom,Medium,3
+161,CHR MULT,Chromis multilineata,Brown chromis,20,3,Planktivore,Demersal,Day,Hard bottom,Medium,3
+162,CHR SCOT,Chromis scotti,Purple reeffish,10,3.4,Planktivore,Demersal,Day,Hard bottom,Medium,3
+111,CLE PARR,Clepticus parrae,Creole wrasse,30,3.3,Planktivore,Demersal,Day,Hard bottom,Low,3
+72,COR DICR,Coryphopterus dicrus,Colon goby,5,2.7,Omnivore,Benthic,Day,Soft sediment,Low,1
+73,COR EIDO,Coryphopterus eidolon,Pallid goby,6,2,Omnivore,Benthic,Day,Soft sediment,Low,1
+74,COR GLAU,Coryphopterus glaucofraenum,Bridled goby,8,2.7,Omnivore,Benthic,Day,Soft sediment,Low,1
+394,COR LIPE,Coryphopterus lipernes,Peppermint goby,3,2.9,Browsing herbivore,Benthic,Day,Soft sediment,Low,1
+75,COR PERS,Coryphopterus personatus,Masked goby,4,2.7,Omnivore,Benthic,Day,Soft sediment,Low,1
+338,COR PUNC,Coryphopterus punctipectophorus,Spotted goby,7.5,2.5,Omnivore,Benthic,Day,Soft sediment,Low,1
+173,CRY ROSE,Cryptotomus roseus,Bluelip parrotfish,13,2,Browsing herbivore,Demersal,Day,Hard bottom,Medium,2
+341,CTE SAEP,Ctenogobius saepepallens,Dash goby,5,3.4,Benthic invertivore,Benthic,Day,Hard bottom,Medium,1
+64,DAS AMER,Dasyatis americana,Southern stingray,200,3.5,Benthic invertivore,Benthic,Day,Soft sediment,Low,1
+40,DEC MACA,Decapterus macarellus,Mackerel scad,46,3.4,Higher carnivore,Pelagic non-site attached,Day,Hard bottom,Low,3
+41,DEC PUNC,Decapterus punctatus,Round scad,30,4.4,Higher carnivore,Pelagic non-site attached,Day,Hard bottom,Low,3
+315,DER INER,Dermatolepis inermis,Marbled grouper,91,4.5,Higher carnivore,Demersal,Day,Hard bottom,Medium,1
+240,DIO HOLO,Diodon holocanthus,Balloonfish,50,3.3,Benthic invertivore,Demersal,Day,Hard bottom,Medium,1
+241,DIO HYST,Diodon hystrix,Porcupinefish,91,3.4,Benthic invertivore,Demersal,Day,Hard bottom,Medium,1
+258,DIP ARGE,Diplodus argenteus,Silver porgy,44,3,Benthic invertivore,Demersal,Day,Hard bottom,Low,2
+197,DIP FORM,Diplectrum formosum,Sand perch,30,4.5,Higher carnivore,Demersal,Day,Hard bottom,Medium,1
+231,DIP HOLB,Diplodus holbrookii,Spottail pinfish,46,2.3,Omnivore,Demersal,Day,Hard bottom,Low,2
+112,DOR MEGA,Doratonotus megalepis,Dwarf wrasse,9.4,3.3,Benthic invertivore,Demersal,Day,Hard bottom,Low,1
+65,ECH NAUC,Echeneis naucrates,Sharksucker,110,3.4,Higher carnivore,Pelagic non-site attached,Day,Hard bottom,Low,2
+421,ECH NEUC,Echeneis neucratoides,Whitefin sharksucker,75,3.3,Higher carnivore,Pelagic non-site attached,Day,Hard bottom,Low,2
+42,ELA BIPI,Elagatis bipinnulata,Rainbow runner,180,3.6,Higher carnivore,Pelagic non-site attached,Day,Hard bottom,Low,3
+78,ELA EVEL,Elacatinus evelynae,Sharknose goby,4,3.4,Cleaner,Benthic,Day,Hard bottom,Medium,1
+389,ELA HORS,Elacatinus horsti,Yellowline goby,5,3.5,Benthic invertivore,Benthic,Day,Hard bottom,Medium,1
+79,ELA MACR,Elacatinus macrodon,Tiger goby,5,3.2,Benthic invertivore,Benthic,Day,Hard bottom,Medium,1
+80,ELA OCEA,Elacatinus oceanops,Neon goby,5,3.5,Cleaner,Benthic,Day,Hard bottom,Medium,1
+412,Ela sauc,Elacatinus saucrum,Leopard goby,1.6,3,Corallivore,Benthic,Day,Hard bottom,Medium,1
+265,Ela xant,Elacatinus xanthiprora,Yellowprow goby,4,3.4,Benthic invertivore,Benthic,Day,Hard bottom,Medium,1
+288,Elo saur,Elops saurus,Ladyfish,100,3.5,Higher carnivore,Pelagic non-site attached,Day,Soft sediment,Low,3
+242,Emb baha,Emblemariopsis bahamensis,Blackhead blenny,2.5,3.1,Benthic invertivore,Benthic,Day,Hard bottom,Medium,1
+55,Emb pand,Emblemaria pandionis,Sailfin blenny,6,3.4,Benthic invertivore,Benthic,Day,Hard bottom,Medium,1
+435,Enc nigr,Enchelycore nigricans,Viper moray,100,4.5,Higher carnivore,Benthic,Night,Hard bottom,High,1
+380,Enn boeh,Enneanectes boehlkei,Roughhead triplefin,4,2.7,Higher carnivore,Benthic,Day,Hard bottom,Medium,1
+198,Epi adsc,Epinephelus adscensionis,Rock hind,61,3.5,Higher carnivore,Demersal,Day,Hard bottom,Medium,1
+316,Epi flav,Epinephelus flavolimbatus,Yellowedge grouper,115,3.8,Higher carnivore,Demersal,Day,Hard bottom,Medium,1
+201,Epi gutt,Epinephelus guttatus,Red hind,76,3.8,Higher carnivore,Demersal,Day,Hard bottom,Medium,1
+253,Epi itaj,Epinephelus itajara,Goliath grouper,250,4.1,Higher carnivore,Demersal,Day,Hard bottom,Medium,1
+202,Epi mori,Epinephelus morio,Red grouper,125,3.5,Higher carnivore,Demersal,Day,Hard bottom,Medium,1
+203,Epi stri,Epinephelus striatus,Nassau grouper,122,4.1,Higher carnivore,Demersal,Day,Hard bottom,Medium,1
+189,Equ lanc,Equetus lanceolatus,Jackknife-fish,25,3.4,Benthic invertivore,Demersal,Night,Hard bottom,High,2
+190,Equ punc,Equetus punctatus,Spotted drum,27,3.5,Benthic invertivore,Benthic,Night,Hard bottom,High,3
+70,Euc arge,Eucinostomus argenteus,Spotfin mojarra,21,3.2,Benthic invertivore,Pelagic site attached,Day,Soft sediment,Low,3
+335,Euc gula,Eucinostomus gula,Silver jenny,23,2.7,Benthic invertivore,Pelagic site attached,Day,Soft sediment,Low,2
+305,Eut alle,Euthynnus alletteratus,Little tunny,122,4.5,Higher carnivore,Pelagic non-site attached,Day,Hard bottom,Low,3
+69,Fis taba,Fistularia tabacaria,Bluespotted cornetfish,200,3.5,Higher carnivore,Demersal,Day,Hard bottom,Low,1
+71,Ger cine,Gerres cinereus,Yellowfin mojarra,41,3.3,Benthic invertivore,Pelagic site attached,Night,Soft sediment,Low,2
+172,Gin cirr,Ginglymostoma cirratum,Nurse shark,430,3.8,Higher carnivore,Benthic,Night,Soft sediment,Medium,1
+77,Gna thom,Gnatholepis thompsoni,Goldspot goby,8.2,2.3,Omnivore,Benthic,Day,Soft sediment,Low,1
+423,Gob dile,Gobiosoma dilepis,Orangeside goby,2.5,3.1,Benthic invertivore,Benthic,Day,Hard bottom,Medium,1
+428,Gra lore,Gramma loreto,Fairy basslet,8,3.3,Benthic invertivore,Pelagic site attached,Day,Hard bottom,Medium,1
+138,Gym fune,Gymnothorax funebris,Green moray,250,4,Higher carnivore,Benthic,Night,Hard bottom,High,1
+5,Gym mili,Gymnothorax miliaris,Goldentail moray,70,3.9,Benthic invertivore,Benthic,Night,Hard bottom,High,1
+139,Gym mori,Gymnothorax moringa,Spotted moray,200,4.5,Higher carnivore,Benthic,Night,Hard bottom,High,1
+251,Gym saxi,Gymnothorax saxicola,Honeycomb moray,60,4,Higher carnivore,Benthic,Night,Hard bottom,High,1
+140,Gym vici,Gymnothorax vicinus,Purplemouth moray,122,4.3,Higher carnivore,Benthic,Night,Hard bottom,High,1
+89,Hae albu,Haemulon album,Margate,79,3.2,Benthic invertivore,Demersal,Night,Hard bottom,Medium,3
+90,Hae auro,Haemulon aurolineatum,Tomtate,25,3.2,Benthic invertivore,Demersal,Night,Hard bottom,Medium,3
+91,Hae carb,Haemulon carbonarium,Caesar grunt,36,3.3,Benthic invertivore,Demersal,Night,Hard bottom,Medium,2
+92,Hae chry,Haemulon chrysargyreum,Smallmouth grunt,23,3.3,Benthic invertivore,Demersal,Night,Hard bottom,Medium,3
+93,Hae flav,Haemulon flavolineatum,French grunt,30,3.3,Benthic invertivore,Demersal,Night,Hard bottom,Medium,3
+94,Hae macr,Haemulon macrostomum,Spanish grunt,43,3.3,Benthic invertivore,Demersal,Night,Hard bottom,Medium,3
+95,Hae mela,Haemulon melanurum,Cottonwick,33,2.2,Benthic invertivore,Demersal,Night,Hard bottom,Medium,3
+96,Hae parr,Haemulon parra,Sailors choice,41.2,3.5,Benthic invertivore,Demersal,Night,Hard bottom,Medium,3
+97,Hae plum,Haemulon plumierii,White grunt,53,3.6,Benthic invertivore,Demersal,Night,Hard bottom,Medium,3
+98,Hae sciu,Haemulon sciurus,Bluestriped grunt,46,3.4,Benthic invertivore,Demersal,Night,Hard bottom,Medium,3
+100,Hae stri,Haemulon striatum,Striped grunt,28,3.4,Benthic invertivore,Demersal,Night,Hard bottom,Medium,3
+113,Hal bivi,Halichoeres bivittatus,Slippery dick,35,3.3,Benthic invertivore,Demersal,Day,Hard bottom,Low,1
+409,Hal caud,Halichoeres caudalis,Painted wrasse,20,3.5,Benthic invertivore,Demersal,Day,Hard bottom,Low,2
+249,Hal cyan,Halichoeres cyanocephalus,Yellowcheek wrasse,30,3.6,Benthic invertivore,Demersal,Day,Hard bottom,Low,2
+114,Hal garn,Halichoeres garnoti,Yellowhead wrasse,19.3,3.5,Benthic invertivore,Demersal,Day,Hard bottom,Low,2
+115,Hal macu,Halichoeres maculipinna,Clown wrasse,18,3.3,Benthic invertivore,Demersal,Day,Hard bottom,Low,1
+116,Hal pict,Halichoeres pictus,Rainbow wrasse,13,3.5,Benthic invertivore,Demersal,Day,Hard bottom,Low,1
+117,Hal poey,Halichoeres poeyi,Blackear wrasse,20,3.4,Benthic invertivore,Demersal,Day,Hard bottom,Low,1
+118,Hal radi,Halichoeres radiatus,Puddingwife,51,3.3,Benthic invertivore,Demersal,Day,Hard bottom,Low,1
+422,Har hume,Harengula humeralis,Redear sardine,22,3.4,Planktivore,Pelagic non-site attached,Day,Soft sediment,Low,3
+62,Har jagu,Harengula jaguana,Scaled sardine,21.2,3.4,Higher carnivore,Pelagic non-site attached,Day,Soft sediment,Low,3
+68,Hem bras,Hemiramphus brasiliensis,Ballyhoo,55,2.3,Omnivore,Pelagic non-site attached,Day,Hard bottom,Medium,3
+56,Hem simu,Hemiemblemaria simula,Wrasse blenny,10,3.7,Benthic invertivore,Benthic,Day,Hard bottom,Medium,1
+171,Het crue,Heteropriacanthus cruentatus,Glasseye snapper,50.7,3.8,Higher carnivore,Benthic,Night,Hard bottom,High,2
+417,Het long,Heteroconger longissimus,Brown garden eel,51,3.1,Planktivore,Benthic,Day,Soft sediment,Low,2
+101,Hol adsc,Holocentrus adscensionis,Squirrelfish,61,3.5,Benthic invertivore,Demersal,Night,Hard bottom,Medium,2
+152,Hol berm,Holacanthus bermudensis,Blue angelfish,45,3.3,Benthic invertivore,Demersal,Day,Hard bottom,Medium,1
+153,Hol cili,Holacanthus ciliaris,Queen angelfish,45,3,Benthic invertivore,Demersal,Day,Hard bottom,Medium,1
+104,Hol rufu,Holocentrus rufus,Longspine squirrelfish,35,3.5,Benthic invertivore,Demersal,Night,Hard bottom,Medium,2
+348,Hol town,Holacanthus townsendi,Townsend angelfish ,45,3,Benthic invertivore,Demersal,Day,Hard bottom,Medium,1
+154,Hol tric,Holacanthus tricolor,Rock beauty,35,3,Benthic invertivore,Demersal,Day,Hard bottom,Medium,1
+27,Hyp berm,Hypleurochilus bermudensis,Barred blenny,10,3.2,Omnivore,Benthic,Day,Hard bottom,Medium,2
+204,Hyp chlo,Hypoplectrus chlorurus,Yellowtail hamlet,12.7,3.8,Benthic invertivore,Demersal,Day,Hard bottom,Medium,1
+205,Hyp gemm,Hypoplectrus gemma,Blue hamlet,13,3.8,Benthic invertivore,Demersal,Day,Hard bottom,Medium,1
+206,Hyp gutt,Hypoplectrus guttavarius,Shy hamlet,13,3.8,Benthic invertivore,Demersal,Day,Hard bottom,Medium,1
+12,Hyp harr,Hypoatherina harringtonensis,Reef silverside,10,3,Planktivore,Pelagic site attached,Day,Hard bottom,Low,3
+207,Hyp hybr,Hypoplectrus hybrid,Hybrid hamlet,15,3.7,Benthic invertivore,Demersal,Day,Hard bottoml,,1
+208,Hyp indi,Hypoplectrus indigo,Indigo hamlet,14.3,3.9,Benthic invertivore,Demersal,Day,Hard bottom,Medium,1
+209,Hyp nigr,Hypoplectrus nigricans,Black hamlet,15.2,4,Higher carnivore,Demersal,Day,Hard bottom,Medium,1
+210,Hyp puel,Hypoplectrus puella,Barred hamlet,15.2,3.7,Benthic invertivore,Demersal,Day,Hard bottom,Medium,1
+211,Hyp tann,Hypoplectrus tann,Tan hamlet,8.1,3.7,Benthic invertivore,Demersal,Day,Hard bottom,Medium,1
+212,Hyp unic,Hypoplectrus unicolor,Butter hamlet,12.7,4,Higher carnivore,Demersal,Day,Hard bottom,Medium,1
+108,Ine vitt,Inermia vittata,Boga,23,3.2,Benthic invertivore,Pelagic non-site attached,Day,Hard bottom,Low,3
+109,Kyp sect,Kyphosus sectatrix,Bermuda chub,45,2.1,Browsing herbivore,Pelagic site attached,Day,Hard bottom,Low,3
+415,Lab bucc,Labrisomus bucciferus,Puffcheek blenny,9,3.8,Benthic invertivore,Benthic,Day,Hard bottom,Medium,1
+411,Lab fila,Labrisomus filamentosus,Quillfin blenny,12,3.9,Benthic invertivore,Benthic,Day,Hard bottom,Medium,1
+28,Lab gobi,Labrisomus gobio,Palehead blenny,6.5,3.6,Benthic invertivore,Benthic,Day,Hard bottom,Medium,1
+57,Lab nuch,Labrisomus nuchipinnis,Hairy blenny,23,3.5,Benthic invertivore,Benthic,Day,Hard bottom,Medium,1
+145,Lac bica,Lactophrys bicaudalis,Spotted trunkfish,48,3,Benthic invertivore,Demersal,Day,Hard bottom,Medium,1
+123,Lac maxi,Lachnolaimus maximus,Hogfish,91,3.9,Benthic invertivore,Demersal,Day,Hard bottom,Low,1
+148,Lac trig,Lactophrys trigonus,Trunkfish,55,3.3,Benthic invertivore,Demersal,Day,Hard bottom,Medium,1
+149,Lac triq,Lactophrys triqueter,Smooth trunkfish,47,3.3,Benthic invertivore,Demersal,Day,Hard bottom,Medium,1
+259,Lag rhom,Lagodon rhomboides,Pinfish,40,4.4,Benthic invertivore,Demersal,Day,Hard bottom,Low,3
+213,Lio eukr,Liopropoma eukrines,Wrasse basslet,13,3.5,Benthic invertivore,Demersal,Day,Hard bottom,Medium,1
+384,Lio rube,Liopropoma rubre,Peppermint basslet,100,4.1,Higher carnivore,Demersal,Day,Hard bottom,Medium,1
+125,Lut anal,Lutjanus analis,Mutton snapper,94,3.9,Higher carnivore,Demersal,Day,Hard bottom,Low,2
+126,Lut apod,Lutjanus apodus,Schoolmaster,67.2,4.2,Higher carnivore,Demersal,Day,Hard bottom,Low,3
+127,Lut bucc,Lutjanus buccanella,Blackfin snapper,75,3.9,Higher carnivore,Demersal,Day,Hard bottom,Low,2
+128,Lut cyan,Lutjanus cyanopterus,Cubera snapper,160,4.4,Higher carnivore,Demersal,Day,Hard bottom,Low,2
+129,Lut gris,Lutjanus griseus,Gray snapper,89,4.3,Higher carnivore,Demersal,Day,Hard bottom,Low,2
+130,Lut jocu,Lutjanus jocu,Dog snapper,128,4.3,Higher carnivore,Demersal,Day,Hard bottom,Low,2
+131,Lut maho,Lutjanus mahogoni,Mahogany snapper,48,4.4,Higher carnivore,Demersal,Day,Hard bottom,Low,2
+132,Lut syna,Lutjanus synagris,Lane snapper,60,3.8,Higher carnivore,Demersal,Day,Hard bottom,Low,2
+418,Mal auro,Malacoctenus aurolineatus,Goldline blenny,6,3.2,Benthic invertivore,Benthic,Day,Hardbottom,Medium,1
+3,Mal gill,Malacoctenus gilli,Dusky blenny,7.6,3.5,Benthic invertivore,Benthic,Day,Hard bottom,Medium,1
+58,Mal macr,Malacoctenus macropus,Rosy blenny,5.5,3.4,Benthic invertivore,Benthic,Day,Hard bottom,Medium,1
+134,Mal plum,Malacanthus plumieri,Sand tilefish,70,3.6,Benthic invertivore,Demersal,Night,Soft sediment,High,1
+59,Mal tria,Malacoctenus triangulatus,Saddled blenny,7.5,3.5,Benthic invertivore,Benthic,Day,Hard bottom,Medium,1
+4,Mal vers,Malacoctenus versicolor,Barfin blenny,7.6,3.1,Benthic invertivore,Benthic,Day,Hard bottom,Medium,1
+135,Man biro,Manta birostris,Giant manta,910,3.5,Omnivore,Pelagic non-site attached,Day,Hard bottom,Low,1
+66,Meg atla,Megalops atlanticus,Tarpon,250,4.5,Higher carnivore,Pelagic non-site attached,Day,Soft sediment,Low,2
+21,Mel nige,Melichthys niger,Black durgon,50,2.4,Planktivore,Demersal,Day,Hard bottom,Medium,2
+84,Mic carr,Microgobius carri,Seminole goby,10,3.4,Benthic invertivore,Benthic,Day,Hard bottom,Medium,1
+163,Mic chry,Microspathodon chrysurus,Yellowtail damselfish,21,2.1,Algal farmer,Demersal,Day,Hard bottom,Medium,1
+85,Mic micr,Microgobius microlepis,Banner goby,10,3.4,Benthic invertivore,Benthic,Day,Hard bottom,Medium,1
+6,Mon cili,Monacanthus ciliatus,Fringed filefish,20,2.7,Omnivore,Demersal,Day,Hard bottom,Medium,2
+23,Mon tuck,Monacanthus tuckeri,Slender filefish,10,2.7,Omnivore,Demersal,Day,Hard bottom,Medium,2
+136,Mul mart,Mulloidichthys martinicus,Yellow goatfish,39.4,3.2,Benthic invertivore,Demersal,Day,Soft sediment,Low,3
+252,Mur reti,Muraena retifera,Reticulate moray,60,3.9,Higher carnivore,Benthic,Night,Hard bottom,High,1
+214,Myc bona,Mycteroperca bonaci,Black grouper,150,4.5,Higher carnivore,Demersal,Day,Hard bottom,Medium,1
+215,Myc inte,Mycteroperca interstitialis,Yellowmouth grouper,84,4.5,Higher carnivore,Demersal,Day,Hard bottom,Medium,1
+216,Myc micr,Mycteroperca microlepis,Gag,145,3.7,Higher carnivore,Demersal,Day,Hard bottom,Medium,1
+217,Myc phen,Mycteroperca phenax,Scamp,107,4.5,Higher carnivore,Demersal,Day,Hard bottom,Medium,1
+254,Myc tigr,Mycteroperca tigris,Tiger grouper,101,4.5,Higher carnivore,Demersal,Day,Hard bottom,Medium,1
+218,Myc vene,Mycteroperca venenosa,Yellowfin grouper,100,4.5,Higher carnivore,Demersal,Day,Hard bottom,Medium,1
+450,Myr brev,Myrichthys÷breviceps,Sharptail eel ,102,3.5,Higher carnivore,Demersal,Night,Hard bottom,Medium,1
+107,Myr jaco,Myripristis jacobus,Blackbar soldierfish,25,3.4,Omnivore,Demersal,Night,Hard bottom,Medium,3
+455,Myr ocel,Myrichthys ocellatus,Goldspotted eel,110,3.6,Benthic invertivore,Demersal,Night,Soft sediment,Low,1
+430,Nar banc,Narcine bancroftii,Lesser electric ray,60,3.2,Benthic invertivore,Benthic,Night,Soft sediment,Low,1
+103,Neo mari,Neoniphon marianus,Longjaw squirrelfish,18,3.6,Benthic invertivore,Demersal,Night,Hard bottom,Medium,2
+245,Nes long,Nes longus,Orangespotted goby,10,3.4,Benthic invertivore,Benthic,Day,Hard bottom,Medium,1
+174,Nic usta,Nicholsina usta,Emerald parrotfish,30,2,Browsing herbivore,Demersal,Day,Hard bottom,Medium,2
+133,Ocy chry,Ocyurus chrysurus,Yellowtail snapper,86.3,4,Higher carnivore,Demersal,Day,Hard bottom,Low,3
+192,Odo dent,Odontoscion dentex,Reef croaker,30,3.5,Planktivore,Benthic,Night,Hard bottom,High,3
+272,Oli saur,Oligoplites saurus,Leatherjack,35,4.3,Higher carnivore,Pelagic non-site attached,Day,Hard bottom,Low,3
+29,Oph macc,Ophioblennius macclurei,Redlip blenny,12.2,2.5,Scraping herbivore,Benthic,Day,Hard bottom,Medium,1
+143,Opi auri,Opistognathus aurifrons,Yellowhead jawfish,10,3.1,Planktivore,Benthic,Day,Hard bottom,Medium,1
+391,Opi macr,Opistognathus macrognathus,Banded jawfish,20,3.6,Higher carnivore,Benthic,Day,Soft sediment,Low,1
+144,Opi whit,Opistognathus whitehursti,Dusky jawfish,14,3.7,Higher carnivore,Benthic,Day,Soft sediment,Low,1
+247,Ort chry,Orthopristis chrysoptera,Pigfish,46,3.4,Benthic invertivore,Demersal,Night,Hard bottom,Medium,3
+86,Oxy stig,Oxyurichthys stigmalophius,Spotfin goby,16.5,3.8,Benthic invertivore,Benthic,Day,Hard bottom,Medium,1
+260,Pag pagr,Pagrus pagrus,Red porgy,91,3.7,Benthic invertivore,Demersal,Day,Hard bottom,Low,2
+188,Par acum,Pareques acuminatus,High-hat,23,3.6,Benthic invertivore,Benthic,Night,Hard bottom,High,3
+328,Par albi,Paralichthys albigutta,Gulf flounder,71,4.1,Higher carnivore,Benthic,Day,Hard bottom,Low,1
+33,Par bair,Paradiplogrammus bairdi,Lancer dragonet,11.4,3.3,Benthic invertivore,Benthic,Day,Soft sediment,Medium,1
+219,Par furc,Paranthias furcifer,Atlantic creolefish,30,3.1,Planktivore,Pelagic site attached,Day,Hard bottom,Medium,2
+81,Par marm,Parablennius marmoreus,Seaweed blenny,8.5,2.5,Browsing herbivore,Benthic,Day,Hard bottom,Medium,1
+60,Par marn,Paraclinus marmoratus,Marbled blenny,10,3.7,Benthic invertivore,Benthic,Day,Hard bottom,Medium,1
+191,Par umbr,Pareques umbrosus,Cubbyu,25,3.5,Benthic invertivore,Benthic,Night,Hard bottom,High,3
+150,Pem scho,Pempheris schomburgkii,Glassy sweeper,15,3.1,Benthic invertivore,Demersal,Night,Hard bottom,High,3
+408,Pha xenu,Phaeoptyx xenus,Sponge cardinalfish,7.5,3.4,Benthic invertivore,Pelagic site attached,Night,Hard bottom,Medium,2
+155,Pom arcu,Pomacanthus arcuatus,Gray angelfish,60,2.9,Benthic invertivore,Demersal,Day,Hard bottom,Medium,1
+156,Pom paru,Pomacanthus paru,French angelfish,41.1,2.8,Benthic invertivore,Demersal,Day,Hard bottom,Medium,1
+170,Pri aren,Priacanthus arenatus,Bigeye,50,4,Higher carnivore,Benthic,Night,Hard bottom,High,2
+246,Pri hipo,Priolepis hipoliti,Rusty goby,4,3.5,Benthic invertivore,Benthic,Day,Hard bottom,Medium,1
+431,Pri ophr,Prionotus ophryas,Bandtail searobin,27,3.6,Higher carnivore,Demersal,Day,Soft sediment,Low,1
+186,Pro acul,Prognathodes aculeatus,Longsnout butterflyfish,10,3.2,Benthic invertivore,Demersal,Day,Hard bottom,Medium,2
+137,Pse macu,Pseudupeneus maculatus,Spotted goatfish,30,3.5,Benthic invertivore,Demersal,Day,Soft sediment,Low,2
+82,Pte call,Ptereleotris calliura,Blue dartfish,12.5,3.4,Planktivore,Demersal,Day,Soft sediment,High,2
+83,Pte hele,Ptereleotris helenae,Hovering dartfish,12,3.4,Planktivore,Demersal,Day,Soft sediment,Medium,2
+433,Pte voli,Pterois volitans,Red lionfish,38,4.5,Higher carnivore,Demersal,Day,Hard bottom,Medium,1
+287,Rem remo,Remora remora,Remora,86.4,3.1,Benthic invertivore,Pelagic non-site attached,Day,Hard bottom,Low,2
+250,Rho auro,Rhomboplites aurorubens,Vermilion snapper,60,4.4,Higher carnivore,Demersal,Day,Hard bottom,Low,3
+432,Ryp macu,Rypticus maculatus,Whitespotted soapfish,20,3.8,Higher carnivore,Demersal,Day,Hard bottom,Medium,1
+220,Ryp sapo,Rypticus saponaceus,Greater soapfish,35,4.1,Higher carnivore,Demersal,Day,Hard bottom,Medium,1
+416,Sar auri,Sardinella aurita,Spanish sardine,31,3.4,Planktivore,Pelagic non-site attached,Day,Soft sediment,Low,3
+102,Sar coru,Sargocentron coruscum,Reef squirrelfish,15,3.6,Benthic invertivore,Demersal,Night,Hard bottom,Medium,2
+106,Sar vexi,Sargocentron vexillarium,Dusky squirrelfish,18,3.5,Benthic invertivore,Demersal,Night,Hard bottom,Medium,2
+175,Sca coel,Scarus coelestinus,Midnight parrotfish,77,2,Scraping herbivore,Demersal,Day,Hard bottom,Medium,2
+176,Sca coer,Scarus coeruleus,Blue parrotfish,120,2,Scraping herbivore,Demersal,Day,Hard bottom,Medium,2
+30,Sca cris,Scartella cristata,Molly miller,12,2,Omnivore,Benthic,Day,Hard bottom,Medium,1
+178,Sca guac,Scarus guacamaia,Rainbow parrotfish,120,2,Scraping herbivore,Demersal,Day,Hard bottom,Medium,2
+177,Sca iser,Scarus iseri,Striped parrotfish,35,2,Scraping herbivore,Demersal,Day,Hard bottom,Medium,2
+179,Sca taen,Scarus taeniopterus,Princess parrotfish,35,2,Scraping herbivore,Demersal,Day,Hard bottom,Medium,2
+180,Sca vetu,Scarus vetula,Queen parrotfish,61,2,Scraping herbivore,Demersal,Day,Hard bottom,Medium,2
+410,Sch beta,Schultzea beta,School bass,10,3.4,Planktivore,Demersal,Day,Hard bottom,Medium,3
+392,Sco cari,Scorpaenodes caribbaeus,Reef scorpionfish,12,3.6,Benthic invertivore,Benthic,Day,Hard bottom,Medium,1
+193,Sco cava,Scomberomorus cavalla,King mackerel,184,4.4,Higher carnivore,Pelagic non-site attached,Day,Hard bottom,Low,3
+194,Sco macu,Scomberomorus maculatus,Spanish mackerel,91,4.5,Higher carnivore,Pelagic non-site attached,Day,Hard bottom,Low,3
+196,Sco plum,Scorpaena plumieri,Spotted scorpionfish,45,3.8,Higher carnivore,Benthic,Day,Hard bottom,Medium,1
+195,Sco rega,Scomberomorus regalis,Cero,183,4.5,Higher carnivore,Pelagic non-site attached,Day,Hard bottom,Low,3
+105,Sel vome,Selene vomer,Lookdown,48.3,4.3,Higher carnivore,Pelagic non-site attached,Day,Hard bottom,Low,2
+255,Ser annu,Serranus annularis,Orangeback bass,9,3.4,Benthic invertivore,Demersal,Day,Hard bottom,Medium,2
+221,Ser bald,Serranus baldwini,Lantern bass,12,4.1,Higher carnivore,Demersal,Day,Hard bottom,Medium,2
+43,Ser dume,Seriola dumerili,Greater amberjack,190,4.5,Higher carnivore,Pelagic non-site attached,Day,Hard bottom,Low,2
+121,Ser rivo,Seriola rivoliana,Almaco jack,160,4.5,Higher carnivore,Pelagic non-site attached,Day,Hard bottom,Low,2
+407,Ser subl,Serranus subligarius ,Belted sandfish,10,3.4,Benthic invertivore,Demersal,Day,Hard bottom,Medium,1
+222,Ser taba,Serranus tabacarius,Tobaccofish,22,4.2,Higher carnivore,Demersal,Day,Soft sediment,Medium,1
+223,Ser tigr,Serranus tigrinus,Harlequin bass,29,3.7,Benthic invertivore,Demersal,Day,Hard bottom,Medium,1
+224,Ser tort,Serranus tortugarum,Chalk bass,8,3.1,Benthic invertivore,Demersal,Day,Hard bottom,Medium,1
+181,Spa atom,Sparisoma atomarium,Greenblotch parrotfish,25,2,Scraping herbivore,Demersal,Day,Hard bottom,Medium,2
+182,Spa auro,Sparisoma aurofrenatum,Redband parrotfish,28,2,Scraping herbivore,Demersal,Day,Hard bottom,Medium,2
+183,Spa chry,Sparisoma chrysopterum,Redtail parrotfish,46,2,Scraping herbivore,Demersal,Day,Hard bottom,Medium,2
+184,Spa radi,Sparisoma radians,Bucktooth parrotfish,20,2,Scraping herbivore,Demersal,Day,Hard bottom,Medium,2
+185,Spa rubr,Sparisoma rubripinne,Yellowtail parrotfish,47.8,2,Scraping herbivore,Demersal,Day,Hard bottom,Medium,2
+187,Spa viri,Sparisoma viride,Stoplight parrotfish,64,2,Scraping herbivore,Demersal,Day,Hard bottom,Medium,2
+232,Sph barr,Sphyraena barracuda,Great barracuda,200,4.5,Higher carnivore,Pelagic non-site attached,Day,Hard bottom,Low,3
+261,Sph guac,Sphyraena guachancho,Guaguanche,200,4.4,Higher carnivore,Pelagic non-site attached,Day,Hard bottom,Low,2
+234,Sph lewi,Sphyrna lewini,Scalloped hammerhead,430,4.1,Higher carnivore,Pelagic non-site attached,Day,Hard bottom,Low,2
+235,Sph moka,Sphyrna mokarran,Great hammerhead,610,4.3,Higher carnivore,Pelagic non-site attached,Day,Hard bottom,Low,1
+262,Sph picu,Sphyraena picudilla,Southern sennet,61,4.2,Higher carnivore,Pelagic non-site attached,Day,Hard bottom,Low,2
+243,Sph spen,Sphoeroides spengleri,Bandtail puffer,30,3.2,Benthic invertivore,Demersal,Day,Soft sediment,Low,1
+264,Sph test,Sphoeroides testudineus,Checkered puffer,38.8,3.4,Benthic invertivore,Demersal,Day,Soft sediment,Low,1
+314,Sph tibu,Sphyrna tiburo,Bonnethead,150,3.9,Benthic invertivore,Pelagic non-site attached,Day,Hard bottom,Low,1
+165,Ste adus,Stegastes adustus,Dusky damselfish,15,2.5,Algal farmer,Demersal,Day,Hard bottom,Medium,1
+164,Ste dien,Stegastes diencaeus,Longfin damselfish,12.5,2,Algal farmer,Demersal,Day,Hard bottom,Medium,1
+22,Ste hisp,Stephanolepis hispidus,Planehead filefish,27.5,2.2,Omnivore,Demersal,Day,Hard bottom,Medium,1
+166,Ste leuc,Stegastes leucostictus,Beaugregory,10,3.1,Algal farmer,Demersal,Day,Hard bottom,Medium,1
+167,Ste part,Stegastes partitus,Bicolor damselfish,10,2,Algal farmer,Demersal,Day,Hard bottom,Medium,1
+168,Ste plan,Stegastes planifrons,Threespot damselfish,13,2.6,Algal farmer,Demersal,Day,Hard bottom,Medium,1
+169,Ste vari,Stegastes variabilis,Cocoa damselfish,12.5,2.5,Algal farmer,Demersal,Day,Hard bottom,Medium,1
+381,Str nota,Strongylura notata,Redfin needlefish,61,4.4,Higher carnivore,Pelagic non-site attached,Day,Soft sediment,Low,2
+24,Str timu,Strongylura timucu,Timucu,61,4.5,Higher carnivore,Pelagic non-site attached,Day,Soft sediment,Low,2
+236,Syn foet,Synodus foetens,Inshore lizardfish,48.3,4.5,Higher carnivore,Benthic,Day,Hard bottom,Low,1
+237,Syn inte,Synodus intermedius,Sand diver,46,4.2,Higher carnivore,Benthic,Day,Hard bottom,Low,1
+445,Syn syno,Synodus synodus,Red lizardfish,33,4.2,Higher carnivore,Benthic,Day,Hard bottom,Low,1
+124,Tha bifa,Thalassoma bifasciatum,Bluehead,25,3.3,Benthic invertivore,Demersal,Day,Hard bottom,Low,2
+45,Tra falc,Trachinotus falcatus,Permit,122,4,Higher carnivore,Pelagic non-site attached,Day,Hard bottom,Low,2
+25,Tyl croc,Tylosurus crocodilus,Houndfish,150,4.2,Higher carnivore,Pelagic non-site attached,Day,Soft sediment,,2
+244,Uro jama,Urobatis jamaicensis,Yellow stingray,76,3.6,Benthic invertivore,Demersal,Night,Soft sediment,Low,1
+119,Xyr mart,Xyrichtys martinicensis,Rosy razorfish,15,3.5,Benthic invertivore,Demersal,Day,Soft sediment,Low,1
+120,Xyr nova,Xyrichtys novacula,Pearly razorfish,38,3.1,Benthic invertivore,Demersal,Day,Soft sediment,Low,1
+122,Xyr sple,Xyrichtys splendens,Green razorfish,17.5,3.2,Benthic invertivore,Demersal,Day,Hard bottom,Low,1
