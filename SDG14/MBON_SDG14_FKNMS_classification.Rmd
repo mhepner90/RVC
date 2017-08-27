@@ -69,6 +69,7 @@ SDG14: Conserve and sustainably use the oceans, seas and marine resources
     
 ```{r librarys}
 #rm(list = ls())
+
 library(knitr)
 library(tidyverse)
 library(rvc)
@@ -1517,22 +1518,28 @@ dygraph(dygraph_rich_simp_shannon, main = "Florida Keys Reef Fish Biodiversity")
 
 ```
 
-
-
 ## Other Groups
 ```{r Other Groups}
-
-
-
 #### Corals, Lobster, Queen Conch
 
+#cremp_abund       = read.csv("C:/Users/luke.mceachron/Documents/Git/RVC/OtherGroups/CREMP_Pcover_group.csv")
+#lobster = read.csv("C:/Users/luke.mceachron/Documents/Git/RVC/OtherGroups/Lobster_landings.csv")
+#conch = read.csv("C:/Users/luke.mceachron/Documents/Git/RVC/OtherGroups/QueenConchData.csv")
+#crichness<-read.csv("C:/Users/luke.mceachron/Documents/Git/RVC/OtherGroups/CREMP_Domain_Coral_Richness.csv")
 
-
-
-cremp_abund       = read.csv("C:/Users/luke.mceachron/Documents/Git/RVC/OtherGroups/CREMP_Pcover_group.csv")
-lobster = read.csv("C:/Users/luke.mceachron/Documents/Git/RVC/OtherGroups/Lobster_landings.csv")
-conch = read.csv("C:/Users/luke.mceachron/Documents/Git/RVC/OtherGroups/QueenConchData.csv")
-crichness<-read.csv("C:/Users/luke.mceachron/Documents/Git/RVC/OtherGroups/CREMP_Domain_Coral_Richness.csv")
+cremp_abund = read_csv("SDG14/OtherGroups/CREMP_Pcover_group.csv")
+#Parsed with column specification:
+#cols(
+  #Year = col_integer(),
+  #Macroalgae = col_double(),
+  #Cyano = col_double(),
+  #Octocoral = col_double(),
+  #Others = col_double(),
+  #Porifera = col_double(),
+  #Seagrass = col_double(),
+  #`Stony Coral` = col_double(),
+  #Zoanthidea = col_double(),
+  #Urchins = col_double())
 
 head(sc_pcov_spp)
 names(crichness)
@@ -1566,7 +1573,6 @@ stonycover<-cremp_abund[c(1,8)]
 lobster
 conch
 
-
 dygraph(algaecover, main = 'Macroalgae Mean % Cover') %>% 
     dyAxis("y", label = "Macroalgae") %>%
     dyAxis("x", label = "Year") %>%
@@ -1599,9 +1605,7 @@ dygraph(conch1, main = 'Queen Conch, Relative Abundance in Sampled Breeding Aggr
     dyAxis("x", label = "Year") %>%
     dyOptions(stackedGraph = T)
 
-
-
-#######For some reason, the Y axis values are not representing the data. E.g., In 1996, the Species Richness line starts at 60 on the y axis, but the data (when you roll over) indicate Richness equals 43.######
+#For some reason, the Y axis values are not representing the data. E.g., In 1996, the Species Richness line starts at 60 on the y axis, but the data (when you roll over) indicate Richness equals 43.
 
 coraldiv<-as.data.frame(coral_diversity)
 coraldiv1=coraldiv[-c(2,4)]
@@ -1615,9 +1619,4 @@ dygraph(coraldiv1, main = 'Coral Diversity') %>%
     dyOptions(stackedGraph = T, fillAlpha = 0.6, axisLineWidth = 1.5) %>% #drawGrid = F
     dyLegend(width = 400)
 
-
-
-
 ```
-
-
