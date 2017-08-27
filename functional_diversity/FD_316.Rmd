@@ -1,0 +1,1185 @@
+---
+title: "FD"
+author: "Megan Hepner"
+date: "August 26, 2017"
+output: html_document
+---
+
+```{r Functional distance matrix spe, eval = F}
+knitr::opts_chunk$set(echo = TRUE)
+
+if (!file.exists("functional_diversity/func_dist_rds")){
+ 
+  trait_matrix_316 = read_csv('functional_diversity/species_trait_matrix_316_spp.csv')
+  
+  trait_matrix = trait_matrix_316 %>%
+    as.tibble() %>%
+    mutate(
+      SPECIES_CD = toupper(as.character(SPECIES_CD))) %>% 
+    arrange(SPECIES_CD)%>% 
+    select(SPECIES_CD, Maxlength, Trophic_level, Trophic_group, Water_column, Diel_activity, Substrate_type, Complexity, Gregariousness) %>% #348*9
+    group_by(
+      SPECIES_CD, Maxlength, Trophic_level, Trophic_group, Water_column, Diel_activity, Substrate_type, Complexity, Gregariousness) %>%
+    #summarize(n = n()) %>%
+    #select(-n) %>%
+    ungroup() %>%
+    mutate(
+      # ordinal traits
+      Complexity = ordered(Complexity, levels=c("Low","Medium","High")),
+      Gregariousness = ordered(Gregariousness, levels=c("1","2","3"))) %>%
+    as.data.frame()
+  
+  #Set species names as row.names and remove extra columns
+  rownames(trait_matrix)=trait_matrix$SPECIES_CD 
+  
+  #Calculate Gower distances. Variables have equal weight. 
+  traits.dist = gowdis(trait_matrix, ord="podani")
+  
+  #Use clustering method to produce ultrametric dendrogram because values of Rao's Q can be maximized when fewer than the max number of functional types are present unless distances are ultramtetric 
+  
+  #to account for sensitivity in clustering use multiple algorithms  (Mouchet et al., 2008) 
+  tree_methods = c("single","complete","average","mcquitty","ward.D") #average is best clustering method 
+  trees=lapply(tree_methods,  function(i) hclust(traits.dist, method=i))
+  par(mfrow=c(3,2))
+  for(i in 1:length(trees)) {plot(trees[[i]])} #plots the 5 different kinds of trees 
+  
+  #convert trees to ultrametric
+  trees.ultra= lapply(trees,function(i) cl_ultrametric(as.hclust(i)))
+  
+  #Plot each tree
+  par(mfrow=c(3,2))
+  for (i in 1:length(trees.ultra)) {plot(trees.ultra[[i]])} #plots the 5 different kinds of trees 
+  
+  #Build the consensus tree (Mouchet et al 2008 Oikos)  
+  ensemble.trees=cl_ensemble(list=trees) #list of clusterings 
+  class(ensemble.trees)
+  consensus.tree=cl_consensus(ensemble.trees) #synthesizes the information in the elements of a cluster ensemble into a single clustering 
+  par(mar=c(1,1,1,1))
+  plot(consensus.tree, horiz=T)
+  
+  #Calculate dissimilarity values for each tree using 2-norm (Merigot et al 2010 Ecology) to determine which tree best preserves orignial distances 
+  #spectral norm (2-norm) of the differences of the ultrametrics
+  all.trees=c(trees.ultra,consensus.tree[1])
+  names(all.trees)=c(tree_methods,"consensus")
+  (trees.dissim=lapply(all.trees,function(i) cl_dissimilarity(i,traits.dist,method="spectral"))) 
+  #Cross-dissimilarities using spectral ultrametric distance:
+  #Single = 57.14248
+  #complete = 99.23281
+  #average = 13.40464
+  #mcquitty = 33.93871
+  #ward.D = 2692.625
+  #consensus =  893.1561
+  
+  #Identify best tree and isolate
+  trees.dissim2=do.call(rbind,trees.dissim)
+  min.tree=which.min(trees.dissim2) #average 
+  names(all.trees)[min.tree]
+  func.dist=all.trees[names(all.trees)==names(all.trees)[min.tree]][[1]]
+  
+  #Confirm lowest 2-norm value,  spectral norm (2-norm) of the differences if the ultrametrics 
+  cl_dissimilarity(func.dist,traits.dist,method="spectral") #Cross-dissimilarities using spectral ultrametric distance:  13.40464
+  
+  #Scale by the max value so that all values are between 0-1
+  func.dist.316=func.dist/max(func.dist)
+  saveRDS(func.dist.316, "functional_diversity/func_dist_316_rds")
+  
+} else { #read data 
+  func.dist = read_rds("functional_diversity/func_dist_316_rds")
+} 
+
+#Plot the best tree - average 
+#removes 250/316 species 
+pdf("functional_diversity/functional_dendrogram_partial.pdf", width = 7, height = 10)
+sup = drop.tip(func_dist_phy_common, sample(func_dist_phy_common$tip.label)[1:250])
+par(mfrow=c(1,1)) 
+plot(sup, horiz=TRUE, main = "Functional Dendrogram", cex = 0.5, label.offset=0.025, edge.width = 1, cex.main = 1.5)
+dev.off()
+
+#with scale 
+pdf("functional_diversity/functional_dendrogram.pdf", width = 8.5, height = 55) 
+#par(mar=c(0,0,0,0)) #number of lines of margins for bottom, left, top, right
+par(pin=c(5,50))         #plot dimensions (width, height)
+plot(func.dist, horiz=TRUE, main = "Functional Dendrogram", cex = 1, cex.main = 2, cex.lab = 1)
+dev.off()
+
+#Plot the best tree - average 
+pdf("functional_diversity/functional_dendrogram.pdf", width = 7, height = 80) 
+par(mfrow=c(1,1))         #nc-by-nr array 
+par(mar=c(2,1,0,2))  #number of lines of margins for bottom, left, top, right 
+par(pin=c(5,70))    #plot dimensions (width, height)
+plot(func.dist, horiz=TRUE, main = "Functional Dendrogram", cex = 1, cex.main = 1.5, cex.lab = 1)
+dev.off()
+
+#Plot the best tree - average 
+#removes 260/348 species 
+pdf("functional_dendrogram.pdf", width = 7, height = 10)
+sup = drop.tip(func.dist, sample(func.dist$tip.label)[1:260])
+par(mfrow=c(1,1)) 
+plot(sup, horiz=TRUE, main = "Functional Dendrogram", cex = 0.5, label.offset=0.025, edge.width = 1, cex.main = 2)
+dev.off()
+
+#Phylogenetic tree with 316 tips and 315 internal nodes. 
+func.dist.phy = as.phylo(as.hclust(func.dist))
+
+#Write newick tree
+write.tree(func.dist.phy, "functional_diversity/functional_dendrogram.nwk")
+#write.nexus(func.dist.phy, "functional_diversity/functional_dendrogram.nex") 
+
+tree <- read.tree("functional_diversity/functional_dendrogram.nwk")
+# List of 4
+#  $ edge       : int [1:694, 1:2] 
+#  $ Nnode      : int 315
+#  $ tip.label  : chr [1:316] 
+#  $ edge.length: num
+# - attr(*, "class")= chr "phylo"
+# - attr(*, "order")= chr "cladewise"
+
+# Phylogenetic tree with 348 tips and 347 internal nodes.
+# Tip labels:
+# 	KYP_SECT, ALE_CILI, ELO_SAUR, HAR_JAGU, CEN_UNDE, TYL_CROC, ...
+# Rooted; includes branch lengths.
+
+plot(tree, label.offset=0.2, edge.width = 2, type = "cladogram")  
+nodelabels() #add node numbers
+tiplabels() #add tip numbers
+
+ggtree(tree, branch.length = T) +
+  ggtitle("Functional Dendogram") +
+  geom_tiplab()+
+  geom_text(aes(x = branch, label=branch.length), vjust = -.5) +
+  theme_tree2()
+
+ggtree(tree, layout= "circular") +
+  ggtitle("Functional Dendogram") +
+  geom_tiplab(size = 1, aes(angle=angle))+
+  theme_tree2()
+
+# transformed to a tidy data.frame by fortify method
+tree_data <- fortify(tree) #node; parent; branch.length; x; y; label; isTip; branch; angle 
+head(tree_data)
+
+#Visualize species' differences in multivariate trait space
+#Perform k-means clustering with no a priori specification for k
+traits.kclus= pamk(traits.dist, krange=2:10) 
+
+#krange: integer vector. Numbers of clusters which are to be compared by the average silhouette width criterion.
+#traits.kclus$nc = 10 
+#traits.kclus$crit 0.0000000 0.2391392 0.2421241 0.2616456 0.2729536 0.2611777 0.2793399 0.2844781 0.3052304 0.3132790
+
+# #Perform nonmetric multidimensional scaling (NMDS) on functional dendrogram
+traits_nmds = metaMDS(traits.dist,k=traits.kclus$nc,trymax=20)
+#k = Number of dimensions
+
+#*** No convergence -- monoMDS stopping criteria:
+#499: no. of iterations >= maxit
+#1: stress ratio > sratmax
+
+# Dimensions: 10 
+# Stress:     0.03545178 
+# Stress type 1, weak ties
+# No convergent solutions - best solution after 500 tries
+# Scaling: centring, PC rotation 
+# Species: scores missing
+
+
+# #Plot in two dimensions - doesn't work 
+par(mar=c(4,4,1,1))
+ordiplot(traits_nmds,type="n")
+
+#Assign colors to different groups
+groups=levels(factor(traits.kclus$pamobject$clustering))
+points.symbols=15:16
+points.colors=c("firebrick3","cornflowerblue")
+for(i in seq_along(groups)) {
+  points(traits_nmds$points[traits.kclus$pamobject$clustering==groups[i],],
+         pch=points.symbols[i],col=points.colors[i],cex=1.4) } 
+ordispider(traits_nmds,factor(traits.kclus$pamobject$clustering),label=F)
+ordihull(traits_nmds.common,factor(traits.kclus.common$pamobject$clustering),lty="dotted")
+orditorp(traits_nmds.common,dis="sites",pcex=0,air=0.5,col="grey10",cex=0.8)
+
+```
+
+```{r Functional distance common name, eval = F}
+knitr::opts_chunk$set(echo = TRUE)
+
+if (!file.exists("functional_diversity/func_dist_rds")){
+ 
+  trait_matrix_316 = read_csv('functional_diversity/species_trait_matrix_316_spp.csv')
+  
+  trait_matrix_common = trait_matrix_316 %>%
+    as.tibble() %>%
+    mutate(
+      Common_name = toupper(as.character(Common_name))) %>% 
+    arrange(Common_name)%>% 
+    select(Common_name, Maxlength, Trophic_level, Trophic_group, Water_column, Diel_activity, Substrate_type, Complexity, Gregariousness) %>% #348*9
+    group_by(
+      Common_name, Maxlength, Trophic_level, Trophic_group, Water_column, Diel_activity, Substrate_type, Complexity, Gregariousness) %>%
+    #summarize(n = n()) %>%
+    #select(-n) %>%
+    ungroup() %>%
+    mutate(
+      # ordinal traits
+      Complexity = ordered(Complexity, levels=c("Low","Medium","High")),
+      Gregariousness = ordered(Gregariousness, levels=c("1","2","3"))) %>%
+    as.data.frame()
+  
+  #Set species names as row.names and remove extra columns
+  rownames(trait_matrix_common)=trait_matrix_common$Common_name 
+  
+  #Calculate Gower distances. Variables have equal weight. 
+  traits.dist = gowdis(trait_matrix_common, ord="podani")
+  #Use clustering method to produce ultrametric dendrogram because values of Rao's Q can be maximized when fewer than the max number of functional types are present unless distances are ultramtetric 
+  
+  #to account for sensitivity in clustering use multiple algorithms  (Mouchet et al., 2008) 
+  tree_methods = c("single","complete","average","mcquitty","ward.D") #average is best clustering method 
+  trees=lapply(tree_methods,  function(i) hclust(traits.dist, method=i))
+  par(mfrow=c(3,2))
+  for(i in 1:length(trees)) {plot(trees[[i]])} #plots the 5 different kinds of trees 
+  
+  #convert trees to ultrametric
+  trees.ultra= lapply(trees,function(i) cl_ultrametric(as.hclust(i)))
+  
+  #Plot each tree
+  par(mfrow=c(3,2))
+  for (i in 1:length(trees.ultra)) {plot(trees.ultra[[i]])} #plots the 5 different kinds of trees 
+  
+  #Build the consensus tree (Mouchet et al 2008 Oikos)  
+  ensemble.trees=cl_ensemble(list=trees) #list of clusterings 
+  class(ensemble.trees)
+  consensus.tree=cl_consensus(ensemble.trees) #synthesizes the information in the elements of a cluster ensemble into a single clustering 
+  par(mar=c(1,1,1,1))
+  plot(consensus.tree, horiz=T)
+  
+  #Calculate dissimilarity values for each tree using 2-norm (Merigot et al 2010 Ecology) to determine which tree best preserves orignial distances 
+  #spectral norm (2-norm) of the differences of the ultrametrics
+  all.trees=c(trees.ultra,consensus.tree[1])
+  names(all.trees)=c(tree_methods,"consensus")
+  (trees.dissim=lapply(all.trees,function(i) cl_dissimilarity(i,traits.dist,method="spectral"))) 
+  #Cross-dissimilarities using spectral ultrametric distance:
+  #Single = 57.14248
+  #complete = 99.23277
+  #average = 13.40464
+  #mcquitty = 33.93871
+  #ward.D = 2692.625
+  #consensus =  918.0584
+  
+  #Identify best tree and isolate
+  trees.dissim2=do.call(rbind,trees.dissim)
+  min.tree=which.min(trees.dissim2) #average 
+  names(all.trees)[min.tree]
+  func.dist=all.trees[names(all.trees)==names(all.trees)[min.tree]][[1]]
+  
+  #Confirm lowest 2-norm value,  spectral norm (2-norm) of the differences if the ultrametrics 
+  cl_dissimilarity(func.dist,traits.dist,method="spectral") #Cross-dissimilarities using spectral ultrametric distance:  14.99288
+  
+  #Scale by the max value so that all values are between 0-1
+  func.dist.common=func.dist/max(func.dist)
+  
+  saveRDS(func.dist.common, "functional_diversity/func_dist_common_rds")
+} else { #read data 
+  func.dist.common = read_rds("functional_diversity/func_dist_common_rds")
+} 
+
+func_dist_phy_common = as.phylo(as.hclust(func.dist.common))
+
+#Plot the best tree - average 
+
+#removes 150/348 species 2 pages
+pdf("functional_diversity/functional_dendrogram_2.pdf", width = 7, height = 20)
+sup = drop.tip(func_dist_phy_common, sample(func_dist_phy_common$tip.label)[1:150])
+par(mfrow=c(1,1)) 
+plot(sup, horiz=TRUE, main = "Functional Dendrogram", cex = 0.5, label.offset=0.025, edge.width = 1, cex.main = 1.5)
+dev.off()
+
+#with scale 
+pdf("functional_diversity/functional_dendrogram_common.pdf", width = 8.5, height = 70) 
+#par(mar=c(0,0,0,0)) #number of lines of margins for bottom, left, top, right
+par(pin=c(3.5,70))         #plot dimensions (width, height)
+plot(func.dist.common, horiz=TRUE, main = "Functional Dendrogram", cex = 1, cex.main = 2, cex.lab = 1)
+dev.off()
+
+#Plot the best tree - average 
+pdf("functional_diversity/functional_dendrogram_common.pdf", width = 8.5, height = 80) 
+par(mfrow=c(1,1))         #nc-by-nr array 
+par(mar=c(2,1,0,2))  #number of lines of margins for bottom, left, top, right 
+par(pin=c(3.5,70))    #plot dimensions (width, height)
+plot(func.dist, horiz=TRUE, main = "Functional Dendrogram", cex = 1, cex.main = 1.5, cex.lab = 1)
+dev.off()
+
+
+#Phylogenetic tree with 348 tips and 347 internal nodes. 
+func.dist.phy.common = as.phylo(as.hclust(func.dist))
+
+#Write newick tree
+write.tree(func.dist.phy.common, "functional_diversity/functional_dendrogram_common.nwk")
+#write.nexus(func.dist.phy, "functional_diversity/functional_dendrogram.nex") 
+
+tree <- read.tree("functional_diversity/functional_dendrogram_common.nwk")
+# List of 4
+#  $ edge       : int [1:694, 1:2] 
+#  $ Nnode      : int 347
+#  $ tip.label  : chr [1:348] 
+#  $ edge.length: num
+# - attr(*, "class")= chr "phylo"
+# - attr(*, "order")= chr "cladewise"
+
+# Phylogenetic tree with 348 tips and 347 internal nodes.
+# Tip labels:
+# 	KYP_SECT, ALE_CILI, ELO_SAUR, HAR_JAGU, CEN_UNDE, TYL_CROC, ...
+# Rooted; includes branch lengths.
+
+plot(tree, label.offset=0.2, edge.width = 2, type = "cladogram")  
+nodelabels() #add node numbers
+tiplabels() #add tip numbers
+
+ggtree(tree, branch.length = T) +
+  ggtitle("Functional Dendogram") +
+  geom_tiplab()+
+  geom_text(aes(x = branch, label=branch.length), vjust = -.5) +
+  theme_tree2()
+
+ggtree(tree, layout= "circular") +
+  ggtitle("Functional Dendogram") +
+  geom_tiplab(size = 1, aes(angle=angle))+
+  theme_tree2()
+
+# transformed to a tidy data.frame by fortify method
+tree_data <- fortify(tree) #node; parent; branch.length; x; y; label; isTip; branch; angle 
+head(tree_data)
+
+#Visualize species' differences in multivariate trait space
+#Perform k-means clustering with no a priori specification for k
+traits.kclus.common= pamk(traits.dist.common, krange=2:10)
+
+#krange: integer vector. Numbers of clusters which are to be compared by the average silhouette width criterion.
+#traits.kclus$nc = 10 
+#traits.kclus$crit 0.0000000 0.2374706 0.2362513 0.2355555 0.2681756 0.2581352 0.2759547 0.2852216 0.3006077 0.3062123
+
+# #Perform nonmetric multidimensional scaling (NMDS) on functional dendrogram
+traits_nmds.common = metaMDS(traits.dist.common,k=traits.kclus.common$nc,trymax=20)
+#k = Number of dimensions
+
+#*** No convergence -- monoMDS stopping criteria:
+#499: no. of iterations >= maxit
+#1: stress ratio > sratmax
+
+# Dimensions: 10 
+# Stress:     0.03545178 
+# Stress type 1, weak ties
+# No convergent solutions - best solution after 500 tries
+# Scaling: centring, PC rotation 
+# Species: scores missing
+
+
+# #Plot in two dimensions - doesn't work 
+par(mar=c(4,4,1,1))
+ordiplot(traits_nmds.common,type="n")
+
+#Assign colors to different groups
+groups=levels(factor(traits.kclus.common$pamobject$clustering))
+points.symbols=15:16
+points.colors=c("firebrick3","cornflowerblue")
+for(i in seq_along(groups)) {
+  points(traits_nmds.common$points[traits.kclus.common$pamobject$clustering==groups[i],],
+         pch=points.symbols[i],col=points.colors[i],cex=1.4) } 
+ordispider(traits_nmds.common,factor(traits.kclus.common$pamobject$clustering),label=F)
+ordihull(traits_nmds.common,factor(traits.kclus.common$pamobject$clustering),lty="dotted")
+orditorp(traits_nmds.common,dis="sites",pcex=0,air=0.5,col="grey10",cex=0.8)
+
+```
+
+### FD - Maxlength 
+```{r FD - Maxlength, eval = F}
+knitr::opts_chunk$set(echo = TRUE)
+
+if (!file.exists("functional_diversity/func_dist_maxlength_rds")){
+ 
+  trait_matrix_316 = read_csv('functional_diversity/species_trait_matrix_316_spp.csv')
+  
+  trait_matrix_maxlength = trait_matrix_316 %>%
+    as.tibble() %>%
+    mutate(
+      SPECIES_CD = toupper(as.character(SPECIES_CD))) %>% 
+    arrange(SPECIES_CD)%>% 
+    select(SPECIES_CD, Trophic_level, Trophic_group, Water_column, Diel_activity, Substrate_type, Complexity, Gregariousness) %>% #348*9
+    group_by(
+      SPECIES_CD, Trophic_level, Trophic_group, Water_column, Diel_activity, Substrate_type, Complexity, Gregariousness) %>%
+    #summarize(n = n()) %>%
+    #select(-n) %>%
+    ungroup() %>%
+    mutate(
+      # ordinal traits
+      Complexity = ordered(Complexity, levels=c("Low","Medium","High")),
+      Gregariousness = ordered(Gregariousness, levels=c("1","2","3"))) %>%
+    as.data.frame()
+  
+  #Set species names as row.names and remove extra columns
+  rownames(trait_matrix_maxlength)=trait_matrix_maxlength$SPECIES_CD 
+  
+  #Calculate Gower distances. Variables have equal weight. 
+  traits.dist.maxlength = gowdis(trait_matrix_maxlength, ord="podani")
+  
+  #Use clustering method to produce ultrametric dendrogram because values of Rao's Q can be maximized when fewer than the max number of functional types are present unless distances are ultramtetric 
+  
+  #to account for sensitivity in clustering use multiple algorithms  (Mouchet et al., 2008) 
+  tree_methods = c("single","complete","average","mcquitty","ward.D") #average is best clustering method 
+  trees=lapply(tree_methods,  function(i) hclust(traits.dist.maxlength, method=i))
+  par(mfrow=c(3,2))
+  for(i in 1:length(trees)) {plot(trees[[i]])} #plots the 5 different kinds of trees 
+  
+  #convert trees to ultrametric
+  trees.ultra= lapply(trees,function(i) cl_ultrametric(as.hclust(i)))
+  
+  #Plot each tree
+  par(mfrow=c(3,2))
+  for (i in 1:length(trees.ultra)) {plot(trees.ultra[[i]])} #plots the 5 different kinds of trees 
+  
+  #Build the consensus tree (Mouchet et al 2008 Oikos)  
+  ensemble.trees=cl_ensemble(list=trees) #list of clusterings 
+  class(ensemble.trees)
+  consensus.tree=cl_consensus(ensemble.trees) #synthesizes the information in the elements of a cluster ensemble into a single clustering 
+  par(mar=c(1,1,1,1))
+  plot(consensus.tree, horiz=T)
+  
+  #Calculate dissimilarity values for each tree using 2-norm (Merigot et al 2010 Ecology) to determine which tree best preserves orignial distances 
+  #spectral norm (2-norm) of the differences of the ultrametrics
+  all.trees=c(trees.ultra,consensus.tree[1])
+  names(all.trees)=c(tree_methods,"consensus")
+  (trees.dissim=lapply(all.trees,function(i) cl_dissimilarity(i,traits.dist.maxlength,method="spectral"))) 
+  #Cross-dissimilarities using spectral ultrametric distance:
+  #Single = 61.99564
+  #complete = 103.5836
+  #average = 17.10799
+  #mcquitty = 27.91702
+  #ward.D = 2862.438
+  #consensus =  1061.012
+  
+  #Identify best tree and isolate
+  trees.dissim2=do.call(rbind,trees.dissim)
+  min.tree=which.min(trees.dissim2) #average 
+  names(all.trees)[min.tree]
+  func.dist.maxlength=all.trees[names(all.trees)==names(all.trees)[min.tree]][[1]]
+  
+  #Confirm lowest 2-norm value,  spectral norm (2-norm) of the differences if the ultrametrics 
+  cl_dissimilarity(func.dist.maxlength,traits.dist.maxlength,method="spectral") #Cross-dissimilarities using spectral ultrametric distance:  17.10799
+  
+  #Scale by the max value so that all values are between 0-1
+  func.dist.ml=func.dist.maxlength/max(func.dist.maxlength)
+  
+  saveRDS(func.dist.ml, "functional_diversity/func_dist_maxlength_rds")
+} else { #read data 
+  func.dist.ml = read_rds("functional_diversity/func_dist_maxlength_rds")
+} 
+
+#with scale 
+pdf("functional_diversity/functional_dendrogram.pdf", width = 8.5, height = 70) 
+#par(mar=c(0,0,0,0)) #number of lines of margins for bottom, left, top, right
+par(pin=c(4.5,65))         #plot dimensions (width, height)
+plot(func_dist_common, horiz=TRUE, main = "Functional Dendrogram", cex = 1, cex.main = 2, cex.lab = 1)
+dev.off()
+
+#Phylogenetic tree with 348 tips and 347 internal nodes. 
+func.dist.phy.maxlength = as.phylo(as.hclust(func.dist.maxlength))
+
+#Write newick tree
+write.tree(func.dist.phy.maxlength, "functional_diversity/functional_dendrogram_maxlength.nwk")
+#write.nexus(func.dist.phy, "functional_diversity/functional_dendrogram.nex") 
+
+```
+
+### FD- Trophic level 
+```{r FD - Trophic level, eval = F}
+knitr::opts_chunk$set(echo = TRUE)
+
+if (!file.exists("functional_diversity/func_dist_maxlength_rds")){
+ 
+  trait_matrix_316 = read_csv('functional_diversity/species_trait_matrix_316_spp.csv')
+  
+  trait_matrix_tl = trait_matrix_316 %>%
+    as.tibble() %>%
+    mutate(
+      SPECIES_CD = toupper(as.character(SPECIES_CD))) %>% 
+    arrange(SPECIES_CD)%>% 
+    select(SPECIES_CD, Maxlength, Trophic_group, Water_column, Diel_activity, Substrate_type, Complexity, Gregariousness) %>% #348*9
+    group_by(
+      SPECIES_CD, Maxlength,Trophic_group, Water_column, Diel_activity, Substrate_type, Complexity, Gregariousness) %>%
+    #summarize(n = n()) %>%
+    #select(-n) %>%
+    ungroup() %>%
+    mutate(
+      # ordinal traits
+      Complexity = ordered(Complexity, levels=c("Low","Medium","High")),
+      Gregariousness = ordered(Gregariousness, levels=c("1","2","3"))) %>%
+    as.data.frame()
+  
+  #Set species names as row.names and remove extra columns
+  rownames(trait_matrix_tl)=trait_matrix_tl$SPECIES_CD 
+  
+  #Calculate Gower distances. Variables have equal weight. 
+  traits.dist.tl = gowdis(trait_matrix_tl, ord="podani")
+  
+  #Use clustering method to produce ultrametric dendrogram because values of Rao's Q can be maximized when fewer than the max number of functional types are present unless distances are ultramtetric 
+  
+  #to account for sensitivity in clustering use multiple algorithms  (Mouchet et al., 2008) 
+  tree_methods = c("single","complete","average","mcquitty","ward.D") #average is best clustering method 
+  trees=lapply(tree_methods,  function(i) hclust(traits.dist.tl, method=i))
+  #par(mfrow=c(3,2))
+  #for(i in 1:length(trees)) {plot(trees[[i]])} #plots the 5 different kinds of trees 
+  
+  #convert trees to ultrametric
+  trees.ultra= lapply(trees,function(i) cl_ultrametric(as.hclust(i)))
+  
+  #Plot each tree
+  #par(mfrow=c(3,2))
+  #for (i in 1:length(trees.ultra)) {plot(trees.ultra[[i]])} #plots the 5 different kinds of trees 
+  
+  #Build the consensus tree (Mouchet et al 2008 Oikos)  
+  ensemble.trees=cl_ensemble(list=trees) #list of clusterings 
+  class(ensemble.trees)
+  consensus.tree=cl_consensus(ensemble.trees) #synthesizes the information in the elements of a cluster ensemble into a single clustering 
+  #par(mar=c(1,1,1,1))
+  #plot(consensus.tree, horiz=T)
+  
+  #Calculate dissimilarity values for each tree using 2-norm (Merigot et al 2010 Ecology) to determine which tree best preserves orignial distances 
+  #spectral norm (2-norm) of the differences of the ultrametrics
+  all.trees=c(trees.ultra,consensus.tree[1])
+  names(all.trees)=c(tree_methods,"consensus")
+  (trees.dissim=lapply(all.trees,function(i) cl_dissimilarity(i,traits.dist.tl,method="spectral"))) 
+  #Cross-dissimilarities using spectral ultrametric distance:
+  #Single = 54.22903
+  #complete = 115.462
+  #average = 15.40287
+  #mcquitty = 31.07382
+  #ward.D = 2876.476
+  #consensus = 1013.871
+  
+  #Identify best tree and isolate
+  trees.dissim2=do.call(rbind,trees.dissim)
+  min.tree=which.min(trees.dissim2) #average 
+  names(all.trees)[min.tree]
+  func.dist.tl=all.trees[names(all.trees)==names(all.trees)[min.tree]][[1]]
+  
+  #Confirm lowest 2-norm value,  spectral norm (2-norm) of the differences if the ultrametrics 
+  cl_dissimilarity(func.dist.tl,traits.dist.tl,method="spectral") #Cross-dissimilarities using spectral ultrametric distance:  15.40287
+  
+  #Scale by the max value so that all values are between 0-1
+  func.dist.tl=func.dist.tl/max(func.dist.tl)
+  
+  saveRDS(func.dist.tl, "functional_diversity/func_dist_tl_rds")
+  
+} else { #read data 
+  func.dist.tl = read_rds("functional_diversity/func_dist_tl_rds")
+} 
+
+#with scale 
+pdf("functional_diversity/functional_dendrogram.pdf", width = 8.5, height = 70) 
+#par(mar=c(0,0,0,0)) #number of lines of margins for bottom, left, top, right
+par(pin=c(4.5,65))         #plot dimensions (width, height)
+plot(func.dist.tl, horiz=TRUE, main = "Functional Dendrogram", cex = 1, cex.main = 2, cex.lab = 1)
+dev.off()
+
+#Phylogenetic tree with 348 tips and 347 internal nodes. 
+func.dist.phy.tl = as.phylo(as.hclust(func.dist.tl))
+
+#Write newick tree
+write.tree(func.dist.phy.tl, "functional_diversity/functional_dendrogram_tl.nwk")
+#write.nexus(func.dist.phy, "functional_diversity/functional_dendrogram.nex") 
+
+```
+
+### FD - Trophic Group 
+
+```{r FD - Trophic Group, eval = F}
+knitr::opts_chunk$set(echo = TRUE)
+
+if (!file.exists("functional_diversity/func_dist_maxlength_rds")){
+ 
+  trait_matrix_316 = read_csv('functional_diversity/species_trait_matrix_316_spp.csv')
+  
+  trait_matrix_tg = trait_matrix_316 %>%
+    as.tibble() %>%
+    mutate(
+      SPECIES_CD = toupper(as.character(SPECIES_CD))) %>% 
+    arrange(SPECIES_CD)%>% 
+    select(SPECIES_CD, Maxlength, Trophic_level, Water_column, Diel_activity, Substrate_type, Complexity, Gregariousness) %>% #348*9
+    group_by(
+      SPECIES_CD, Maxlength, Trophic_level, Water_column, Diel_activity, Substrate_type, Complexity, Gregariousness) %>%
+    #summarize(n = n()) %>%
+    #select(-n) %>%
+    ungroup() %>%
+    mutate(
+      # ordinal traits
+      Complexity = ordered(Complexity, levels=c("Low","Medium","High")),
+      Gregariousness = ordered(Gregariousness, levels=c("1","2","3"))) %>%
+    as.data.frame()
+  
+  #Set species names as row.names and remove extra columns
+  rownames(trait_matrix_tg)=trait_matrix_tg$SPECIES_CD 
+  
+  #Calculate Gower distances. Variables have equal weight. 
+  traits.dist.tg = gowdis(trait_matrix_tg, ord="podani")
+  
+  #Use clustering method to produce ultrametric dendrogram because values of Rao's Q can be maximized when fewer than the max number of functional types are present unless distances are ultramtetric 
+  
+  #to account for sensitivity in clustering use multiple algorithms  (Mouchet et al., 2008) 
+  tree_methods = c("single","complete","average","mcquitty","ward.D") #average is best clustering method 
+  trees=lapply(tree_methods,  function(i) hclust(traits.dist.tg, method=i))
+  #par(mfrow=c(3,2))
+  #for(i in 1:length(trees)) {plot(trees[[i]])} #plots the 5 different kinds of trees 
+  
+  #convert trees to ultrametric
+  trees.ultra= lapply(trees,function(i) cl_ultrametric(as.hclust(i)))
+  
+  #Plot each tree
+  #par(mfrow=c(3,2))
+  #for (i in 1:length(trees.ultra)) {plot(trees.ultra[[i]])} #plots the 5 different kinds of trees 
+  
+  #Build the consensus tree (Mouchet et al 2008 Oikos)  
+  ensemble.trees=cl_ensemble(list=trees) #list of clusterings 
+  class(ensemble.trees)
+  consensus.tree=cl_consensus(ensemble.trees) #synthesizes the information in the elements of a cluster ensemble into a single clustering 
+  par(mar=c(1,1,1,1))
+  plot(consensus.tree, horiz=T)
+  
+  #Calculate dissimilarity values for each tree using 2-norm (Merigot et al 2010 Ecology) to determine which tree best preserves orignial distances 
+  #spectral norm (2-norm) of the differences of the ultrametrics
+  all.trees=c(trees.ultra,consensus.tree[1])
+  names(all.trees)=c(tree_methods,"consensus")
+  (trees.dissim=lapply(all.trees,function(i) cl_dissimilarity(i,traits.dist.tg,method="spectral"))) 
+  #Cross-dissimilarities using spectral ultrametric distance:
+  #Single = 61.99564
+  #complete = 103.5836
+  #average = 13.80478
+  #mcquitty = 32.03715
+  #ward.D = 2663.038
+  #consensus =  1021.462
+  
+  #Identify best tree and isolate
+  trees.dissim2=do.call(rbind,trees.dissim)
+  min.tree=which.min(trees.dissim2) #average 
+  names(all.trees)[min.tree]
+  func.dist.tg=all.trees[names(all.trees)==names(all.trees)[min.tree]][[1]]
+  
+  #Confirm lowest 2-norm value,  spectral norm (2-norm) of the differences if the ultrametrics 
+  cl_dissimilarity(func.dist.tg,traits.dist.tg,method="spectral") #Cross-dissimilarities using spectral ultrametric distance:  13.80478
+  
+  #Scale by the max value so that all values are between 0-1
+  func.dist.tg=func.dist.tg/max(func.dist.tg)
+  
+  saveRDS(func.dist.tg, "functional_diversity/func_dist_tg_rds")
+} else { #read data 
+  func.dist.tg = read_rds("functional_diversity/func_dist_tg_rds")
+} 
+
+#Phylogenetic tree with 348 tips and 347 internal nodes. 
+func.dist.phy.tg = as.phylo(as.hclust(func.dist.tg))
+
+#Write newick tree
+write.tree(func.dist.phy.tg, "functional_diversity/functional_dendrogram_tg.nwk")
+#write.nexus(func.dist.phy, "functional_diversity/functional_dendrogram.nex") 
+
+```
+
+### FD - Water column
+```{r FD - Water column, eval = F}
+knitr::opts_chunk$set(echo = TRUE)
+
+if (!file.exists("functional_diversity/func_dist_maxlength_rds")){
+ 
+  trait_matrix_316 = read_csv('functional_diversity/species_trait_matrix_316_spp.csv')
+  
+  trait_matrix_wc = trait_matrix_316 %>%
+    as.tibble() %>%
+    mutate(
+      SPECIES_CD = toupper(as.character(SPECIES_CD))) %>% 
+    arrange(SPECIES_CD)%>% 
+    select(SPECIES_CD, Maxlength, Trophic_level, Trophic_group, Diel_activity, Substrate_type, Complexity, Gregariousness) %>% #348*9
+    group_by(
+      SPECIES_CD, Maxlength, Trophic_level, Trophic_group, Diel_activity, Substrate_type, Complexity, Gregariousness) %>%
+    #summarize(n = n()) %>%
+    #select(-n) %>%
+    ungroup() %>%
+    mutate(
+      # ordinal traits
+      Complexity = ordered(Complexity, levels=c("Low","Medium","High")),
+      Gregariousness = ordered(Gregariousness, levels=c("1","2","3"))) %>%
+    as.data.frame()
+  
+  #Set species names as row.names and remove extra columns
+  rownames(trait_matrix_wc)=trait_matrix_wc$SPECIES_CD 
+  
+  #Calculate Gower distances. Variables have equal weight. 
+  traits.dist.st = gowdis(trait_matrix_wc, ord="podani")
+  
+  #Use clustering method to produce ultrametric dendrogram because values of Rao's Q can be maximized when fewer than the max number of functional types are present unless distances are ultramtetric 
+  
+  #to account for sensitivity in clustering use multiple algorithms  (Mouchet et al., 2008) 
+  tree_methods = c("single","complete","average","mcquitty","ward.D") #average is best clustering method 
+  trees=lapply(tree_methods,  function(i) hclust(traits.dist.wc, method=i))
+  #par(mfrow=c(3,2))
+  #for(i in 1:length(trees)) {plot(trees[[i]])} #plots the 5 different kinds of trees 
+  
+  #convert trees to ultrametric
+  trees.ultra= lapply(trees,function(i) cl_ultrametric(as.hclust(i)))
+  
+  #Plot each tree
+  #par(mfrow=c(3,2))
+  #for (i in 1:length(trees.ultra)) {plot(trees.ultra[[i]])} #plots the 5 different kinds of trees 
+  
+  #Build the consensus tree (Mouchet et al 2008 Oikos)  
+  ensemble.trees=cl_ensemble(list=trees) #list of clusterings 
+  class(ensemble.trees)
+  consensus.tree=cl_consensus(ensemble.trees) #synthesizes the information in the elements of a cluster ensemble into a single clustering 
+  par(mar=c(1,1,1,1))
+  plot(consensus.tree, horiz=T)
+  
+  #Calculate dissimilarity values for each tree using 2-norm (Merigot et al 2010 Ecology) to determine which tree best preserves orignial distances 
+  #spectral norm (2-norm) of the differences of the ultrametrics
+  all.trees=c(trees.ultra,consensus.tree[1])
+  names(all.trees)=c(tree_methods,"consensus")
+  (trees.dissim=lapply(all.trees,function(i) cl_dissimilarity(i,traits.dist.wc,method="spectral"))) 
+  #Cross-dissimilarities using spectral ultrametric distance:
+  #Single = 43.69567
+  #complete = 97.31773
+  #average = 13.14301
+  #mcquitty = 22.40858
+  #ward.D = 2774.186
+  #consensus = 1080.689
+  
+  #Identify best tree and isolate
+  trees.dissim2=do.call(rbind,trees.dissim)
+  min.tree=which.min(trees.dissim2) #average 
+  names(all.trees)[min.tree]
+  func.dist.wc=all.trees[names(all.trees)==names(all.trees)[min.tree]][[1]]
+  
+  #Confirm lowest 2-norm value,  spectral norm (2-norm) of the differences if the ultrametrics 
+  cl_dissimilarity(func.dist.wc,traits.dist.wc,method="spectral") #Cross-dissimilarities using spectral ultrametric distance:  13.14301
+  
+  #Scale by the max value so that all values are between 0-1
+  func.dist.wc=func.dist.wc/max(func.dist.wc)
+  
+  saveRDS(func.dist.wc, "functional_diversity/func_dist_maxlength_rds")
+} else { #read data 
+  func.dist.wc = read_rds("functional_diversity/func_dist_maxlength_rds")
+} 
+
+#Phylogenetic tree with 348 tips and 347 internal nodes. 
+func.dist.phy.wc = as.phylo(as.hclust(func.dist.wc))
+
+#Write newick tree
+write.tree(func.dist.phy.wc, "functional_diversity/functional_dendrogram_wc.nwk")
+#write.nexus(func.dist.phy, "functional_diversity/functional_dendrogram.nex") 
+
+```
+
+### FD - Diel activity
+```{r FD - Diel activity, eval = F}
+knitr::opts_chunk$set(echo = TRUE)
+
+if (!file.exists("functional_diversity/func_dist_maxlength_rds")){
+ 
+  trait_matrix_316 = read_csv('functional_diversity/species_trait_matrix_316_spp.csv')
+  
+  trait_matrix_da = trait_matrix_316 %>%
+    as.tibble() %>%
+    mutate(
+      SPECIES_CD = toupper(as.character(SPECIES_CD))) %>% 
+    arrange(SPECIES_CD)%>% 
+    select(SPECIES_CD, Maxlength, Trophic_level, Trophic_group, Water_column, Substrate_type, Complexity, Gregariousness) %>% #348*9
+    group_by(
+      SPECIES_CD, Maxlength, Trophic_level, Trophic_group, Water_column, Substrate_type, Complexity, Gregariousness) %>%
+    #summarize(n = n()) %>%
+    #select(-n) %>%
+    ungroup() %>%
+    mutate(
+      # ordinal traits
+      Complexity = ordered(Complexity, levels=c("Low","Medium","High")),
+      Gregariousness = ordered(Gregariousness, levels=c("1","2","3"))) %>%
+    as.data.frame()
+  
+  #Set species names as row.names and remove extra columns
+  rownames(trait_matrix_da)=trait_matrix_da$SPECIES_CD 
+  
+  #Calculate Gower distances. Variables have equal weight. 
+  traits.dist.da = gowdis(trait_matrix_da, ord="podani")
+  
+  #Use clustering method to produce ultrametric dendrogram because values of Rao's Q can be maximized when fewer than the max number of functional types are present unless distances are ultramtetric 
+  
+  #to account for sensitivity in clustering use multiple algorithms  (Mouchet et al., 2008) 
+  tree_methods = c("single","complete","average","mcquitty","ward.D") #average is best clustering method 
+  trees=lapply(tree_methods,  function(i) hclust(traits.dist.da, method=i))
+  #par(mfrow=c(3,2))
+  #for(i in 1:length(trees)) {plot(trees[[i]])} #plots the 5 different kinds of trees 
+  
+  #convert trees to ultrametric
+  trees.ultra= lapply(trees,function(i) cl_ultrametric(as.hclust(i)))
+  
+  #Build the consensus tree (Mouchet et al 2008 Oikos)  
+  ensemble.trees=cl_ensemble(list=trees) #list of clusterings 
+  class(ensemble.trees)
+  consensus.tree=cl_consensus(ensemble.trees) #synthesizes the information in the elements of a cluster ensemble into a single clustering 
+  #par(mar=c(1,1,1,1))
+  #plot(consensus.tree, horiz=T)
+  
+  #Calculate dissimilarity values for each tree using 2-norm (Merigot et al 2010 Ecology) to determine which tree best preserves orignial distances 
+  #spectral norm (2-norm) of the differences of the ultrametrics
+  all.trees=c(trees.ultra,consensus.tree[1])
+  names(all.trees)=c(tree_methods,"consensus")
+  (trees.dissim=lapply(all.trees,function(i) cl_dissimilarity(i,traits.dist.da,method="spectral"))) 
+
+  #Identify best tree and isolate
+  trees.dissim2=do.call(rbind,trees.dissim)
+  min.tree=which.min(trees.dissim2) #average 
+  names(all.trees)[min.tree]
+  func.dist.da=all.trees[names(all.trees)==names(all.trees)[min.tree]][[1]]
+  
+  #Confirm lowest 2-norm value,  spectral norm (2-norm) of the differences if the ultrametrics 
+  cl_dissimilarity(func.dist.da,traits.dist.da,method="spectral") #Cross-dissimilarities using spectral ultrametric distance:  13.39007
+  
+  #Scale by the max value so that all values are between 0-1
+  func.dist.da=func.dist.da/max(func.dist.da)
+  
+  saveRDS(func.dist.da, "functional_diversity/func_dist_da_rds")
+} else { #read data 
+  func.dist.da = read_rds("functional_diversity/func_dist_da_rds")
+} 
+
+#Phylogenetic tree with 348 tips and 347 internal nodes. 
+func.dist.phy.da = as.phylo(as.hclust(func.dist.da))
+
+#Write newick tree
+write.tree(func.dist.phy.da, "functional_diversity/functional_dendrogram_da.nwk")
+#write.nexus(func.dist.phy, "functional_diversity/functional_dendrogram.nex") 
+
+```
+
+### FD - Substrate type
+```{r FD - Substrate type, eval = F}
+knitr::opts_chunk$set(echo = TRUE)
+
+if (!file.exists("functional_diversity/func_dist_maxlength_rds")){
+ 
+  trait_matrix_316 = read_csv('functional_diversity/species_trait_matrix_316_spp.csv')
+  
+  trait_matrix_st = trait_matrix_316 %>%
+    as.tibble() %>%
+    mutate(
+      SPECIES_CD = toupper(as.character(SPECIES_CD))) %>% 
+    arrange(SPECIES_CD)%>% 
+    select(SPECIES_CD, Maxlength, Trophic_level, Trophic_group, Water_column, Diel_activity, Complexity, Gregariousness) %>% #348*9
+    group_by(
+      SPECIES_CD, Maxlength, Trophic_level, Trophic_group, Water_column, Diel_activity, Complexity, Gregariousness) %>%
+    #summarize(n = n()) %>%
+    #select(-n) %>%
+    ungroup() %>%
+    mutate(
+      # ordinal traits
+      Complexity = ordered(Complexity, levels=c("Low","Medium","High")),
+      Gregariousness = ordered(Gregariousness, levels=c("1","2","3"))) %>%
+    as.data.frame()
+  
+  #Set species names as row.names and remove extra columns
+  rownames(trait_matrix_st)=trait_matrix_st$SPECIES_CD 
+  
+  #Calculate Gower distances. Variables have equal weight. 
+  traits.dist.st = gowdis(trait_matrix_st, ord="podani")
+  
+  #Use clustering method to produce ultrametric dendrogram because values of Rao's Q can be maximized when fewer than the max number of functional types are present unless distances are ultramtetric 
+  
+  #to account for sensitivity in clustering use multiple algorithms  (Mouchet et al., 2008) 
+  tree_methods = c("single","complete","average","mcquitty","ward.D") #average is best clustering method 
+  trees=lapply(tree_methods,  function(i) hclust(traits.dist.st, method=i))
+
+  #convert trees to ultrametric
+  trees.ultra= lapply(trees,function(i) cl_ultrametric(as.hclust(i)))
+
+  #Build the consensus tree (Mouchet et al 2008 Oikos)  
+  ensemble.trees=cl_ensemble(list=trees) #list of clusterings 
+  consensus.tree=cl_consensus(ensemble.trees) #synthesizes the information in the elements of a cluster ensemble into a single clustering 
+  #par(mar=c(1,1,1,1))
+  #plot(consensus.tree, horiz=T)
+  
+  #Calculate dissimilarity values for each tree using 2-norm (Merigot et al 2010 Ecology) to determine which tree best preserves orignial distances 
+  #spectral norm (2-norm) of the differences of the ultrametrics
+  all.trees=c(trees.ultra,consensus.tree[1])
+  names(all.trees)=c(tree_methods,"consensus")
+  (trees.dissim=lapply(all.trees,function(i) cl_dissimilarity(i,traits.dist.st,method="spectral"))) 
+
+  #Identify best tree and isolate
+  trees.dissim2=do.call(rbind,trees.dissim)
+  min.tree=which.min(trees.dissim2) #average 
+  names(all.trees)[min.tree]
+  func.dist.st=all.trees[names(all.trees)==names(all.trees)[min.tree]][[1]]
+  
+  #Confirm lowest 2-norm value,  spectral norm (2-norm) of the differences if the ultrametrics
+  cl_dissimilarity(func.dist.st,traits.dist.da,method="spectral") #Cross-dissimilarities using spectral ultrametric distance:  23.29937
+  
+  #Scale by the max value so that all values are between 0-1
+  func.dist.st=func.dist.st/max(func.dist.st)
+  
+  saveRDS(func.dist.st, "functional_diversity/func_dist_st_rds")
+} else { #read data 
+  func.dist.st = read_rds("functional_diversity/func_dist_st_rds")
+} 
+
+#Phylogenetic tree with 348 tips and 347 internal nodes. 
+func.dist.phy.st = as.phylo(as.hclust(func.dist.st))
+
+#Write newick tree
+write.tree(func.dist.phy.st, "functional_diversity/functional_dendrogram_st.nwk")
+
+```
+
+### FD - Complexity
+```{r FD - Complexity, eval = F}
+knitr::opts_chunk$set(echo = TRUE)
+
+if (!file.exists("functional_diversity/func_dist_maxlength_rds")){
+ 
+  trait_matrix_316 = read_csv('functional_diversity/species_trait_matrix_316_spp.csv')
+  
+  trait_matrix_comp = trait_matrix_316 %>%
+    as.tibble() %>%
+    mutate(
+      SPECIES_CD = toupper(as.character(SPECIES_CD))) %>% 
+    arrange(SPECIES_CD)%>% 
+    select(SPECIES_CD, Maxlength, Trophic_level, Trophic_group, Water_column, Diel_activity, Substrate_type, Gregariousness) %>% #348*9
+    group_by(
+      SPECIES_CD, Maxlength, Trophic_level, Trophic_group, Water_column, Diel_activity, Substrate_type, Gregariousness) %>%
+    #summarize(n = n()) %>%
+    #select(-n) %>%
+    ungroup() %>%
+    mutate(
+      # ordinal traits
+      Gregariousness = ordered(Gregariousness, levels=c("1","2","3"))) %>%
+    as.data.frame()
+  
+  #Set species names as row.names and remove extra columns
+  rownames(trait_matrix_comp)=trait_matrix_comp$SPECIES_CD 
+  
+  #Calculate Gower distances. Variables have equal weight. 
+  traits.dist.comp = gowdis(trait_matrix_comp, ord="podani")
+  
+  #Use clustering method to produce ultrametric dendrogram because values of Rao's Q can be maximized when fewer than the max number of functional types are present unless distances are ultramtetric 
+  
+  #to account for sensitivity in clustering use multiple algorithms  (Mouchet et al., 2008) 
+  tree_methods = c("single","complete","average","mcquitty","ward.D") #average is best clustering method 
+  trees=lapply(tree_methods,  function(i) hclust(traits.dist.comp, method=i))
+  #par(mfrow=c(3,2))
+  #for(i in 1:length(trees)) {plot(trees[[i]])} #plots the 5 different kinds of trees 
+  
+  #convert trees to ultrametric
+  trees.ultra= lapply(trees,function(i) cl_ultrametric(as.hclust(i)))
+  
+  #Build the consensus tree (Mouchet et al 2008 Oikos)  
+  ensemble.trees=cl_ensemble(list=trees) #list of clusterings 
+  class(ensemble.trees)
+  consensus.tree=cl_consensus(ensemble.trees) #synthesizes the information in the elements of a cluster ensemble into a single clustering 
+  par(mar=c(1,1,1,1))
+  plot(consensus.tree, horiz=T)
+  
+  #Calculate dissimilarity values for each tree using 2-norm (Merigot et al 2010 Ecology) to determine which tree best preserves orignial distances 
+  #spectral norm (2-norm) of the differences of the ultrametrics
+  all.trees=c(trees.ultra,consensus.tree[1])
+  names(all.trees)=c(tree_methods,"consensus")
+  (trees.dissim=lapply(all.trees,function(i) cl_dissimilarity(i,traits.dist.comp,method="spectral"))) 
+
+  #Identify best tree and isolate
+  trees.dissim2=do.call(rbind,trees.dissim)
+  min.tree=which.min(trees.dissim2) #average 
+  names(all.trees)[min.tree]
+  func.dist.comp=all.trees[names(all.trees)==names(all.trees)[min.tree]][[1]]
+  
+  #Confirm lowest 2-norm value,  spectral norm (2-norm) of the differences if the ultrametrics 
+  cl_dissimilarity(func.dist.comp,traits.dist.comp,method="spectral") #Cross-dissimilarities using spectral ultrametric distance:  17.67784
+  
+  #Scale by the max value so that all values are between 0-1
+  func.dist.comp=func.dist.comp/max(func.dist.comp)
+  
+  saveRDS(func.dist.comp, "functional_diversity/func_dist_comp_rds")
+} else { #read data 
+  func.dist.comp = read_rds("functional_diversity/func_dist_comp_rds")
+} 
+
+
+#Phylogenetic tree with 348 tips and 347 internal nodes. 
+func.dist.phy.comp = as.phylo(as.hclust(func.dist.comp))
+
+#Write newick tree
+write.tree(func.dist.phy.comp, "functional_diversity/functional_dendrogram_comp.nwk")
+#write.nexus(func.dist.phy, "functional_diversity/functional_dendrogram.nex") 
+
+```
+
+### FD - Gregariousness
+```{r FD - Gregariousness, eval = F}
+knitr::opts_chunk$set(echo = TRUE)
+
+if (!file.exists("functional_diversity/func_dist_maxlength_rds")){
+ 
+  trait_matrix_316 = read_csv('functional_diversity/species_trait_matrix_316_spp.csv')
+  
+  trait_matrix_greg = trait_matrix_316 %>%
+    as.tibble() %>%
+    mutate(
+      SPECIES_CD = toupper(as.character(SPECIES_CD))) %>% 
+    arrange(SPECIES_CD)%>% 
+    select(SPECIES_CD, Maxlength, Trophic_level, Trophic_group, Water_column, Diel_activity, Substrate_type, Complexity) %>% #348*9
+    group_by(
+      SPECIES_CD, Maxlength, Trophic_level, Trophic_group, Water_column, Diel_activity,Substrate_type, Complexity) %>%
+    #summarize(n = n()) %>%
+    #select(-n) %>%
+    ungroup() %>%
+    mutate(
+      # ordinal traits
+      Complexity = ordered(Complexity, levels=c("Low","Medium","High"))) %>%
+    as.data.frame()
+  
+  #Set species names as row.names and remove extra columns
+  rownames(trait_matrix_greg)=trait_matrix_greg$SPECIES_CD 
+  
+  #Calculate Gower distances. Variables have equal weight. 
+  traits.dist.greg = gowdis(trait_matrix_greg, ord="podani")
+  
+  #Use clustering method to produce ultrametric dendrogram because values of Rao's Q can be maximized when fewer than the max number of functional types are present unless distances are ultramtetric 
+  
+  #to account for sensitivity in clustering use multiple algorithms  (Mouchet et al., 2008) 
+  tree_methods = c("single","complete","average","mcquitty","ward.D") #average is best clustering method 
+  trees=lapply(tree_methods,  function(i) hclust(traits.dist.greg, method=i))
+
+  #convert trees to ultrametric
+  trees.ultra= lapply(trees,function(i) cl_ultrametric(as.hclust(i)))
+  
+  #Build the consensus tree (Mouchet et al 2008 Oikos)  
+  ensemble.trees=cl_ensemble(list=trees) #list of clusterings 
+  consensus.tree=cl_consensus(ensemble.trees) #synthesizes the information in the elements of a cluster ensemble into a single clustering 
+
+  #Calculate dissimilarity values for each tree using 2-norm (Merigot et al 2010 Ecology) to determine which tree best preserves orignial distances 
+  #spectral norm (2-norm) of the differences of the ultrametrics
+  all.trees=c(trees.ultra,consensus.tree[1])
+  names(all.trees)=c(tree_methods,"consensus")
+  (trees.dissim=lapply(all.trees,function(i) cl_dissimilarity(i,traits.dist.greg,method="spectral"))) 
+
+  #Identify best tree and isolate
+  trees.dissim2=do.call(rbind,trees.dissim)
+  min.tree=which.min(trees.dissim2) #average 
+  names(all.trees)[min.tree]
+  func.dist.greg=all.trees[names(all.trees)==names(all.trees)[min.tree]][[1]]
+  
+  #Confirm lowest 2-norm value,  spectral norm (2-norm) of the differences if the ultrametrics
+  cl_dissimilarity(func.dist.greg,traits.dist.greg,method="spectral") #Cross-dissimilarities using spectral ultrametric distance:  17.47219
+  
+  #Scale by the max value so that all values are between 0-1
+  func.dist.greg=func.dist.greg/max(func.dist.greg)
+  
+  saveRDS(func.dist.greg, "functional_diversity/func_dist_greg_rds")
+} else { #read data 
+  func.dist.greg = read_rds("functional_diversity/func_dist_greg_rds")
+} 
+
+#Phylogenetic tree with 348 tips and 347 internal nodes. 
+func.dist.phy.greg = as.phylo(as.hclust(func.dist.greg))
+
+#Write newick tree
+write.tree(func.dist.phy.greg, "functional_diversity/functional_dendrogram_greg.nwk")
+
+```
+
+# Rao's Q 
+```{r Rao Q}
+
+if(!file.exists("functional_diversity/raoQ_list.csv")){
+  
+  func.dist.316 = read_rds("functional_diversity/func_dist_316_rds")
+  func.dist.ml = read_rds("functional_diversity/func_dist_maxlength_rds")
+  func.dist.tl = read_rds("functional_diversity/func_dist_tl_rds")
+  func.dist.tg = read_rds("functional_diversity/func_dist_tg_rds")
+  func.dist.da = read_rds("functional_diversity/func_dist_da_rds")
+  func.dist.st = read_rds("functional_diversity/func_dist_st_rds")
+  func.dist.comp = read_rds("functional_diversity/func_dist_comp_rds")
+  func.dist.greg = read_rds("functional_diversity/func_dist_greg_rds")
+  
+  #read in trait matrix 
+  traits = read.csv('functional_diversity/species_trait_matrix_348_spp.csv')
+  #Set rownames on traits and remove other info
+  rownames(traits) <- traits$SPECIES_CD
+  traits <- traits[, -c(1:4)]
+  #Convert rownames to all caps
+  rownames(traits) <- toupper(rownames(traits))
+  
+  sample_data = read_csv("big_csv/sample_data/FK/sample_data_all_years.csv")
+  #remove PSU-'s with 1 species [2006,602U INPR] [2016,  1010U, INPR] AND removed 2001 PSU 222U HRRF abundance 5X greater than normal (50,114 species)
+  sample_data = sample_data[!(sample_data$YEAR == "2006" & 
+                                  sample_data$PRIMARY_SAMPLE_UNIT == "602U" | 
+                                  sample_data$YEAR == "2016" & 
+                                  sample_data$PRIMARY_SAMPLE_UNIT == "1010U" | 
+                                  sample_data$YEAR == "2001" &
+                                  sample_data$PRIMARY_SAMPLE_UNIT == "222U"),]
+  saveRDS(sample_data, "sample_data_rds")
+  
+  psu_fk_abun <- read_csv("big_csv/abundance_psu/psu_fk_abun.csv", col_types = cols(protected_status = col_character())) #3,643,306*10
+    
+  #remove species not identified in species level and protected status all
+  psu_fk_abun_no_spp = psu_fk_abun %>%
+    filter(!stringr::str_detect(SPECIES_CD, 'SPE\\.$')) %>%
+    filter(stringr::str_detect(protected_status, 'all')) 
+    #dim(psu_fk_abun_no_spp) #1,689,982      10
+  
+  #remove PSU-'s with 1 species [2006,602U INPR] [2016,  1010U, INPR] AND removed 2001 PSU 222U HRRF abundance 5X greater than normal (50,114 species)
+  psu_abun_sum = psu_fk_abun_no_spp[!(psu_fk_abun_no_spp$YEAR == "2006" & 
+                                  psu_fk_abun_no_spp$PRIMARY_SAMPLE_UNIT == "602U" | 
+                                  psu_fk_abun_no_spp$YEAR == "2016" & 
+                                  psu_fk_abun_no_spp$PRIMARY_SAMPLE_UNIT == "1010U" | 
+                                  psu_fk_abun_no_spp$YEAR == "2001" &
+                                  psu_fk_abun_no_spp$PRIMARY_SAMPLE_UNIT == "222U"),] 
+  #dim(psu_abun_sum) # 5238 x 4 
+
+  abund = psu_abun_sum %>% 
+    select(YEAR, PRIMARY_SAMPLE_UNIT, STRAT, PROT, SPECIES_CD, abundance)
+  #1,689,982 * 6
+  
+  # Cast abundance longways (species as columns)
+  abundmat <- spread(abund, SPECIES_CD, abundance, fill = 0)
+  #dim(abundmat) #5238  352
+  
+  # What is up with these species not being in the trait matrix??
+  checkthese <- colnames(abundmat)[!colnames(abundmat) %in% rownames(traits)]
+  
+  # Subset species whose names only appear in traits
+  abundmat <- abundmat[colnames(abundmat) %in% rownames(traits)] 
+  #dim(abundmat) #5,241    348
+  
+  # Drop communities with no species (roughly 500 sites)
+  abundmat <- abundmat[!rowSums(abundmat) == 0,] 
+  #dim(abundmat) #5,241     348
+  abundmat <- abundmat[!rowSums(abundmat) == 1,]
+  #dim(abundmat) #5240  348
+  
+  #Calculate relative values for community matrix
+  rel.mat=abundmat/apply(abundmat,1,sum)
+  
+  #Ensure that all evenness calculations are not >1 (bug)
+  func.div.316=1/(1-apply(rel.mat,1,function(x) t(x) %*% as.matrix(func.dist.316) %*% x))
+  func.div.ml=1/(1-apply(rel.mat,1,function(x) t(x) %*% as.matrix(func.dist.ml) %*% x))
+  func.div.tl=1/(1-apply(rel.mat,1,function(x) t(x) %*% as.matrix(func.dist.tl) %*% x))
+  func.div.tg=1/(1-apply(rel.mat,1,function(x) t(x) %*% as.matrix(func.dist.tg) %*% x))
+  func.div.wc=1/(1-apply(rel.mat,1,function(x) t(x) %*% as.matrix(func.dist.wc) %*% x))
+  func.div.da=1/(1-apply(rel.mat,1,function(x) t(x) %*% as.matrix(func.dist.da) %*% x))
+  func.div.st=1/(1-apply(rel.mat,1,function(x) t(x) %*% as.matrix(func.dist.st) %*% x))
+  func.div.comp=1/(1-apply(rel.mat,1,function(x) t(x) %*% as.matrix(func.dist.comp) %*% x))
+  func.div.greg=1/(1-apply(rel.mat,1,function(x) t(x) %*% as.matrix(func.dist.greg) %*% x))
+  
+  #Bind all to the original dataframe (need to remove psu with 1 species detected)
+  raoQ_list = cbind(sample_data,func.div,func.div,func.div.ml,func.div.tl,func.div.tg,func.div.wc,func.div.da,func.div.st,func.div.comp,func.div.greg)
+  
+  raoQ_list = raoQ_list %>%
+    select(PRIMARY_SAMPLE_UNIT, YEAR, STRAT, PROT,func.div,func.div,func.div.ml,func.div.tl,func.div.tg,func.div.wc,func.div.da,func.div.st,func.div.comp,func.div.greg) %>%
+    group_by(YEAR,PRIMARY_SAMPLE_UNIT)
+  
+  write_csv(raoQ_list,"raoQ_list.csv")
+  
+} {else
+  raoQ_list = read_csv("raoQ_list.csv")
+}
+
+```
