@@ -382,6 +382,8 @@ orditorp(traits_nmds.common,dis="sites",pcex=0,air=0.5,col="grey10",cex=0.8)
 
 ```
 
+- Removed each trait from the full matrix and re-calculated Rao's Q 
+
 ### FD - Maxlength 
 ```{r FD - Maxlength, eval = F}
 knitr::opts_chunk$set(echo = TRUE)
@@ -1151,5 +1153,14 @@ if(!file.exists("functional_diversity/raoQ_list.csv")){
 } {else
   raoQ_list = read_csv("raoQ_list.csv")
 }
+
+```
+
+### Contributions of each trait to functional diversity. 
+- traits that contributed more to FD, when dropped from the matrix, will have a lower R^2 values. 
+
+```{r FD linear regression}
+
+raoQ_list = read_csv("raoQ_list.csv")
 
 ```
