@@ -126,7 +126,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 if (!file.exists("functional_diversity/func_dist_rds")){
  
-  trait_matrix = read_csv('functional_diversity/species_trait_matrix_316_spp.csv')
+  trait_matrix = read_csv('functional_diversity/species_trait_matrix_316_spp.csv') #316 species
   
   trait_matrix = trait_matrix %>%
     as.tibble() %>%
@@ -201,12 +201,12 @@ if (!file.exists("functional_diversity/func_dist_rds")){
   names(all.trees)=c(tree_methods,"consensus")
   (trees.dissim=lapply(all.trees,function(i) cl_dissimilarity(i,traits.dist,method="spectral"))) 
   #Cross-dissimilarities using spectral ultrametric distance:
-  #Single = 63.17399
-  #complete = 116.8516
-  #average = 14.99288
-  #mcquitty = 36.06599
-  #ward.D = 3161.581
-  #consensus =  1065.058 (1067.782) (1091.628)
+  #Single = 57.14248
+  #complete = 99.23281
+  #average = 13.40464
+  #mcquitty = 33.93871
+  #ward.D = 2692.625
+  #consensus =  886.1535
   
   #Identify best tree and isolate
   trees.dissim2=do.call(rbind,trees.dissim)
@@ -215,7 +215,7 @@ if (!file.exists("functional_diversity/func_dist_rds")){
   func.dist=all.trees[names(all.trees)==names(all.trees)[min.tree]][[1]]
   
   #Confirm lowest 2-norm value,  spectral norm (2-norm) of the differences if the ultrametrics 
-  cl_dissimilarity(func.dist,traits.dist,method="spectral") #Cross-dissimilarities using spectral ultrametric distance:  14.99288
+  cl_dissimilarity(func.dist,traits.dist,method="spectral") #Cross-dissimilarities using spectral ultrametric distance:  13.40464
   
   #Scale by the max value so that all values are between 0-1
   func.dist=func.dist/max(func.dist)
@@ -762,7 +762,7 @@ if(!file.exists("fd_eveness_rds")){
   func.dist = read_rds("functional_diversity/func_dist_rds")
   
   #read in trait matrix 
-  traits = read.csv('functional_diversity/species_trait_matrix_348_spp.csv')
+  traits = read.csv('functional_diversity/species_trait_matrix_316_spp.csv')
 
   #Set rownames on traits and remove other info
   rownames(traits) <- traits$SPECIES_CD
@@ -816,9 +816,9 @@ if(!file.exists("fd_eveness_rds")){
   
   # Drop communities with no species (roughly 500 sites)
   abundmat <- abundmat[!rowSums(abundmat) == 0,] 
-  #dim(abundmat) #5,241     348
+  #dim(abundmat) #5,241     316
   abundmat <- abundmat[!rowSums(abundmat) == 1,]
-  #dim(abundmat) #5240  348
+  #dim(abundmat) #5238  316
   
   #Calculate relative values for community matrix
   rel.mat=abundmat/apply(abundmat,1,sum)
