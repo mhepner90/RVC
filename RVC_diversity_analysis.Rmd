@@ -862,12 +862,13 @@ if(!file.exists("psu_matrices_data_rds")){
   all_matrices = inner_join(all_matrices, psu_div) #5,241*9 (+richness, simpson, shannon)
   all_matrices = inner_join(all_matrices, fd_evenness) #5,241*12(+spec.div, functional.div, evenness)
   all_matrices_data = inner_join(all_matrices, sample_data) #5,241 x 24
-
+  
+  all_matrices_data = all_matrices_data %>%
+    select(-data, -data_wide)
+  
   saveRDS(all_matrices_data, "psu_matrices_data_rds")
   
   } else{
-  all_matrices_data = all_matrices_data %>%
-    select(-data, -data_wide)
   
     all_matrices_data = read_rds("psu_matrices_data_rds") #5238, 32
   }
@@ -956,6 +957,8 @@ mean_indices = stats_all_matrices_data %>%
   select(YEAR, STRAT, abundance_mean, biomass_mean, evenness_mean, richness_mean, simpson_mean, shannon_mean, func.div_mean) %>%
   group_by(YEAR, STRAT) %>%
   arrange(YEAR, desc(abundance_mean))
+
+write_csv(mean_indices, "mean_indices.csv")
 # plot mean and se across strat and year using line graphs
 
 # BY STRAT and YEAR
@@ -8424,5 +8427,347 @@ partial_deviance_explained = ggplot(partial_deviance_data,aes(x= Diversity, y= P
       legend.title=element_blank())
 
 ggsave(file="partial_deviance_explained.pdf", partial_deviance_explained, width=8.5, height=11, path="big_csv/plots")
+
+```
+
+### Kruskal-Wallis and Dunn test 
+
+```{r playing}
+
+compare = mean_indices %>% 
+  select(simpson_mean, func.div_mean, YEAR, STRAT) %>%
+  mutate(dif = (func.div_mean/simpson_mean)) 
+
+x = mean(compare$dif)
+(1-x)/x
+
+#simpson diversity is on average 2 times greater than functional diversity 
+
+subregion_dif = matrices_strat_grouped_with_subregion %>%
+  select(SUBREGION_DOMAIN,YEAR,STRAT_GROUPED,abundance_mean, biomass_mean,evenness_mean, richness_mean,simpson_mean,shannon_mean,func.div_mean) %>%
+  group_by(SUBREGION_DOMAIN) %>%
+  summarize(
+    SR_abun_mean = mean(abundance_mean),
+    SR_bio_mean = mean(biomass_mean),
+    SR_even_mean = mean(evenness_mean),
+    SR_rich_mean = mean(richness_mean),
+    SR_simp_mean = mean(simpson_mean),
+    SR_shan_mean = mean(shannon_mean),
+    SR_fd_mean = mean(func.div_mean))
+
+matrices_subregion = all_matrices_data_with_subregion %>% 
+    mutate(
+      STRAT_GROUPED = 
+      ifelse(grepl("FMLR|FSLR|FDLR", STRAT), 'LINEAR_REEF', 
+             ifelse(grepl("OFPR|MCPR|INPR", STRAT), 'PATCH_REEF',
+                    ifelse(grepl('HRRF', STRAT), 'HIGH_RELIEF', "IDK")))) %>%
+    filter(SUBREGION_DOMAIN != "BiscBay") %>% 
+    group_by(SUBREGION_DOMAIN) %>% 
+    summarize(
+      abundance_mean = mean(abundance_sum),
+      abundance_n = length(abundance_sum),
+      abundance_sd = sd(abundance_sum),
+      abundance_se = abundance_sd / sqrt(abundance_n),
+      abundance_min = min(abundance_sum),
+      abundance_max = max(abundance_sum),
+      biomass_mean = mean(biomass_sum),
+      biomass_n = length(biomass_sum),
+      biomass_sd = sd(biomass_sum),
+      biomass_se = biomass_sd / sqrt(biomass_n),
+      biomass_min = min(biomass_sum),
+      biomass_max = max(biomass_sum),
+      richness_mean = mean(richness),
+      richness_n = length(richness),
+      richness_sd = sd(richness),
+      richness_se = richness_sd / sqrt(richness_n),
+      richness_min = min(richness),
+      richness_max = max(richness),
+      simpson_mean = mean(simpson),
+      simpson_n = length(simpson),
+      simpson_sd = sd(simpson),
+      simpson_se = simpson_sd / sqrt(simpson_n),
+      simpson_min = min(simpson),
+      simpson_max = max(simpson),
+      shannon_mean = mean(shannon),
+      shannon_n = length(shannon),
+      shannon_sd = sd(shannon),
+      shannon_se = shannon_sd / sqrt(shannon_n),
+      shannon_min = min(shannon),
+      shannon_max = max(shannon),
+      func.div_mean = mean(func.div),
+      func.div_n = length(func.div),
+      func.div_sd = sd(func.div),
+      func.div_se = func.div_sd / sqrt(func.div_n),
+      func.div_min = min(func.div),
+      func.div_max = max(func.div),
+      evenness_mean = mean(evenness, na.rm = T),
+      evenness_n = length(evenness),
+      evenness_sd = sd(evenness, na.rm = T),
+      evenness_se = evenness_sd / sqrt(evenness_n),
+      evenness_min = min(evenness),
+      evenness_max = max(evenness))
+  
+matrices_sr = matrices_subregion %>%
+  select(SUBREGION_DOMAIN,abundance_mean,biomass_mean,evenness_mean, richness_mean,simpson_mean, shannon_mean, func.div_mean)
+
+
+```
+
+```{r KW prot}
+### KRUSKAL TEST WITH PROT 
+#comparse the sums of ranks 
+#KW assumes all of your samples come from the same type of distribution
+# if p-value is less than 0.05 than we reject the null hypothesis that there is no dfference between the means and conclude that a significant difference does exist. If p-value is >0.05 than we cannot conclude that a significant difference exists 
+
+all_matrices_data = read_rds("psu_matrices_data_rds")
+
+all_matrices_data$PROT = factor(all_matrices_data$PROT, levels=c("0","1"))
+levels(all_matrices_data$PROT)
+
+#abundance  
+kruskal.test(all_matrices_data$abundance_sum~all_matrices_data$PROT)
+#Kruskal-Wallis chi-squared = 83.908, df = 1, p-value < 2.2e-16
+
+#Dunn test
+dt_abun_prot = dunnTest(abundance_sum ~ PROT, data=all_matrices_data)
+dt_abundance_prot = dt_abun_prot$res
+
+#biomass 
+kruskal.test(all_matrices_data$biomass_sum~all_matrices_data$PROT)
+#Kruskal-Wallis chi-squared = 172.69, df = 1, p-value < 2.2e-16
+
+#evenness - NOT SIGNIFICANT 
+kruskal.test(all_matrices_data$evenness~all_matrices_data$PROT)
+#Kruskal-Wallis chi-squared = 1.2309, df = 1, p-value = 0.2672
+
+#richness 
+kruskal.test(all_matrices_data$richness~all_matrices_data$PROT)
+#Kruskal-Wallis chi-squared = 109.16, df = 1, p-value < 2.2e-16
+
+#Simpson 
+kruskal.test(all_matrices_data$simpson~all_matrices_data$PROT)
+#Kruskal-Wallis chi-squared = 22.569, df = 1, p-value = 2.027e-06
+
+#Shannon 
+kruskal.test(all_matrices_data$shannon~all_matrices_data$PROT)
+#Kruskal-Wallis chi-squared = 29.719, df = 1, p-value = 4.994e-08
+
+#FD 
+kruskal.test(all_matrices_data$func.div~all_matrices_data$PROT)
+#Kruskal-Wallis chi-squared = 15.991, df = 1, p-value = 6.365e-05
+
+```
+
+```{r KW test strata}
+
+#### KRUSKAL TEST WITH STRATA 
+
+all_matrices_data = read_rds("psu_matrices_data_rds")
+
+all_matrices_data$STRAT = factor(all_matrices_data$STRAT, levels=c("FMLR", "FSLR", "HRRF", "OFPR", "MCPR", "INPR", "FDLR"))
+levels(all_matrices_data$STRAT)
+
+all_matrices_data$STRAT = as.factor(all_matrices_data$STRAT)
+
+#abundance strata 
+kt_abun_strat = kruskal.test(all_matrices_data$abundance_sum~all_matrices_data$STRAT)
+#Kruskal-Wallis chi-squared = 663.25, df = 6, p-value < 2.2e-16
+
+dt_abun_strat = dunnTest(abundance_sum~STRAT, data=all_matrices_data)
+dt_abundance_strat = dt_abun_strat$res
+
+cldList(P.adj~Comparison,
+        data = dt_abundance_strat,
+        threshold = 0.05)
+#FDLR = HRRF 
+#FMLR = OFPR 
+
+#biomass strata 
+kt_bio_strat = kruskal.test(all_matrices_data$biomass_sum~all_matrices_data$STRAT)
+#Kruskal-Wallis chi-squared = 655.02, df = 6, p-value < 2.2e-16
+
+dt_bio_strat = dunnTest(biomass_sum~STRAT, data=all_matrices_data)
+dt_biomass_strat = dt_bio_strat$res
+
+cldList(P.adj~Comparison,
+        data = dt_biomass_strat,
+        threshold = 0.05)
+#FMLR = MCPR 
+
+#evenness strata 
+kruskal.test(all_matrices_data$evenness~all_matrices_data$STRAT)
+#Kruskal-Wallis chi-squared = 324.62, df = 6, p-value < 2.2e-16
+
+dt_eve_strat = dunnTest(evenness~STRAT, data=all_matrices_data)
+dt_evennes_strat = dt_eve_strat$res
+
+cldList(P.adj~Comparison,
+        data = dt_evennes_strat,
+        threshold = 0.05)
+#FMLR = HRRF 
+#FSLR = MCPR 
+
+#richness strata 
+kruskal.test(all_matrices_data$richness~all_matrices_data$STRAT)
+#Kruskal-Wallis chi-squared = 1192.5, df = 6, p-value < 2.2e-16
+
+dt_rich_strat = dunnTest(richness~STRAT, data=all_matrices_data)
+dt_richnnes_strat = dt_rich_strat$res
+
+cldList(P.adj~Comparison,
+        data = dt_richnnes_strat,
+        threshold = 0.05)
+#FMLR = OFPR 
+
+#Simpson strata
+kruskal.test(all_matrices_data$simpson~all_matrices_data$STRAT)
+#Kruskal-Wallis chi-squared = 352.49, df = 6, p-value < 2.2e-16
+
+dt_simp_strat = dunnTest(simpson~STRAT, data=all_matrices_data)
+dt_simpson_strat = dt_simp_strat$res
+
+cldList(P.adj~Comparison,
+        data = dt_simpson_strat,
+        threshold = 0.05)
+#FMLR = FSLR 
+#FDLR = INPR 
+#HRRF = OFPR 
+
+#Shannon strata
+kruskal.test(all_matrices_data$shannon~all_matrices_data$STRAT)
+#ruskal-Wallis chi-squared = 446.17, df = 6, p-value < 2.2e-16
+
+dt_shan_strat = dunnTest(shannon~STRAT, data=all_matrices_data)
+dt_shannon_strat = dt_shan_strat$res
+
+cldList(P.adj~Comparison,
+        data = dt_shannon_strat,
+        threshold = 0.05)
+#FDLR = FSLR 
+#FMLR = MCPR 
+
+#FD strata  
+kruskal.test(all_matrices_data$func.div~all_matrices_data$STRAT)
+#Kruskal-Wallis chi-squared = 663.1, df = 6, p-value < 2.2e-16
+
+dt_fd_strat = dunnTest(func.div~STRAT, data=all_matrices_data)
+dt_functional_strat = dt_fd_strat$res
+
+cldList(P.adj~Comparison,
+        data = dt_functional_strat,
+        threshold = 0.05)
+#FDLR = HRRF 
+#FMLR = INPR 
+#MCPR = OFPR 
+
+DunnTest_all = cbind(dt_abundance_strat, dt_biomass_strat, dt_evennes_strat, dt_richnnes_strat, dt_simpson_strat, dt_shannon_strat, dt_functional_strat)
+
+write_csv(DunnTest_all, "DunnTest_all.csv")
+
+```
+
+```{r KW subregion}
+
+matrices_subregion_kt = all_matrices_data_with_subregion %>% 
+    mutate(
+      STRAT_GROUPED = 
+      ifelse(grepl("FMLR|FSLR|FDLR", STRAT), 'LINEAR_REEF', 
+             ifelse(grepl("OFPR|MCPR|INPR", STRAT), 'PATCH_REEF',
+                    ifelse(grepl('HRRF', STRAT), 'HIGH_RELIEF', "IDK")))) %>%
+    filter(SUBREGION_DOMAIN != "BiscBay") %>% 
+    group_by(SUBREGION_DOMAIN)
+
+#Kruskal-Wallis test 
+#Dependent variables: where y1 is numeric and A is a factor 
+
+matrices_subregion_kt$SUBREGION_DOMAIN = factor(matrices_subregion_kt$SUBREGION_DOMAIN, levels=c("Lower","Middle","Upper"))
+
+#abundance 
+kt_abun_sr = kruskal.test(matrices_subregion_kt$abundance_sum~matrices_subregion_kt$SUBREGION_DOMAIN)
+#Kruskal-Wallis chi-squared = 17.443, df = 2, p-value = 0.000163
+
+#Dunn test
+library(FSA)
+dt_abun_sr = dunnTest(abundance_sum~SUBREGION_DOMAIN, data=matrices_subregion_kt)
+dt_abundance_sr = dt_abun_sr$res
+
+library(rcompanion)
+cldList(P.adj~Comparison,
+        data = dt_abundance_sr,
+        threshold = 0.05)
+#LK = UK
+
+#biomass
+kt_bio_sr = kruskal.test(matrices_subregion_kt$biomass_sum~matrices_subregion_kt$SUBREGION_DOMAIN)
+#Kruskal-Wallis chi-squared = 28.286, df = 2, p-value = 7.206e-07
+
+dt_bio_sr = dunnTest(biomass_sum~SUBREGION_DOMAIN, data=matrices_subregion_kt)
+dt_biomass_sr = dt_bio_sr$res
+
+#Compact letter display  
+cldList(P.adj~Comparison,
+        data = dt_biomass_sr,
+        threshold = 0.05)
+#LK, UK, & MK are all significantly different 
+
+#evenness
+kt_even_sr = kruskal.test(matrices_subregion_kt$evenness~matrices_subregion_kt$SUBREGION_DOMAIN)
+#Kruskal-Wallis chi-squared = 17.196, df = 2, p-value = 0.0001845
+
+#Dunn Test 
+dt_even_sr = dunnTest(evenness~SUBREGION_DOMAIN, data=matrices_subregion_kt)
+dt_evenness_sr = dt_even_sr$res
+
+cldList(P.adj~Comparison,
+        data = dt_evenness_sr,
+        threshold = 0.05)
+#LK = UK
+
+#richness - NOT SIGNIFICANTLY DIFFERENT BY SUBREGION
+kt_rich_sr = kruskal.test(matrices_subregion_kt$richness~matrices_subregion_kt$SUBREGION_DOMAIN)
+#Kruskal-Wallis chi-squared = 0.20689, df = 2, p-value = 0.9017
+
+#simpson
+kt_simp_sr= kruskal.test(matrices_subregion_kt$simpson~matrices_subregion_kt$SUBREGION_DOMAIN)
+#Kruskal-Wallis chi-squared = 15.834, df = 2, p-value = 0.0003646
+
+dt_simp_sr = dunnTest(simpson~SUBREGION_DOMAIN, data=matrices_subregion_kt)
+dt_simpson_sr = dt_simp_sr$res
+
+cldList(P.adj~Comparison,
+        data = dt_simpson_sr,
+        threshold = 0.05)
+#LK = UK
+
+#shannon
+kt_shan_sr = kruskal.test(matrices_subregion_kt$shannon~matrices_subregion_kt$SUBREGION_DOMAIN)
+#Kruskal-Wallis chi-squared = 24.915, df = 2, p-value = 3.889e-06
+
+dt_shan_sr = dunnTest(shannon~SUBREGION_DOMAIN, data=matrices_subregion_kt)
+dt_shannon_sr = dt_shan_sr$res
+
+cldList(P.adj~Comparison,
+        data = dt_shannon_sr,
+        threshold = 0.05)
+#LK = UK
+
+#fd
+kt_fd_sr = kruskal.test(matrices_subregion_kt$func.div~matrices_subregion_kt$SUBREGION_DOMAIN)
+#Kruskal-Wallis chi-squared = 15.587, df = 2, p-value = 0.0004124
+
+dt_fd_sr = dunnTest(func.div~SUBREGION_DOMAIN, data=matrices_subregion_kt)
+dt_functional_sr = dt_fd_sr$res
+
+#compact letter display 
+cldList(P.adj ~ Comparison,
+        data = dt_functional_sr,
+        threshold = 0.05)
+#MK = UK 
+
+#groups sharing a letter not significantly different (alpha = 0.05)
+
+DunnTest_all_subregion = cbind(dt_abundance_sr, dt_biomass_sr, dt_evenness_sr, dt_richness_sr, dt_simpson_sr, dt_shannon_sr, dt_functional_sr)
+
+write_csv(DunnTest_all_subregion, "DunnTest_all_subregion.csv")
 
 ```
