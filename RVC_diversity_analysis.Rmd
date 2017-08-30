@@ -968,6 +968,7 @@ ab_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=abundance_mean, colour=STRAT
   geom_point(size=3) +
   geom_errorbar(aes(ymax=abundance_mean+abundance_se,ymin=abundance_mean-abundance_se),width=0.1)+
   labs(title= "A) Abundance", x="Year", y="Mean abundance", colour = "Strata")+
+  scale_y_continuous(limits = c(0, 1600), breaks = c(100,200,300,400,500,600,700,800,900,1000,1100,1200, 1300, 1400, 1500, 1600), labels = c("","200","","400","","600","","800","","1000","","1200","","1400","","1600")) +
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
   theme_bw()+
   theme(
@@ -986,6 +987,7 @@ bio_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=biomass_mean, colour=STRAT,
   geom_point(size=3) +
   geom_errorbar(aes(ymin=biomass_mean-biomass_se, ymax=biomass_mean+biomass_se), width=.2) +
   labs(title= "B) Biomass", x="Year", y="Mean biomass", colour = "Strata")+
+  scale_y_continuous(limits = c(0, 80), breaks = c(0, 10, 20, 30, 40, 50, 60,70, 80), labels= c("0", "", "20", "", "40", "", "60", "", "80"))+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
   theme_bw()+
   theme(
@@ -8443,18 +8445,8 @@ x = mean(compare$dif)
 
 #simpson diversity is on average 2 times greater than functional diversity 
 
-subregion_dif = matrices_strat_grouped_with_subregion %>%
-  select(SUBREGION_DOMAIN,YEAR,STRAT_GROUPED,abundance_mean, biomass_mean,evenness_mean, richness_mean,simpson_mean,shannon_mean,func.div_mean) %>%
-  group_by(SUBREGION_DOMAIN) %>%
-  summarize(
-    SR_abun_mean = mean(abundance_mean),
-    SR_bio_mean = mean(biomass_mean),
-    SR_even_mean = mean(evenness_mean),
-    SR_rich_mean = mean(richness_mean),
-    SR_simp_mean = mean(simpson_mean),
-    SR_shan_mean = mean(shannon_mean),
-    SR_fd_mean = mean(func.div_mean))
-
+all_matrices_data_with_subregion = read_rds("psu_matrices_data_with_subregion_rds")
+  
 matrices_subregion = all_matrices_data_with_subregion %>% 
     mutate(
       STRAT_GROUPED = 
@@ -8508,7 +8500,8 @@ matrices_subregion = all_matrices_data_with_subregion %>%
       evenness_max = max(evenness))
   
 matrices_sr = matrices_subregion %>%
-  select(SUBREGION_DOMAIN,abundance_mean,biomass_mean,evenness_mean, richness_mean,simpson_mean, shannon_mean, func.div_mean)
+  select(SUBREGION_DOMAIN,abundance_mean,biomass_mean,evenness_mean, richness_mean,simpson_mean, shannon_mean, func.div_mean) %>%
+  t()
 
 
 ```
@@ -8779,4 +8772,31 @@ DunnTest_all_subregion = cbind(dt_abundance_sr, dt_biomass_sr, dt_evenness_sr, d
 
 write_csv(DunnTest_all_subregion, "DunnTest_all_subregion.csv")
 
+```
+
+```{r KW year}
+
+all_matrices_data = read_rds("psu_matrices_data_rds")
+
+all_matrices_data$YEAR = factor(all_matrices_data$YEAR, levels=c("1999", "2000", "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2014", "2016"))
+
+#abundance 
+kt_abun_year = kruskal.test(all_matrices_data$abundance_sum~all_matrices_data$YEAR)
+#Kruskal-Wallis chi-squared = 280.85, df = 15, p-value < 2.2e-16
+
+dt_abun_year = dunnTest(abundance_sum~YEAR, data=all_matrices_data)
+dt_abundance_year = dt_abun_year$res
+
+cldList(P.adj~Comparison,
+        data = dt_abundance_year,
+        threshold = 0.05)
+
+kt_simp_year = kruskal.test(all_matrices_data$simpson~all_matrices_data$YEAR)
+
+dt_simp_year = dunnTest(simpson~YEAR, data=all_matrices_data)
+dt_simpson_year = dt_simp_year$res
+
+cldList(P.adj~Comparison,
+        data = dt_simpson_year,
+        threshold = 0.05)
 ```
