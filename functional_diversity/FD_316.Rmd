@@ -1163,4 +1163,44 @@ if(!file.exists("functional_diversity/raoQ_list.csv")){
 
 raoQ_list = read_csv("raoQ_list.csv")
 
+# minus max length 
+linear_ml = lm(func.div.ml~func.div, data = raoQ_list)
+summary(linear_ml)
+#R-squared:  0.9319
+
+# minus trophic level 
+linear_tl = lm(func.div.tl~func.div, data = raoQ_list)
+summary(linear_tl)
+#R-squared:  0.8796
+
+# minus trophic group 
+linear_tg = lm(func.div.tg~func.div, data = raoQ_list)
+summary(linear_tg)
+#R-squared:  0.5941
+
+# minus water column position 
+linear_wc = lm(func.div.wc~func.div, data = raoQ_list)
+summary(linear_wc)
+#R-squared: 0.929
+
+# minus substrate type 
+linear_st = lm(func.div.st~func.div, data = raoQ_list)
+summary(linear_st)
+#R-squared: 0.7554
+
+# minus diel activity 
+linear_da = lm(func.div.da~func.div, data = raoQ_list)
+summary(linear_da)
+#R-squared: 0.7217
+
+# minus habitat complexity 
+linear_hc = lm(func.div.comp~func.div, data = raoQ_list)
+summary(linear_hc)
+#R-squared: 0.9782
+
+# minus gregariousness 
+linear_greg = lm(func.div.greg~func.div, data = raoQ_list)
+summary(linear_greg)
+#R-squared: 0.9883
+
 ```
