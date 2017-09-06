@@ -871,6 +871,8 @@ if(!file.exists("psu_matrices_data_rds")){
   } else{
   
     all_matrices_data = read_rds("psu_matrices_data_rds") #5238, 32
+    
+    write_csv(all_matrices_data, "big_csv/all_matrices_data.csv")
   }
 
 ```
@@ -8503,6 +8505,48 @@ matrices_sr = matrices_subregion %>%
   select(SUBREGION_DOMAIN,abundance_mean,biomass_mean,evenness_mean, richness_mean,simpson_mean, shannon_mean, func.div_mean) %>%
   t()
 
+stats_all_matrices_data
+
+strata_rich_mean = stats_all_matrices_data %>% 
+  select(richness_mean, STRAT, YEAR) %>%
+  group_by(STRAT) %>%
+  spread(STRAT, richness_mean, fill = 0) %>%
+  summarize(
+    FDLR_mean = mean(FDLR),
+    FMLR_mean = mean(FMLR),
+    FSLR_mean = mean(FSLR),
+    HRRF_mean = mean(HRRF),
+    INPR_mean = mean(INPR),
+    MCPPR_mean = mean(MCPR),
+    OFPR_mean = mean(OFPR)) 
+
+strata_simp_mean = stats_all_matrices_data %>% 
+  select(simpson_mean, STRAT, YEAR) %>%
+  group_by(STRAT) %>%
+  spread(STRAT, simpson_mean, fill = 0) %>%
+  summarize(
+    FDLR_mean = mean(FDLR),
+    FMLR_mean = mean(FMLR),
+    FSLR_mean = mean(FSLR),
+    HRRF_mean = mean(HRRF),
+    INPR_mean = mean(INPR),
+    MCPPR_mean = mean(MCPR),
+    OFPR_mean = mean(OFPR)) %>%
+  t() 
+
+strata_shan_mean = stats_all_matrices_data %>% 
+  select(shannon_mean, STRAT, YEAR) %>%
+  group_by(STRAT) %>%
+  spread(STRAT, shannon_mean, fill = 0) %>%
+  summarize(
+    FDLR_mean = mean(FDLR),
+    FMLR_mean = mean(FMLR),
+    FSLR_mean = mean(FSLR),
+    HRRF_mean = mean(HRRF),
+    INPR_mean = mean(INPR),
+    MCPPR_mean = mean(MCPR),
+    OFPR_mean = mean(OFPR)) %>%
+  t() 
 
 ```
 
@@ -8800,3 +8844,191 @@ cldList(P.adj~Comparison,
         data = dt_simpson_year,
         threshold = 0.05)
 ```
+
+### Lionfish abundance and biomass
+
+```{r lionfish}
+
+  psu_fk_abun <- read_csv("big_csv/abundance_psu/psu_fk_abun.csv",
+                          col_types = cols(protected_status = col_character()))
+  #dim(psu_fk_abun) #3,643,306 x 10
+
+  lionfish_abun = psu_fk_abun %>%
+    filter(stringr::str_detect(protected_status, 'all')) %>%
+    filter(SPECIES_CD == "PTE VOLI") %>%
+    group_by(YEAR, STRAT,PRIMARY_SAMPLE_UNIT) %>%
+    summarize(abundance_sum = sum(abundance)) %>%
+    filter(!abundance_sum == "0") 
+  
+  lionfish_abun_year = lionfish_abun %>%
+    group_by(YEAR) %>%
+    summarize(
+      abundance_mean = mean(abundance_sum),
+      abundance_n = length(abundance_sum),
+      abundance_sd = sd(abundance_sum),
+      abundance_se = abundance_sd / sqrt(abundance_n),
+      abundance_min = min(abundance_sum),
+      abundance_max = max(abundance_sum), 
+      abundance_total = sum(abundance_sum))
+    
+  lionfish = ggplot(lionfish_abun_year, aes(x = YEAR, y = abundance_total))+
+    geom_line(lwd=1) +
+    geom_point(size=3)+ 
+    labs(title= "Lionfish Abundance", x="Year", y="Total Abundance (number of individuals)")+
+    scale_x_continuous(limits = c(2010, 2016), breaks = c(2010, 2012, 2014, 2016), labels=c("2010","2012","2014","2016"))+
+  #scale_y_continuous(limits= c(200,1000))+
+  theme_bw()+
+  theme(
+      legend.position="none", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+  
+  ggsave(file="lionfish_abun.pdf", lionfish, width=4, height=4, path="big_csv/plots")
+    
+  #psu_fk_bio <- read_csv('big_csv/biomass_psu/psu_fk_biomass.csv', col_types = cols( protected_status = col_character())) 
+    #dim(psu_fk_bio) 3,429,476*10
+
+  # lionfish_bio = psu_fk_bio %>%
+  #   filter(stringr::str_detect(protected_status, 'all'))%>%
+  #   filter(SPECIES_CD == "PTE VOLI") %>%
+  #   group_by(YEAR, STRAT,PRIMARY_SAMPLE_UNIT) %>%
+  #   summarize(biomass_sum = sum(biomass)) %>%
+  #   filter(!biomass_sum == "0") 
+  # 
+  # lionfish_bio = lionfish_bio %>%
+  #   group_by(YEAR) %>%
+  #   summarize(
+  #     biomass_mean = mean(biomass_sum),
+  #     biomass_n = length(biomass_sum),
+  #     biomass_sd = sd(biomass_sum),
+  #     biomass_se = biomass_sd / sqrt(biomass_n),
+  #     biomass_min = min(biomass_sum),
+  #     biomass_max = max(biomass_sum))
+```
+
+Hurricane disturbance in 2004 and 2005 
+
+```{r hurricane disturbance}
+
+all_matrices_data = read_rds("psu_matrices_data_rds")
+
+hurricane = all_matrices_data[(all_matrices_data$YEAR == "2004" |
+                               all_matrices_data$YEAR == "2005" |
+                               all_matrices_data$YEAR == "2006"),]
+  
+hurricane_dist = hurricane %>%
+  select(YEAR, PRIMARY_SAMPLE_UNIT, STRAT, PROT, abundance_sum, biomass_sum, evenness,simpson, shannon, richness, func.div) %>%
+  group_by(YEAR) %>%
+    summarize(
+      abundance_mean = mean(abundance_sum),
+      abundance_n = length(abundance_sum),
+      abundance_sd = sd(abundance_sum),
+      abundance_se = abundance_sd / sqrt(abundance_n),
+      abundance_min = min(abundance_sum),
+      abundance_max = max(abundance_sum),
+      biomass_mean = mean(biomass_sum),
+      biomass_n = length(biomass_sum),
+      biomass_sd = sd(biomass_sum),
+      biomass_se = biomass_sd / sqrt(biomass_n),
+      biomass_min = min(biomass_sum),
+      biomass_max = max(biomass_sum),
+      richness_mean = mean(richness),
+      richness_n = length(richness),
+      richness_sd = sd(richness),
+      richness_se = richness_sd / sqrt(richness_n),
+      richness_min = min(richness),
+      richness_max = max(richness),
+      simpson_mean = mean(simpson),
+      simpson_n = length(simpson),
+      simpson_sd = sd(simpson),
+      simpson_se = simpson_sd / sqrt(simpson_n),
+      simpson_min = min(simpson),
+      simpson_max = max(simpson),
+      shannon_mean = mean(shannon),
+      shannon_n = length(shannon),
+      shannon_sd = sd(shannon),
+      shannon_se = shannon_sd / sqrt(shannon_n),
+      shannon_min = min(shannon),
+      shannon_max = max(shannon),
+      func.div_mean = mean(func.div),
+      func.div_n = length(func.div),
+      func.div_sd = sd(func.div),
+      func.div_se = func.div_sd / sqrt(func.div_n),
+      func.div_min = min(func.div),
+      func.div_max = max(func.div),
+      evenness_mean = mean(evenness),
+      evenness_n = length(evenness),
+      evenness_sd = sd(evenness),
+      evenness_se = evenness_sd / sqrt(evenness_n),
+      evenness_min = min(evenness),
+      evenness_max = max(evenness))
+
+hurricane_dist = hurricane_dist %>%
+  select(YEAR, abundance_mean, biomass_mean, evenness_mean, richness_mean, simpson_mean, shannon_mean, func.div_mean)
+
+#YEAR abundance_mean biomass_mean evenness_mean richness_mean simpson_mean
+#  2004       448.1831     26.26251     0.5704466      42.78740     9.041081
+#  2005       325.1630     20.74618     0.5797596      35.78516     8.313524
+#  2006       308.6095     12.28805     0.5618082      34.94495     8.008290
+
+#abundance declined 31%
+#(1-(308.6095/448.1831))*100 = 31.14% 
+
+#biomass declined 53%
+#(1-(12.28805/26.26251))*100 = 53.21% 
+
+#evenness 
+#(1-(0.5618082/0.5704466))*100 = 1.5%
+
+#richness 
+#(1-(34.94495/42.78740))*100 = 18.32%
+
+#simpson 
+#(1-(8.008290/9.041081))*100 = 11.42%
+
+#shannon 
+#(1-(12.94369/14.96688))*100 = 13.5%
+
+#functional 
+#(1-(2.516593/2.743986))*100 = 8.2%
+
+cold_event = all_matrices_data[(all_matrices_data$YEAR == "2009" |
+                               all_matrices_data$YEAR == "2010" ),]
+  
+cold_event2010 = cold_event %>%
+  select(YEAR, PRIMARY_SAMPLE_UNIT, STRAT, PROT, abundance_sum, biomass_sum, evenness,simpson, shannon, richness, func.div) %>%
+  group_by(YEAR) %>%
+    summarize(
+      abundance_mean = mean(abundance_sum),
+      biomass_mean = mean(biomass_sum),
+      evenness_mean = mean(evenness),
+      richness_mean = mean(richness),
+      simpson_mean = mean(simpson),
+      shannon_mean = mean(shannon),
+      func.div_mean = mean(func.div))
+
+#YEAR abundance_mean biomass_mean evenness_mean richness_mean simpson_mean
+# 2009       434.8777     12.18400     0.5377376      39.94574     7.756119
+# 2010       359.3104     10.09484     0.5412410      35.79683     7.391117
+
+#abundance declined 31%
+#(1-(359.3104/434.8777))*100 = 17.37% 
+
+#biomass declined 53%
+#(1-(10.09484/12.18400))*100 = 17.14% 
+
+#richness 
+#(1-(35.79683/39.94574))*100 = 10.38%
+
+#simpson 
+#(1-(7.391117/7.756119))*100 = 4.70%
+
+#shannon 
+#(1-(12.01082/12.77735))*100 = 5.99%
+
+#functional 
+#(1-(2.484178/2.529140))*100 = 1.7%
+  
