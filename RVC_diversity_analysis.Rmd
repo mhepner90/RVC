@@ -9031,4 +9031,106 @@ cold_event2010 = cold_event %>%
 
 #functional 
 #(1-(2.484178/2.529140))*100 = 1.7%
+```
+
+```{r compare diversity indices}
+
+all_matrices_data = read_rds("psu_matrices_data_rds")
+
+stats_all_matrices_data = all_matrices_data %>%
+    group_by(YEAR) %>% #110 groups 
+    summarize(
+      abundance_mean = mean(abundance_sum),
+      biomass_mean = mean(biomass_sum),
+      richness_mean = mean(richness),
+      simpson_mean = mean(simpson),
+      shannon_mean = mean(shannon),
+      func.div_mean = mean(func.div),
+      evenness_mean = mean(evenness))
+
+percent_div_to_rich = stats_all_matrices_data %>%
+  select(richness_mean, simpson_mean, shannon_mean) %>%
+  mutate(simp_rich = (simpson_mean/richness_mean),
+         shan_rich = (shannon_mean/richness_mean)) %>%
+  summarize(simp_rich_avg = mean(simp_rich), #0.2134
+            shan_rich_avg = mean(shan_rich)) #0.3494 
+
+all_matrices_data_with_subregion = read_rds("psu_matrices_data_with_subregion_rds")
   
+  matrices_strat_grouped_with_subregion = all_matrices_data_with_subregion %>% 
+    mutate(
+      STRAT_GROUPED = 
+      ifelse(grepl("FMLR|FSLR|FDLR", STRAT), 'LINEAR_REEF', 
+             ifelse(grepl("OFPR|MCPR|INPR", STRAT), 'PATCH_REEF',
+                    ifelse(grepl('HRRF', STRAT), 'HIGH_RELIEF', "IDK")))) %>%
+    filter(SUBREGION_DOMAIN != "BiscBay") %>% 
+    group_by(YEAR, SUBREGION_DOMAIN) %>% 
+    summarize(      
+      abundance_mean = mean(abundance_sum),
+      biomass_mean = mean(biomass_sum),
+      richness_mean = mean(richness),
+      simpson_mean = mean(simpson),
+      shannon_mean = mean(shannon),
+      func.div_mean = mean(func.div),
+      evenness_mean = mean(evenness))
+  
+  compare_region_abun = matrices_strat_grouped_with_subregion %>% 
+    select(YEAR,SUBREGION_DOMAIN,abundance_mean) %>%
+    group_by(SUBREGION_DOMAIN) %>% 
+    spread(SUBREGION_DOMAIN, abundance_mean, fill=0) %>%
+    mutate(middle_lower = (Middle/Lower),
+           middle_upper = (Middle/Upper)) %>%
+    summarize(
+      middle_lower_mean = mean(middle_lower),
+      middle_upper_mean = mean(middle_upper))
+  
+  #middle_lower_mean middle_upper_mean
+  # 1.05506         0.9861887
+  
+    compare_region_simp = matrices_strat_grouped_with_subregion %>% 
+    select(YEAR,SUBREGION_DOMAIN,simpson_mean) %>%
+    group_by(SUBREGION_DOMAIN) %>% 
+    spread(SUBREGION_DOMAIN, simpson_mean, fill=0) %>%
+    mutate(middle_lower = (Middle/Lower),
+           middle_upper = (Middle/Upper)) %>%
+    summarize(
+      middle_lower_mean = mean(middle_lower),
+      middle_upper_mean = mean(middle_upper))
+    
+   # middle_lower_mean middle_upper_mean
+   # 0.8788093         0.8836824
+   # Simp LK 12% > MK
+   # Simp UK 11% > MK
+ 
+    compare_region_shan = matrices_strat_grouped_with_subregion %>% 
+    select(YEAR,SUBREGION_DOMAIN,shannon_mean) %>%
+    group_by(SUBREGION_DOMAIN) %>% 
+    spread(SUBREGION_DOMAIN, shannon_mean, fill=0) %>%
+    mutate(middle_lower = (Middle/Lower),
+           middle_upper = (Middle/Upper)) %>%
+    summarize(
+      middle_lower_mean = mean(middle_lower),
+      middle_upper_mean = mean(middle_upper))
+    
+   # middle_lower_mean middle_upper_mean
+   # 0.8796215         0.89113764
+  # Shan Lower is 12% > MK 
+  # Shan Upper is 11% > MK
+    
+    compare_region_func = matrices_strat_grouped_with_subregion %>% 
+    select(YEAR,SUBREGION_DOMAIN,func.div_mean) %>%
+    group_by(SUBREGION_DOMAIN) %>% 
+    spread(SUBREGION_DOMAIN, func.div_mean, fill=0) %>%
+    mutate(middle_lower = (Middle/Lower),
+           middle_upper = (Middle/Upper)) %>%
+    summarize(
+      middle_lower_mean = (1-mean(middle_lower))*100,
+      middle_upper_mean = (1-mean(middle_upper))*100)
+    
+   # middle_lower_mean middle_upper_mean
+   # 0.9072941         0.928107
+  # FD Lower is 9% > MK 
+  # FD Upper is 7% > MK
+    
+  
+```
