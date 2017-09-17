@@ -368,6 +368,116 @@ orditorp(traits_nmds.common,dis="sites",pcex=0,air=0.5,col="grey10",cex=0.8)
 
 ```
 
+Top 23 species = 80% of species 
+
+Bicolor Damselfish
+Bluehead
+Masked Goby
+Tomtate
+White Grunt
+Striped Parrotfish
+Reef Silverside
+Slippery Dick
+Yellowtail Snapper
+Redband Parrotfish
+French Grunt
+Bluestriped Grunt
+Yellowhead Wrasse
+Ocean Surgeon
+Hardhead Silverside
+Clown Wrasse
+Sergeant Major
+Bar Jack
+Blue Tang
+Brown Chromis
+Creole Wrasse
+Gray Snapper
+Doctorfish
+
+```{r trait matrix for 23 species}
+
+trait_matrix = read_csv('functional_diversity/species_trait_matrix_316_spp.csv') #316 species
+  
+trait_matrix_common = trait_matrix %>%
+    as.tibble() %>%
+    mutate(
+      Common_name = toupper(as.character(Common_name))) %>% 
+    arrange(Common_name)%>% 
+    select(Common_name, Maxlength, Trophic_level, Trophic_group, Water_column, Diel_activity, Substrate_type, Complexity, Gregariousness) %>% #348*9
+    group_by(
+      Common_name, Maxlength, Trophic_level, Trophic_group, Water_column, Diel_activity, Substrate_type, Complexity, Gregariousness) %>%
+    #summarize(n = n()) %>%
+    #select(-n) %>%
+    ungroup() %>%
+    mutate(
+      # ordinal traits
+      Complexity = ordered(Complexity, levels=c("Low","Medium","High")),
+      Gregariousness = ordered(Gregariousness, levels=c("1","2","3"))) 
+  
+top_23_list = c("Bicolor Damselfish","Bluehead","Bluestriped Grunt","Clown Wrasse","French Grunt","Hardhead Silverside","Masked Goby","Ocean Surgeon","Redband Parrotfish","Reef Silverside","Slippery Dick","Striped Parrotfish","Tomtate","White Grunt","Yellowtail Snapper","Yellowhead Wrasse", "Sergeant Major","Bar Jack","Blue Tang","Brown Chromis","Creole Wrasse","Gray Snapper","Doctorfish")
+
+top_23 = trait_matrix_common %>%
+  filter(Common_name %in% toupper(as.character(top_23_list))) %>%
+  as.data.frame()
+
+#Set species names as row.names and remove extra columns
+  rownames(top_23)=top_23$Common_name 
+  
+  #Calculate Gower distances. Variables have equal weight. 
+  traits.dist.common_23 = gowdis(top_23, ord="podani")
+  #Use clustering method to produce ultrametric dendrogram because values of Rao's Q can be maximized when fewer than the max number of functional types are present unless distances are ultramtetric 
+  
+  #to account for sensitivity in clustering use multiple algorithms  (Mouchet et al., 2008) 
+  tree_methods = c("single","complete","average","mcquitty","ward.D") #average is best clustering method 
+  trees=lapply(tree_methods,  function(i) hclust(traits.dist.common_23, method=i))
+  par(mfrow=c(3,2))
+  for(i in 1:length(trees)) {plot(trees[[i]])} #plots the 5 different kinds of trees 
+  
+  #convert trees to ultrametric
+  trees.ultra= lapply(trees,function(i) cl_ultrametric(as.hclust(i)))
+  
+  #Plot each tree
+  par(mfrow=c(3,2))
+  for (i in 1:length(trees.ultra)) {plot(trees.ultra[[i]])} #plots the 5 different kinds of trees 
+  
+  #Build the consensus tree (Mouchet et al 2008 Oikos)  
+  ensemble.trees=cl_ensemble(list=trees) #list of clusterings 
+  class(ensemble.trees)
+  consensus.tree=cl_consensus(ensemble.trees) #synthesizes the information in the elements of a cluster ensemble into a single clustering 
+  par(mar=c(1,1,1,1))
+  plot(consensus.tree, horiz=T)
+  
+  #Calculate dissimilarity values for each tree using 2-norm (Merigot et al 2010 Ecology) to determine which tree best preserves orignial distances 
+  #spectral norm (2-norm) of the differences of the ultrametrics
+  all.trees=c(trees.ultra,consensus.tree[1])
+  names(all.trees)=c(tree_methods,"consensus")
+  (trees.dissim=lapply(all.trees,function(i) cl_dissimilarity(i,traits.dist.common_23,method="spectral"))) 
+
+  #Identify best tree and isolate
+  trees.dissim2=do.call(rbind,trees.dissim)
+  min.tree=which.min(trees.dissim2) #average 
+  names(all.trees)[min.tree]
+  func.dist.23=all.trees[names(all.trees)==names(all.trees)[min.tree]][[1]]
+  
+  #Confirm lowest 2-norm value,  spectral norm (2-norm) of the differences if the ultrametrics 
+  cl_dissimilarity(func.dist.23,traits.dist.common_23,method="spectral") #Cross-dissimilarities using spectral ultrametric distance:  1.139691
+  
+  #Scale by the max value so that all values are between 0-1
+  func.dist.23=func.dist.23/max(func.dist.23)
+  saveRDS(func.dist.23, "functional_diversity/func_dist_23_rds")
+  
+  #with scale 
+pdf("functional_diversity/functional_dendrogram_23.pdf", width = 8.5, height = 11) 
+par(pin=c(4.5,9.5))         #plot dimensions (width, height)
+plot(func.dist.23, horiz=TRUE, main = "Functional Dendrogram", cex = 1, cex.main = 2, cex.lab = 1)
+dev.off()
+
+plot(func.dist.23, label.offset=0.2, edge.width = 2, type = "cladogram")  
+nodelabels() #add node numbers
+tiplabels()
+         
+```
+
 ## Trait matrix visualization 
 
 [http://jkunst.com/r/pokemon-visualize-em-all/]
