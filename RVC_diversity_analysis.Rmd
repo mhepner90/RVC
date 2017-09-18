@@ -122,6 +122,7 @@ summarise = dplyr::summarise #override plotly::summarise
 Gowdis computes the Gower (1971) similarity coefficient exactly as described by Podani (1999), then converts it to a dissimilarity coefficient by using D = 1 - S
 
 ```{r Functional distance matrix, eval = F}
+
 knitr::opts_chunk$set(echo = TRUE)
 
 if (!file.exists("functional_diversity/func_dist_rds")){
@@ -475,6 +476,51 @@ dev.off()
 plot(func.dist.23, label.offset=0.2, edge.width = 2, type = "cladogram")  
 nodelabels() #add node numbers
 tiplabels()
+
+library(dendextend)
+#set(object, what, value)
+
+devtools::install_github('talgalili/dendextendRcpp')
+library("colorspace")
+
+dend5 %>% nnodes # 45 #get the number of nodes in the tree (including leaves)
+dend5 %>% nleaves #23 #get the number of leaves of the tree
+dend5 %>% labels # get the labels of the tree
+dend5 %>% head # # A combination of "str" with "head"
+dend5 %>% get_nodes_attr("height") # node's height
+dend5 %>% get_nodes_attr("members") # number of members (leaves) under that node
+dend5 %>% get_nodes_attr("members", id = c(2,5)) # number of members for nodes 2 and 5
+
+#dend2 = rotate(dend, 1:23)
+#dend4 = hang.dendrogram(dend3, hang_height = 0.1)
+#add bullets #19 --by changing number get differnt style bullets 
+
+dend = as.dendrogram(func.dist.23)
+#'dendrogram' with 2 branches and 23 members total, at height 1
+dend6 = 
+  color_branches(dend, k=5) %>% #color the branches based on the clusters 
+  set("labels_cex", 0.8) %>% #size of the labels 
+  #set(dend5, "labels_color", "blue") #change label color 
+  set("nodes_pch", 19) %>% #type of nodes
+  set("nodes_cex", 0.5) %>% #size of nodes 
+  set("nodes_col", 1) %>% #color of nodes
+  set("branches_lwd", 1.5) #%>% #thickness of branch 
+  #set("branches_lty", 3) #dashed branches 
+
+#plot 
+pdf("functional_diversity/functional_dendrogram_23color.pdf", width = 8.5, height = 11) 
+par(pin=c(4,9))
+#par(mar = c(3,3,3,7))
+plot(dend6,
+     main= "Florida Keys Reef Fish\nFunctional dendrogram", 
+     xlab = "Dissimilarity",
+     ylab = "",
+     sub = NULL,
+     horiz = T,
+     #hang = -1,
+     nodePar = list(cex = .007))
+dev.off()
+#abline(h=2, lty =2)
          
 ```
 
