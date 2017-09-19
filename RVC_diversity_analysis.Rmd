@@ -506,6 +506,10 @@ dend6 =
   set("nodes_col", 1) %>% #color of nodes
   set("branches_lwd", 1.5) #%>% #thickness of branch 
   #set("branches_lty", 3) #dashed branches 
+  #rect.dendrogram(k=5)
+
+#ggd1 = as.ggdend(dend6)
+#ggplot(ggd1,theme(panel.background = element_rect(fill="blue")))
 
 #plot 
 pdf("functional_diversity/functional_dendrogram_23color.pdf", width = 8.5, height = 11) 
@@ -519,6 +523,10 @@ plot(dend6,
      horiz = T,
      #hang = -1,
      nodePar = list(cex = .007))
+
+#abline(v=0.5, lty = 2)
+#rect.hclust(dend6, k=1) #draw border around clusters 
+#panel.background=element_rect(fill=)
 dev.off()
 #abline(h=2, lty =2)
          
