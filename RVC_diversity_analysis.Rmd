@@ -1815,24 +1815,35 @@ ggsave(file="functional_diversity_by_year_and_strata2.pdf", path="big_csv/plots"
 
 #combine multiple plots
 #all plots on one page
-g_ys_ab_bio_eve <- grid.arrange(ab_ys_forereef, ab_ys_patchreef, bio_ys_forereef, bio_ys_patchreef, eve_ys_forereef, eve_ys_patchreef, ncol=2)
-
+g_ys_ab_bio_eve <- grid.arrange(ab_ys_forereef, ab_ys_patchreef, bio_ys_forereef, bio_ys_patchreef, eve_ys_forereef, eve_ys_patchreef)
 ggsave(file="g_ys_ab_bio_eve.pdf", g_ys_ab_bio_eve, width=7, height=10, path="big_csv/plots")
+
+g_ys_ab_bio_eve_legend <- grid.arrange(ab_ys_forereef, ab_ys_patchreef, bio_ys_forereef, bio_ys_patchreef, eve_ys_forereef, eve_ys_patchreef, legend_vert)
+ggsave(file="g_ys_ab_bio_eve_legend.pdf", g_ys_ab_bio_eve, width=7, height=10, path="big_csv/plots")
 
 g_ys_rich_simp_shan_func <- grid.arrange(rich_ys_forereef, rich_ys_patchreef, sim_ys_forereef, sim_ys_patchreef, shan_ys_forereef, shan_ys_patchreef, func_ys_forereef, func_ys_patchreef, ncol=2)
 
 ggsave(file="g_ys_rich_simp_shan_func.pdf", g_ys_rich_simp_shan_func, width=7, height=10, path="big_csv/plots")
 
 #save legend
-for_legend_vert_patchreef = ggplot(patchreef_indices,aes(x=YEAR,y=abundance_mean, colour=STRAT, group=STRAT))+
+for_legend_vert = ggplot(stats_all_matrices_data,aes(x=YEAR,y=abundance_mean, colour=STRAT, group=STRAT))+
   geom_line(aes(group=STRAT),lwd=1) +
   geom_point(size=3) +
   labs(colour = "Strata")+
+  scale_color_manual(name="", 
+                     labels= c("Forereef Deep Linear Reef","Forereef Medium Linear Reef","Forereef Shallow Linear Reef","High Relief Reef","Inshore Patch Reef","Midchannel Patch Reef","Offshore Patch Reef"), 
+                     values=c("FDLR"="red","FMLR"="yellow","FSLR"="green","HRRF"="orange","INPR"="blue","MCPR"="cyan","OFPR"="magenta"))+
   theme(
-      legend.position="right", #"none", "right",c(0.8,0.68),
+      panel.grid.major=element_line(color="grey55"), #element_blank()
+      panel.grid.minor=element_blank(),
+      panel.background=element_rect(fill="grey45"),
+      legend.position="bottom", #"none", "right",c(0.8,0.68),
       legend.text=element_text(size=11),
-      legend.key.size=unit(5,"mm"))
-legend_vert_patchreef <- get_legend(for_legend_vert_patchreef)
+      legend.key.size=unit(5,"mm"),
+      legend.background = element_rect(fill = "grey45"))
+      #legend.title = element_text(hjust=0.5))
+legend_vert <- get_legend(for_legend_vert)
+ggsave(file="g_ys_legend.pdf", legend_vert, width=9, height=1, path="big_csv/plots")
 #plots on two pages - letters in plot titles will need to be changed so they make sense on two pages (i.e., A-C and A-D)
 g1 <- grid.arrange(ab_ys,bio_ys,eve_ys,legend_vert,ncol=2)
 ggsave(file="ab_bio_eve_by_year_and_strata.pdf", g1, width=7, height=5, path="big_csv/plots")
@@ -1976,6 +1987,84 @@ ggplot(stats_all_matrices_data, aes(x=YEAR, y=evenness_mean, group=YEAR)) +
 
 ```
 
+Plot by year with rich, simp, shan, and func on one graph 
+```{r diveristy on one plot}
+
+all_matrices_data = read_rds("psu_matrices_data_rds")
+  
+#Melt dataframe so diversity indices are in a single column
+  x = reshape2::melt(all_matrices_data, id.vars = c("YEAR"),
+                     measure.vars=c("richness","shannon","simpson","func.div")) 
+#Summarize means and SEs by year and variable
+  x=plyr::ddply(x, c("YEAR", "variable"), summarize, value.mean=mean(value), value.se=plotrix::std.error(value))
+#Rename levels for figure plotting
+  levels(x$variable)=c("Richness", "Shannon", "Simpson", "Functional")
+  diversity_plot = x %>%
+    as.tibble()
+  
+  diveristy_year_plot = diversity_plot %>% 
+    ggplot(.,aes(x=YEAR, y=value.mean, color=variable))+
+    geom_errorbar(aes(ymax=value.mean+value.se,ymin=value.mean-value.se),width=0.2)+
+    geom_point(size=3)+
+    geom_line(aes(group=variable),lwd=1)+
+    labs(title= "Florida Keys Reef Fish Biodiversity", x="Year", y="", colour = "Diversity index")+
+    scale_y_continuous(limits= c(0,50),
+                       breaks=c(0,5,10,15,20,25,30,35,40,45,50), 
+                       labels=c("0","","10","","20","","30","","40","","50"))+
+    scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  scale_color_manual(
+    labels= c("Richness","Shannon diversity","Simpson diversity","Functional diversity"),
+    values=c("Richness"="red",
+             "Shannon"="yellow",
+             "Simpson"="green",
+             "Functional"="blue"))+
+  #theme_bw()+
+  theme(
+      legend.position="right",
+      panel.grid.major=element_line(color="grey55"), #element_blank()
+      panel.grid.minor=element_blank(),
+      panel.background=element_rect(fill="grey45"),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12),
+      plot.title =element_text(hjust = 0.5))
+ggsave(file="diversity_plot.pdf", path="big_csv/plots")
+
+diversity_simp_shan_func = diversity_plot %>% 
+  filter(variable != "Richness") %>%
+  as.tibble()
+  
+simp_shan_func_plot =  
+    ggplot(diversity_simp_shan_func, aes(x=YEAR, y=value.mean, color=variable))+
+    geom_errorbar(aes(ymax=value.mean+value.se,ymin=value.mean-value.se),width=0.2)+
+    geom_point(size=3)+
+    geom_line(aes(group=variable),lwd=1)+
+    labs(title= "Florida Keys Reef Fish Biodiversity", x="Year", y="Effective Number of Species", colour = "Diversity index")+
+    scale_y_continuous(limits= c(2,16),
+                       breaks=c(2,4,6,8,10,12,14,16), 
+                       labels=c("2","4","6","8","10","12","14","16"))+
+    scale_x_continuous(limits = c(1999, 2016), 
+                       breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), 
+                       labels=c("2000","2002","2004","2006","2008","2010","2012","2014","2016"))+
+  scale_color_manual(
+    labels= c("Shannon Diversity","Simpson diversity","Functional diversity"),
+    values=c("Shannon"="yellow",
+             "Simpson"="green",
+             "Functional"="blue"))+
+  #theme_bw()+
+  theme(
+      legend.position="right", #right,bottom
+      #legend.background = element_rect(fill="grey45"),
+      panel.grid.major=element_line(color="grey55"), #element_blank()
+      panel.grid.minor=element_blank(),
+      panel.background=element_rect(fill="grey45"),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12),
+      plot.title =element_text(hjust = 0.5))
+ggsave(file="diversity_ssf.pdf", path="big_csv/plots")
+
+```
 Plot each strata individually by index 
 
 ```{r plot abundance by strata indv in 7 line graphs}
