@@ -540,7 +540,7 @@ dev.off()
 
 ```{r trait visualization}
 
-trait_matrix = read_csv('functional_diversity/species_trait_matrix_348_spp.csv')
+trait_matrix = read_csv('functional_diversity/species_trait_matrix_316_spp.csv')
 
 trait_matrix_treemap = trait_matrix %>%
   select(Common_name, Maxlength, Trophic_level, Trophic_group, Water_column,Diel_activity,Substrate_type,Complexity, Gregariousness) %>% 
@@ -556,18 +556,35 @@ trait_matrix_treemap = trait_matrix %>%
   ungroup() %>%
   as.data.frame()
 
+devtools::install_github("timelyportfolio/d3treeR")
+library(treemap)
+library(d3treeR)
+
 treemap2 = 
   d3treeR::d3tree2(
     treemap(
       dtf = trait_matrix_treemap,
-      index = c("Trophic_group", "Trophic_level"), #, "Water_column", "Complexity", "Substrate_type", "Diel_activity"),
+      index = c("Trophic_group", "Diel_activity", "Substrate_type", "Trophic_level", "Water_column","Maxlength","Complexity","Gregariousness"),
       vSize = "n", 
       vColor = "Trophic_group",
       type = "index"),
     #title = "Reef Fish Traits",
     #fontsize.title = 14, 
     #algorithm = "squarified"
-    rootname = "Species_Traits")
+    rootname = "Species Traits")
+
+treemap3 = 
+  d3treeR::d3tree2(
+    treemap(
+      dtf = trait_matrix_treemap,
+      index = c("Trophic_group", "Diel_activity", "Substrate_type", "Water_column"),#"Trophic_level" #"Diel_activity", "Substrate_type", "Water_column", "Complexity", "Substrate_type", "Trophic_level"),
+      vSize = "n", 
+      vColor = "Trophic_group",
+      type = "index"),
+    #title = "Reef Fish Traits",
+    #fontsize.title = 14, 
+    #algorithm = "squarified"
+    rootname = "Species Traits")
 
 #treemap example 
 data(GNI2014)
@@ -9450,6 +9467,132 @@ all_matrices_data_with_subregion = read_rds("psu_matrices_data_with_subregion_rd
    # 0.9072941         0.928107
   # FD Lower is 9% > MK 
   # FD Upper is 7% > MK
-    
   
 ```
+
+Arc MAP with MPA's
+
+```{r maps}
+
+all_matrices_data = read_rds("psu_matrices_data_rds")
+
+mpa_lat_long = all_matrices_data %>%
+  select(YEAR, PRIMARY_SAMPLE_UNIT, LAT_DEGREES,LON_DEGREES,MPA_NR,STRAT) %>%
+  filter(MPA_NR != "0") %>% 
+  filter(YEAR == "2016")%>%
+  arrange(MPA_NR)
+
+write_csv(mpa_lat_long, "big_csv/mpa_lat_long.csv")
+
+strata_numbered = all_matrices_data %>%
+  select(YEAR, PRIMARY_SAMPLE_UNIT, LAT_DEGREES, LON_DEGREES, STRAT) %>%
+  mutate(STRAT_NR = ifelse(grepl("HRRF", STRAT),"1",
+                           ifelse(grepl("FDLR", STRAT), "2", 
+                                  ifelse(grepl("FMLR", STRAT), "3",
+                                         ifelse(grepl("FSLR", STRAT), "4",
+                                                ifelse(grepl("INPR", STRAT), "5",
+                                                       ifelse(grepl("MCPR", STRAT), "6",
+                                                              ifelse(grepl("OFPR", STRAT), "7","IDK"))))))))
+
+write_csv(strata_numbered, "strata_numbered.csv")
+         
+
+```
+
+```{r thesis word cloud}
+
+library(tm)
+library(wordcloud)
+library(SnowballC)
+
+#read in text file 
+modified_thesis = Corpus(DirSource("word_cloud/"))
+inspect(modified_thesis)
+modified_thesis = tm_map(modified_thesis, stripWhitespace)  #strip white space 
+modified_thesis = tm_map(modified_thesis, tolower) #to lower case 
+#modified_thesis = tm_map(modified_thesis, stemDocument) #comment out b/c cuts off words 
+modified_thesis = tm_map(modified_thesis, removeNumbers)  #remove numbers 
+modified_thesis = tm_map(modified_thesis, removePunctuation) #remove punctuation 
+modified_thesis = tm_map(modified_thesis, removeWords, stopwords("english")) #remove common english words 
+remove_these = c("also", "can","one","using", "two")
+modified_thesis = tm_map(modified_thesis, removeWords,remove_these)
+
+tdm_thesis = TermDocumentMatrix(modified_thesis)%>% #create TDM
+  as.matrix() 
+sum_thesis = sort(rowSums(tdm_thesis), decreasing = T) #frequency of each word 
+d = data.frame(word=names(sum_thesis), freq=sum_thesis)
+head(d, 25)
+table(d$freq)
+
+png("wordcloud_packages.png", width=1280,height=800)
+wordcloud(d$word,d$freq, scale=c(8,.2),min.freq=3,
+max.words=Inf, random.order=FALSE, rot.per=.15, colors=brewer.pal(8,"Dark2"))
+dev.off()
+
+png("wordcloud_packages_rainbow_blue8.png", width=1280,height=800)
+par(bg="navy") 
+wordcloud(d$word,d$freq, scale=c(8,.2),min.freq=3,
+max.words=Inf, random.order=FALSE, rot.per=.15, colors=grDevices::rainbow(8)) #colors=grDevices::topo.colors(8)) #colors=grDevices::rainbow(8))
+dev.off()
+
+png("wordcloud_packages_2.png", width=1280,height=800)
+wordcloud(d$word,d$freq, scale=c(8,.2),min.freq=3,
+max.words=200, random.order=FALSE, rot.per=.15, colors=brewer.pal(8,"Dark2"))
+dev.off()
+
+png("wordcloud_packages_3.png", width=800,height=400)
+wordcloud(d$word,d$freq, scale=c(8,.2),min.freq=3,
+max.words=200, random.order=FALSE, rot.per=.15, colors=brewer.pal(8,"Dark2"))
+dev.off()
+#wordcloud(modified_thesis, scale = c(2,0.5), max.words = 100, random.order = F, rot.per=0.25, use.r.layout = F, colors=brewer.pal(8,"Dark2"))
+
+```
+
+```{r pp examples}
+
+#2000, PSU = 211U, STRAT = HRRF
+# sum = 548.977, Protected = 1 
+#Richness = 50, Simpson = 8.517275, Shannon = 14.303620, Functional diversity = 2.832026
+#Eveness = 0.5475674, 9 – 27 – 2000, 25.12288, -80.29665
+
+pp_example = all_matrices_data %>% 
+  #arrange(desc(richness))
+  filter(STRAT == "HRRF") %>%
+  filter(PRIMARY_SAMPLE_UNIT == "211U")%>%
+  filter(YEAR == "2000")
+
+pp_example2 <- psu_fk_abun_no_spp %>%
+  filter(YEAR == "2000") %>%
+  filter(PRIMARY_SAMPLE_UNIT == "211U")%>%
+  filter(!abundance == "0")  %>%
+  arrange(desc(abundance))
+
+pp_example3 = left_join(pp_example2, family, by= "SPECIES_CD")%>%
+  select(SPECIES_CD, abundance, COMNAME)
+
+diversity_example = read_csv("pp_diversity_example2.csv")
+
+   
+  div_example = diversity_example %>%  
+    select(SPECIES_CD,abundance) %>%
+    spread(SPECIES_CD,abundance)
+
+richness = specnumber(div_example[,]) #24 
+simpson = diversity(div_example[,], index = 'simpson') #0.8653564
+shannon = (diversity(div_example[,],  index = 'shannon')) #2.413305
+simpson_en = 1/(1 - diversity(div_example[,], index = 'simpson')) #7.427017
+shannon_en = exp(diversity(div_example[,],  index = 'shannon')) #11.178
+
+#post hurricane event examples
+  div_example_post = diversity_example %>%  
+    #filter(post_abundance != "0") %>%
+    select(SPECIES_CD,post_abundance) %>%
+    spread(SPECIES_CD,post_abundance)
+  
+  post_richness = specnumber(div_example_post[,]) #12
+  post_simpson = diversity(div_example_post[,], index = 'simpson') #0.8417122
+  post_shannon = (diversity(div_example_post[,],  index = 'shannon')) #2.094478
+  post_simpson_en = 1/(1 - diversity(div_example_post[,], index = 'simpson')) #6.317604
+  post_shannon_en = exp(diversity(div_example_post[,],  index = 'shannon')) #8.121199
+
+
