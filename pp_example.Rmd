@@ -1,0 +1,670 @@
+---
+title: "pp_examples"
+author: "Megan Hepner"
+date: "10/4/2017"
+output: html_document
+---
+
+```{r ntmr}
+
+rich_prot = ggplot(matrices_ntmr,aes(x=YEAR,y=richness_mean, colour=factor(PROT), group=factor(PROT)))+ 
+  geom_line(aes(group=PROT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=richness_mean+richness_se,ymin=richness_mean-richness_se),width=0.1)+
+  labs(title= "Richness", x="Year", y="Mean ENS", color = NULL)+
+  scale_color_manual(
+    values =  c("green","magenta"),
+    breaks = c("1", "0"), 
+    labels=c("Protected","Not Protected"))+
+  scale_x_continuous(
+    limits = c(1999, 2016), 
+    breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016),
+    labels=c("2000","","2004","","2008","","2012","","2016"))+
+  theme(
+    legend.position="none",
+    panel.background=element_rect(fill="grey30"), #black
+    panel.grid.major=element_line("grey40"),#element_blank(),
+    panel.grid.minor=element_blank(),
+    axis.title.x=element_text(size=12),
+    axis.title.y=element_text(size=12),
+    plot.title =element_text(hjust = 0),
+    title=element_text(size=12))
+ggsave(file="richness_by_year_PROT_bw.png", path="big_csv/plots")
+#ggsave(file="richness_by_year_PROT_bw.pdf", path="big_csv/plots")
+
+#simpson
+simp_prot = ggplot(matrices_ntmr,aes(x=YEAR,y=simpson_mean, colour=factor(PROT), group=factor(PROT)))+ 
+  geom_line(aes(group=PROT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=simpson_mean+simpson_se,ymin=simpson_mean-simpson_se),width=0.1)+
+  labs(title= "Simpson", x="Year", y="Mean ENS", color = NULL)+
+  scale_color_manual(
+    values =  c("green","magenta"),
+    breaks = c("1", "0"), 
+    labels=c("Protected","Not Protected"))+
+  scale_x_continuous(
+    limits = c(1999, 2016), 
+    breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016),
+    labels=c("2000","","2004","","2008","","2012","","2016"))+
+  theme(
+    legend.position="none",
+    panel.background=element_rect(fill="grey30"), #black
+    panel.grid.major=element_line("grey40"),#element_blank(),
+    panel.grid.minor=element_blank(),
+    axis.title.x=element_text(size=12),
+    axis.title.y=element_text(size=12),
+    plot.title =element_text(hjust = 0),
+    title=element_text(size=12))
+ggsave(file="simpson_diversity_by_year_PROT_bw.png", path="big_csv/plots")
+#ggsave(file="simpson_diversity_by_year_PROT_bw.pdf", path="big_csv/plots")
+
+# shannon
+shan_prot = ggplot(matrices_ntmr,aes(x=YEAR,y=shannon_mean, colour=factor(PROT), group=factor(PROT)))+ 
+  geom_line(aes(group=PROT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=shannon_mean+shannon_se,ymin=shannon_mean-shannon_se),width=0.1)+
+  labs(title= "Shannon", x="Year", y="Mean ENS", color = NULL)+
+  scale_color_manual(
+    values =  c("green","magenta"),
+    breaks = c("1", "0"), 
+    labels=c("Protected","Not Protected"))+
+  scale_x_continuous(
+    limits = c(1999, 2016), 
+    breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016),
+    labels=c("2000","","2004","","2008","","2012","","2016"))+
+  theme(
+    legend.position="none",
+    panel.background=element_rect(fill="grey30"), #black
+    panel.grid.major=element_line("grey40"),#element_blank(),
+    panel.grid.minor=element_blank(),
+    axis.title.x=element_text(size=12),
+    axis.title.y=element_text(size=12),
+    plot.title =element_text(hjust = 0),
+    title=element_text(size=12))
+ggsave(file="shannon_diversity_by_year_PROT_bw.png", path="big_csv/plots")
+#ggsave(file="shannon_diversity_by_year_PROT_bw.pdf", path="big_csv/plots")
+
+# functional
+func_prot = ggplot(matrices_ntmr,aes(x=YEAR,y=func.div_mean, colour=factor(PROT), group=factor(PROT)))+ 
+  geom_line(aes(group=PROT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=func.div_mean+func.div_se,ymin=func.div_mean-func.div_se),width=0.1)+
+  labs(title= "Functional", x="Year", y="Mean ENS", color = NULL)+
+  scale_color_manual(
+    values =  c("green","magenta"),
+    breaks = c("1", "0"), 
+    labels=c("Protected","Not Protected"))+
+  scale_x_continuous(
+    limits = c(1999, 2016), 
+    breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016),
+    labels=c("2000","","2004","","2008","","2012","","2016"))+
+  theme(
+    legend.position="none",
+    panel.background=element_rect(fill="grey30"), #black
+    panel.grid.major=element_line("grey40"),#element_blank(),
+    panel.grid.minor=element_blank(),
+    axis.title.x=element_text(size=12),
+    axis.title.y=element_text(size=12),
+    plot.title =element_text(hjust = 0),
+    title=element_text(size=12))
+ggsave(file="functional_diversity_by_year_PROT_bw.png", path="big_csv/plots")
+
+#save legend
+for_legend_prot_vert = ggplot(matrices_ntmr,aes(x=YEAR,y=abundance_mean, colour=factor(PROT), group=factor(PROT)))+ 
+  geom_line(aes(group=factor(PROT)),lwd=1) +
+  geom_point(size=3) +
+  labs(colour = "")+
+  scale_colour_manual(labels=c("Protected", "Not Protected"), values= c("magenta", "green"))+
+    theme(    
+    legend.position="bottom", #right 
+    legend.text=element_text(size=11, color = "white"),
+    legend.key.size=unit(5,"mm"),
+    legend.background = element_rect(fill = "grey30"),
+    panel.background=element_rect(fill="grey30"), #black
+    panel.grid.major=element_line("grey40"),#element_blank(),
+    panel.grid.minor=element_blank(),
+    axis.title.x=element_text(size=12),
+    axis.title.y=element_text(size=12),
+    plot.title =element_text(hjust = 0),
+    title=element_text(size=12))
+    #legend.position="right", #"none", "right",c(0.8,0.68),
+
+legend_prot_vert <- get_legend(for_legend_prot_vert)
+ggsave(file="legend_prot_vert.png", legend_prot_vert, width =5, height=0.5, path="big_csv/plots")
+
+ntmr_plot = grid.arrange(rich_prot,shan_prot,simp_prot,func_prot,ncol=2)
+ggsave(file="ntmr_plots.png", ntmr_plot, width=7, height=5, path="big_csv/plots")
+
+
+```
+
+```{r strata}
+
+forereef_indices = stats_all_matrices_data %>%
+  filter(STRAT != "INPR") %>%
+  filter(STRAT != "MCPR") %>%
+  filter(STRAT != "OFPR")
+
+patchreef_indices = stats_all_matrices_data %>%
+  filter(STRAT != "FMLR") %>%
+  filter(STRAT != "FSLR") %>%
+  filter(STRAT != "FDLR") %>%
+  filter(STRAT != "HRRF") 
+
+# BY STRAT and YEAR
+#richness
+rich_ys_forereef = ggplot(forereef_indices,aes(x=YEAR,y=richness_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
+  geom_line(aes(group=STRAT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2)+
+  labs(title= "Richness", x="Year", y="Mean ENS", colour = "Strata")+
+  scale_y_continuous(
+    limits=c(5,55),
+    breaks=c(5,10,15,20,25,30,35,40,45,50,55),
+    labels=c("5","","15","","25","","35","","45","","55"))+
+  scale_x_continuous(
+    limits = c(1999, 2016), 
+    breaks = c(2000,2002,2004,2006,2008,2010,2012,2014, 2016), 
+    labels=c("2000","","2004","","2008","","2012","","2016"))+
+  scale_color_manual(name="Strata", labels= c("Forereef Deep Linear Reef","Forereef Medium Linear Reef","Forereef Shallow Linear Reef","High Relief Reef"), values=c("FDLR"="red","FMLR"="yellow","FSLR"="green","HRRF"="orange"))+
+  theme(
+    legend.position="none",
+    panel.background=element_rect(fill="grey30"), #black
+    panel.grid.major=element_line("grey40"),#element_blank(),
+    panel.grid.minor=element_blank(),
+    axis.title.x=element_text(size=12),
+    axis.title.y=element_text(size=12),
+    plot.title =element_text(hjust = 0),
+    title=element_text(size=12))
+ggsave(file="pp_richness_by_year_and_strata1.pdf", path="big_csv/plots")
+
+rich_ys_patchreef = ggplot(patchreef_indices,aes(x=YEAR,y=richness_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
+  geom_line(aes(group=STRAT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2)+
+  labs(title= "", x="Year", y="", colour = "Strata")+
+    scale_y_continuous(
+    limits=c(5,55),
+    breaks=c(5,10,15,20,25,30,35,40,45,50,55),
+    labels=c("5","","15","","25","","35","","45","","55"))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  scale_color_manual(name="Strata", labels= c("Inshore Patch Reef","Midchannel Patch Reef","Offshore Patch Reef"), values=c("INPR"="blue","MCPR"="cyan","OFPR"="magenta"))+
+  theme(
+    legend.position="none",
+    panel.background=element_rect(fill="grey30"), #black
+    panel.grid.major=element_line("grey40"),#element_blank(),
+    panel.grid.minor=element_blank(),
+    axis.title.x=element_text(size=12),
+    axis.title.y=element_text(size=12),
+    plot.title =element_text(hjust = 0),
+    title=element_text(size=12))
+ggsave(file="pp_richness_by_year_and_strata2.pdf", path="big_csv/plots")
+
+#simpson
+sim_ys_forereef = ggplot(forereef_indices,aes(x=YEAR,y=simpson_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
+  geom_line(aes(group=STRAT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymin=simpson_mean-simpson_se, ymax=simpson_mean+simpson_se), width=.2)+
+  labs(title= "Simpson", x="Year", y="Mean ENS", colour = "Strata")+
+  scale_y_continuous(limits= c(3,13),
+                     breaks=c(3,4,5,6,7,8,9,10,11,12,13),
+                     labels=c("","4","","6","","8","","10","","12",""))+
+  scale_x_continuous(limits = c(1999, 2016),
+                     breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016),
+                     labels=c("2000","","2004","","2008","","2012","","2016"))+
+  scale_color_manual(name="Strata", labels= c("Forereef Deep Linear Reef","Forereef Medium Linear Reef","Forereef Shallow Linear Reef","High Relief Reef"), values=c("FDLR"="red","FMLR"="yellow","FSLR"="green","HRRF"="orange"))+
+  #theme_bw()+
+  theme(
+    legend.position="none",
+    panel.background=element_rect(fill="grey30"), #black
+    panel.grid.major=element_line("grey40"),#element_blank(),
+    panel.grid.minor=element_blank(),
+    axis.title.x=element_text(size=12),
+    axis.title.y=element_text(size=12),
+    plot.title =element_text(hjust = 0),
+    title=element_text(size=12))
+ggsave(file="pp_simpson_diversity_by_year_and_strata1.pdf", path="big_csv/plots")
+
+sim_ys_patchreef = ggplot(patchreef_indices,aes(x=YEAR,y=simpson_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
+  geom_line(aes(group=STRAT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymin=simpson_mean-simpson_se, ymax=simpson_mean+simpson_se), width=.2)+
+  labs(title= "", x="Year", y="", colour = "Strata")+
+  scale_y_continuous(limits= c(3,13),
+                     breaks=c(3,4,5,6,7,8,9,10,11,12,13),
+                     labels=c("","4","","6","","8","","10","","12",""))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  scale_color_manual(name="Strata", labels= c("Inshore Patch Reef","Midchannel Patch Reef","Offshore Patch Reef"), values=c("INPR"="blue","MCPR"="cyan","OFPR"="magenta"))+
+  theme(
+    legend.position="none",
+    panel.background=element_rect(fill="grey30"), #black
+    panel.grid.major=element_line("grey40"),#element_blank(),
+    panel.grid.minor=element_blank(),
+    axis.title.x=element_text(size=12),
+    axis.title.y=element_text(size=12),
+    plot.title =element_text(hjust = 0),
+    title=element_text(size=12))
+ggsave(file="pp_simpson_diversity_by_year_and_strata2.pdf", path="big_csv/plots")
+
+# shannon
+shan_ys_forereef = ggplot(forereef_indices,aes(x=YEAR,y=shannon_mean, colour=STRAT, group=STRAT))+ 
+  geom_line(aes(group=STRAT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=shannon_mean+shannon_se,ymin=shannon_mean-shannon_se),width=0.1)+
+  labs(title= "Shannon", x="Year", y="Mean ENS", colour = "Strata")+
+    scale_y_continuous(
+    limits= c(6,21),
+    breaks = c(6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21),
+    labels=c("6","","8","","10","","12","","14","","16","","18","","20",""))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  scale_color_manual(name="Strata", labels= c("Forereef Deep Linear Reef","Forereef Medium Linear Reef","Forereef Shallow Linear Reef","High Relief Reef"), values=c("FDLR"="red","FMLR"="yellow","FSLR"="green","HRRF"="orange"))+
+  #theme_bw()+
+  theme(
+    legend.position="none",
+    panel.background=element_rect(fill="grey30"), #black
+    panel.grid.major=element_line("grey40"),#element_blank(),
+    panel.grid.minor=element_blank(),
+    axis.title.x=element_text(size=12),
+    axis.title.y=element_text(size=12),
+    plot.title =element_text(hjust = 0),
+    title=element_text(size=12))
+ggsave(file="pp_shannon_diversity_by_year_and_strata1.pdf", path="big_csv/plots")
+
+shan_ys_patchreef = ggplot(patchreef_indices,aes(x=YEAR,y=shannon_mean, colour=STRAT, group=STRAT))+ 
+  geom_line(aes(group=STRAT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=shannon_mean+shannon_se,ymin=shannon_mean-shannon_se),width=0.1)+
+  labs(title= "", x="Year", y="", colour = "Strata")+
+scale_y_continuous(
+    limits= c(6,21),
+    breaks = c(6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21),
+    labels=c("6","","8","","10","","12","","14","","16","","18","","20",""))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  scale_color_manual(name="Strata", labels= c("Inshore Patch Reef","Midchannel Patch Reef","Offshore Patch Reef"), values=c("INPR"="blue","MCPR"="cyan","OFPR"="magenta"))+
+  theme(
+    legend.position="none",
+    panel.background=element_rect(fill="grey30"), #black
+    panel.grid.major=element_line("grey40"),#element_blank(),
+    panel.grid.minor=element_blank(),
+    axis.title.x=element_text(size=12),
+    axis.title.y=element_text(size=12),
+    plot.title =element_text(hjust = 0),
+    title=element_text(size=12))
+ggsave(file="pp_shannon_diversity_by_year_and_strata2.pdf", path="big_csv/plots")
+
+# functional
+func_ys_forereef= ggplot(forereef_indices,aes(x=YEAR,y=func.div_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
+  geom_line(aes(group=STRAT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=func.div_mean+func.div_se,ymin=func.div_mean-func.div_se),width=0.1)+
+  labs(title= "Functional", x="Year", y="Mean ENS", colour = "Strata")+
+  scale_y_continuous(limits= c(2,3.25),
+                     breaks=c(2,2.25,2.5,2.75,3,3.25),
+                     labels=c("2","","2.5","","3",""))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  scale_color_manual(name="Strata", labels= c("Forereef Deep Linear Reef","Forereef Medium Linear Reef","Forereef Shallow Linear Reef","High Relief Reef"), values=c("FDLR"="red","FMLR"="yellow","FSLR"="green","HRRF"="orange"))+
+  theme(
+    legend.position="none",
+    panel.background=element_rect(fill="grey30"), #black
+    panel.grid.major=element_line("grey40"),#element_blank(),
+    panel.grid.minor=element_blank(),
+    axis.title.x=element_text(size=12),
+    axis.title.y=element_text(size=12),
+    plot.title =element_text(hjust = 0),
+    title=element_text(size=12))
+ggsave(file="pp_functional_diversity_by_year_and_strata1.pdf", path="big_csv/plots")
+
+func_ys_patchreef= ggplot(patchreef_indices,aes(x=YEAR,y=func.div_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
+  geom_line(aes(group=STRAT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=func.div_mean+func.div_se,ymin=func.div_mean-func.div_se),width=0.1)+
+  labs(title= "", x="Year", y="", colour = "Strata")+
+  scale_y_continuous(limits= c(2,3.25),
+                     breaks=c(2,2.25,2.5,2.75,3,3.25),
+                     labels=c("2","","2.5","","3",""))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  scale_color_manual(name="Strata", labels= c("Inshore Patch Reef","Midchannel Patch Reef","Offshore Patch Reef"), values=c("INPR"="blue","MCPR"="cyan","OFPR"="magenta"))+
+  #theme_bw()+
+  theme(
+    legend.position="none",
+    panel.background=element_rect(fill="grey30"), #black
+    panel.grid.major=element_line("grey40"),#element_blank(),
+    panel.grid.minor=element_blank(),
+    axis.title.x=element_text(size=12),
+    axis.title.y=element_text(size=12),
+    plot.title =element_text(hjust = 0),
+    title=element_text(size=12))
+ggsave(file="pp_functional_diversity_by_year_and_strata2.pdf", path="big_csv/plots")
+
+#g_ys_rich_simp_shan_func <- grid.arrange(rich_ys_forereef, rich_ys_patchreef, sim_ys_forereef, sim_ys_patchreef, shan_ys_forereef, shan_ys_patchreef, func_ys_forereef, func_ys_patchreef, ncol=2)
+
+rich_strat = grid.arrange(rich_ys_forereef, rich_ys_patchreef, ncol=2)
+
+ggsave(file="g_ys_rich_simp_shan_func.pdf", g_ys_rich_simp_shan_func, width=7, height=10, path="big_csv/plots")
+
+#save legend
+for_legend_vert = ggplot(stats_all_matrices_data,aes(x=YEAR,y=abundance_mean, colour=STRAT, group=STRAT))+
+  geom_line(aes(group=STRAT),lwd=1) +
+  geom_point(size=3) +
+  labs(colour = "Strata")+
+  scale_color_manual(name="", 
+                     labels= c("Forereef Deep Linear Reef","Forereef Medium Linear Reef","Forereef Shallow Linear Reef","High Relief Reef","Inshore Patch Reef","Midchannel Patch Reef","Offshore Patch Reef"),
+                     values=c("FDLR"="red","FMLR"="yellow","FSLR"="green","HRRF"="orange","INPR"="blue","MCPR"="cyan","OFPR"="magenta"))+
+  theme(
+    legend.position="none",
+    panel.background=element_rect(fill="grey30"), #black
+    panel.grid.major=element_line("grey40"),#element_blank(),
+    panel.grid.minor=element_blank(),
+    axis.title.x=element_text(size=12),
+    axis.title.y=element_text(size=12),
+    plot.title =element_text(hjust = 0),
+    title=element_text(size=12))
+legend_vert <- get_legend(for_legend_vert)
+ggsave(file="g_ys_legend.png", legend_vert, width=7, height=1, path="big_csv/plots")
+#ggsave(file="g_ys_legend.pdf", legend_vert, width=9, height=1, path="big_csv/plots")
+
+```
+
+```{r strat all}
+
+#richness
+rich_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=richness_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
+  geom_line(aes(group=STRAT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2)+
+  labs(title= "Richness", x="Year", y="Mean ENS", colour = "Strata")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  #scale_y_continuous(
+    #limits=c(15,55),
+    #breaks=c(15,20,25,30,35,40,45,50,55),
+    #labels=c("15","","25","","35","","45","","55"))+
+  scale_color_manual(name="", 
+                     labels= c("Forereef Deep Linear Reef","Forereef Medium Linear Reef","Forereef Shallow Linear Reef","High Relief Reef", "Inshore Patch Reef","Midchannel Patch Reef","Offshore Patch Reef"),
+                  values=c("FDLR"="red","FMLR"="yellow","FSLR"="green","HRRF"="orange","INPR"="blue","MCPR"="cyan","OFPR"="magenta"))+
+  theme(
+    legend.position="right", #right 
+    legend.text=element_text(size=11, color = "white"),
+    legend.key.size=unit(5,"mm"),
+    legend.background = element_rect(fill = "grey30"),
+    panel.background=element_rect(fill="grey30"), #black
+    panel.grid.major=element_line("grey40"),#element_blank(),
+    panel.grid.minor=element_blank(),
+    axis.title.x=element_text(size=12),
+    axis.title.y=element_text(size=12),
+    plot.title =element_text(hjust = 0),
+    title=element_text(size=12))
+ggsave(file="richness_by_year_and_strata.png", path="big_csv/plots")
+ggsave(file="richness_by_year_and_strata.pdf", path="big_csv/plots", width=7, height=7)
+
+legend_prot_horz <- get_legend(rich_ys)
+ggsave(file="legend_strat_horz.png", legend_prot_horz, width =10, height=4, path="big_csv/plots")
+
+legend_prot_vert <- get_legend(rich_ys)
+ggsave(file="legend_strat_vert.png", legend_prot_vert, width =3, height=7, path="big_csv/plots")
+
+#simpson
+simp_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=simpson_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
+  geom_line(aes(group=STRAT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymin=simpson_mean-simpson_se, ymax=simpson_mean+simpson_se), width=.2)+
+  labs(title= "Simpson", x="Year", y="Mean ENS", colour = "Strata")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  scale_color_manual(name="", 
+                     labels= c("Forereef Deep Linear Reef","Forereef Medium Linear Reef","Forereef Shallow Linear Reef","High Relief Reef", "Inshore Patch Reef","Midchannel Patch Reef","Offshore Patch Reef"),
+                  values=c("FDLR"="red","FMLR"="yellow","FSLR"="green","HRRF"="orange","INPR"="blue","MCPR"="cyan","OFPR"="magenta"))+
+  theme(
+    legend.position="bottom", #right 
+    legend.text=element_text(size=11, color = "white"),
+    legend.key.size=unit(5,"mm"),
+    legend.background = element_rect(fill = "grey30"),
+    panel.background=element_rect(fill="grey30"), #black
+    panel.grid.major=element_line("grey40"),#element_blank(),
+    panel.grid.minor=element_blank(),
+    axis.title.x=element_text(size=12),
+    axis.title.y=element_text(size=12),
+    plot.title =element_text(hjust = 0),
+    title=element_text(size=12))
+ggsave(file="simpson_by_year_and_strata.png", path="big_csv/plots")
+ggsave(file="simpson_by_year_and_strata.pdf", path="big_csv/plots", width=7, height=7)
+
+#shannon
+shan_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=shannon_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
+  geom_line(aes(group=STRAT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymin=shannon_mean-shannon_se, ymax=shannon_mean+shannon_se), width=.2)+
+  labs(title= "Shannon", x="Year", y="Mean ENS", colour = "Strata")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  scale_color_manual(name="", 
+                     labels= c("Forereef Deep Linear Reef","Forereef Medium Linear Reef","Forereef Shallow Linear Reef","High Relief Reef", "Inshore Patch Reef","Midchannel Patch Reef","Offshore Patch Reef"),
+                  values=c("FDLR"="red","FMLR"="yellow","FSLR"="green","HRRF"="orange","INPR"="blue","MCPR"="cyan","OFPR"="magenta"))+
+  theme(
+    legend.position="bottom", #right 
+    legend.text=element_text(size=11, color = "white"),
+    legend.key.size=unit(5,"mm"),
+    legend.background = element_rect(fill = "grey30"),
+    panel.background=element_rect(fill="grey30"), #black
+    panel.grid.major=element_line("grey40"),#element_blank(),
+    panel.grid.minor=element_blank(),
+    axis.title.x=element_text(size=12),
+    axis.title.y=element_text(size=12),
+    plot.title =element_text(hjust = 0),
+    title=element_text(size=12))
+ggsave(file="shannon_by_year_and_strata.png", path="big_csv/plots")
+ggsave(file="shannon_by_year_and_strata.pdf", path="big_csv/plots", width=7, height=7)
+
+#shannon
+func_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=func.div_mean, colour=STRAT, group=STRAT))+ #shape=STRAT
+  geom_line(aes(group=STRAT),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymin=func.div_mean-func.div_se, ymax=func.div_mean+func.div_se), width=.2)+
+  labs(title= "Functional", x="Year", y="Mean ENS", colour = "Strata")+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  scale_color_manual(name="", 
+                     labels= c("Forereef Deep Linear Reef","Forereef Medium Linear Reef","Forereef Shallow Linear Reef","High Relief Reef", "Inshore Patch Reef","Midchannel Patch Reef","Offshore Patch Reef"),
+                  values=c("FDLR"="red","FMLR"="yellow","FSLR"="green","HRRF"="orange","INPR"="blue","MCPR"="cyan","OFPR"="magenta"))+
+  theme(
+    legend.position="bottom", #right 
+    legend.text=element_text(size=11, color = "white"),
+    legend.key.size=unit(5,"mm"),
+    legend.background = element_rect(fill = "grey30"),
+    panel.background=element_rect(fill="grey30"), #black
+    panel.grid.major=element_line("grey40"),#element_blank(),
+    panel.grid.minor=element_blank(),
+    axis.title.x=element_text(size=12),
+    axis.title.y=element_text(size=12),
+    plot.title =element_text(hjust = 0),
+    title=element_text(size=12))
+ggsave(file="functional_by_year_and_strata.png", path="big_csv/plots")
+ggsave(file="functional_by_year_and_strata.pdf", path="big_csv/plots", width=7, height=7)
+```
+
+```{r subregion}
+
+#richness
+rich_g= ggplot(matrices_strat_grouped_with_subregion,aes(x=YEAR,y=richness_mean, colour=SUBREGION_DOMAIN, group=SUBREGION_DOMAIN))+ #shape=STRAT
+  geom_line(aes(group=SUBREGION_DOMAIN),lwd=1) +
+  geom_point(size=3) +
+ geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.1)+
+  labs(title= "Richness", x="Year", y="Mean ENS", colour = "")+
+  scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("cyan", "deeppink", "yellow"))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  theme(
+    legend.position="bottom", #right 
+    legend.text=element_text(size=11, color = "white"),
+    legend.key.size=unit(5,"mm"),
+    legend.background = element_rect(fill = "grey30"),
+    panel.background=element_rect(fill="grey30"), #black
+    panel.grid.major=element_line("grey40"),#element_blank(),
+    panel.grid.minor=element_blank(),
+    axis.title.x=element_text(size=12),
+    axis.title.y=element_text(size=12),
+    plot.title =element_text(hjust = 0),
+    title=element_text(size=12))
+ggsave(file="richness_subregion.png", path="big_csv/plots")
+ggsave(file="richness_subregion.pdf", path="big_csv/plots")
+
+#simpson
+sim_g= ggplot(matrices_strat_grouped_with_subregion,aes(x=YEAR,y=simpson_mean, colour=SUBREGION_DOMAIN, group=SUBREGION_DOMAIN))+ #shape=STRAT
+  geom_line(aes(group=SUBREGION_DOMAIN),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymin=simpson_mean-simpson_se, ymax=simpson_mean+simpson_se), width=.1)+
+  labs(title= "Simpson", x="Year", y="Mean ENS", colour = "")+
+  scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("cyan", "deeppink", "yellow"))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  theme(
+    legend.position="bottom", #right 
+    legend.text=element_text(size=11, color = "white"),
+    legend.key.size=unit(5,"mm"),
+    legend.background = element_rect(fill = "grey30"),
+    panel.background=element_rect(fill="grey30"), #black
+    panel.grid.major=element_line("grey40"),#element_blank(),
+    panel.grid.minor=element_blank(),
+    axis.title.x=element_text(size=12),
+    axis.title.y=element_text(size=12),
+    plot.title =element_text(hjust = 0),
+    title=element_text(size=12))
+ggsave(file="simpson__subregion.png", path="big_csv/plots")
+ggsave(file="simpson__subregion.pdf", path="big_csv/plots")
+
+#shannon
+shan_g= ggplot(matrices_strat_grouped_with_subregion,aes(x=YEAR,y=shannon_mean, colour=SUBREGION_DOMAIN, group=SUBREGION_DOMAIN))+ #shape=STRAT
+  geom_line(aes(group=SUBREGION_DOMAIN),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymin=shannon_mean-shannon_se, ymax=shannon_mean+shannon_se), width=.1)+
+  labs(title= "Shannon", x="Year", y="Mean ENS", colour = "")+
+  scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("cyan", "deeppink", "yellow"))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  theme(
+    legend.position="bottom", #right 
+    legend.text=element_text(size=11, color = "white"),
+    legend.key.size=unit(5,"mm"),
+    legend.background = element_rect(fill = "grey30"),
+    panel.background=element_rect(fill="grey30"), #black
+    panel.grid.major=element_line("grey40"),#element_blank(),
+    panel.grid.minor=element_blank(),
+    axis.title.x=element_text(size=12),
+    axis.title.y=element_text(size=12),
+    plot.title =element_text(hjust = 0),
+    title=element_text(size=12))
+ggsave(file="shannon_subregion.png", path="big_csv/plots")
+ggsave(file="shannon_subregion.pdf", path="big_csv/plots")
+
+#functional
+func_g= ggplot(matrices_strat_grouped_with_subregion,aes(x=YEAR,y=func.div_mean, colour=SUBREGION_DOMAIN, group=SUBREGION_DOMAIN))+ #shape=STRAT
+  geom_line(aes(group=SUBREGION_DOMAIN),lwd=1) +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymax=func.div_mean+func.div_se,ymin=func.div_mean-func.div_se),width=0.1)+
+  labs(title= "Functional", x="Year", y="Mean ENS", colour = "")+
+  scale_colour_manual(labels=c("Lower Keys", "Middle Keys", "Upper Keys"), values= c("cyan", "deeppink", "yellow"))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  theme(
+    legend.position="bottom", #right 
+    legend.text=element_text(size=11, color = "white"),
+    legend.key.size=unit(5,"mm"),
+    legend.background = element_rect(fill = "grey30"),
+    panel.background=element_rect(fill="grey30"), #black
+    panel.grid.major=element_line("grey40"),#element_blank(),
+    panel.grid.minor=element_blank(),
+    axis.title.x=element_text(size=12),
+    axis.title.y=element_text(size=12),
+    plot.title =element_text(hjust = 0),
+    title=element_text(size=12))
+ggsave(file="functional_subregion.png", path="big_csv/plots")
+ggsave(file="functional_subregion.pdf", path="big_csv/plots")
+
+#save legend
+for_legend_g <- get_legend(rich_g)
+```
+
+```{r comparing diversity}
+
+#Melt dataframe so diversity indices are in a single column
+  x = reshape2::melt(all_matrices_data, id.vars = c("YEAR"),
+                     measure.vars=c("richness","shannon","simpson","func.div")) 
+#Summarize means and SEs by year and variable
+  x=plyr::ddply(x, c("YEAR", "variable"), summarize, value.mean=mean(value), value.se=plotrix::std.error(value))
+#Rename levels for figure plotting
+  levels(x$variable)=c("Richness", "Shannon", "Simpson", "Functional")
+  diversity_plot = x %>%
+    as.tibble()
+  
+  diversity_year_plot = diversity_plot %>% 
+    ggplot(.,aes(x=YEAR, y=value.mean, color=variable))+
+    geom_errorbar(aes(ymax=value.mean+value.se,ymin=value.mean-value.se),width=0.2)+
+    geom_point(size=3)+
+    geom_line(aes(group=variable),lwd=1)+
+    labs(title= "Florida Keys Reef Fish Biodiversity", x="Year", y="", colour = "")+
+    scale_y_continuous(limits= c(0,50),
+                       breaks=c(0,5,10,15,20,25,30,35,40,45,50), 
+                       labels=c("0","","10","","20","","30","","40","","50"))+
+    scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
+  scale_color_manual(
+    labels= c("Richness","Shannon diversity","Simpson diversity","Functional diversity"),
+    values=c("Richness"="red",
+             "Shannon"="yellow",
+             "Simpson"="green",
+             "Functional"="cyan"))+
+  #theme_bw()+
+  theme(
+    legend.position="", #right 
+    legend.text=element_text(size=11, color = "white"),
+    legend.key.size=unit(5,"mm"),
+    legend.background = element_rect(fill = "grey30"),
+    panel.background=element_rect(fill="grey30"), #black
+    panel.grid.major=element_line("grey40"),#element_blank(),
+    panel.grid.minor=element_blank(),
+    axis.title.x=element_text(size=12),
+    axis.title.y=element_text(size=12),
+    plot.title =element_text(hjust = 0),
+    title=element_text(size=12))
+
+ggsave(file="diversity_plot.png", path="big_csv/plots")  
+ggsave(file="diversity_plot.pdf", path="big_csv/plots")
+
+#save legend
+for_legend_rssf <- get_legend(diversity_year_plot)
+ggsave(file="legend_diversity.png", for_legend_rssf, width =7, height=7, path="big_csv/plots")
+
+diversity_simp_shan_func = diversity_plot %>% 
+  filter(variable != "Richness") %>%
+  as.tibble()
+  
+simp_shan_func_plot =  
+    ggplot(diversity_simp_shan_func, aes(x=YEAR, y=value.mean, color=variable))+
+    geom_errorbar(aes(ymax=value.mean+value.se,ymin=value.mean-value.se),width=0.2)+
+    geom_point(size=3)+
+    geom_line(aes(group=variable),lwd=1)+
+    labs(title= "Florida Keys Reef Fish Biodiversity", x="Year", y="Effective Number of Species", colour = "")+
+    scale_y_continuous(limits= c(2,16),
+                       breaks=c(2,4,6,8,10,12,14,16), 
+                       labels=c("2","4","6","8","10","12","14","16"))+
+    scale_x_continuous(limits = c(1999, 2016), 
+                       breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), 
+                       labels=c("2000","2002","2004","2006","2008","2010","2012","2014","2016"))+
+  scale_color_manual(
+    labels= c("Shannon Diversity","Simpson diversity","Functional diversity"),
+    values=c("Shannon"="yellow",
+             "Simpson"="green",
+             "Functional"="cyan"))+
+  #theme_bw()+
+  theme(
+    legend.position="bottom", #right 
+    legend.text=element_text(size=11, color = "white"),
+    legend.key.size=unit(5,"mm"),
+    legend.background = element_rect(fill = "grey30"),
+    panel.background=element_rect(fill="grey30"), #black
+    panel.grid.major=element_line("grey40"),#element_blank(),
+    panel.grid.minor=element_blank(),
+    axis.title.x=element_text(size=12),
+    axis.title.y=element_text(size=12),
+    plot.title =element_text(hjust = 0),
+    title=element_text(size=12))
+
+ggsave(file="diversity_ssf.png", path="big_csv/plots")
+ggsave(file="diversity_ssf.pdf", path="big_csv/plots")
+
+#save legend
+for_legend_ssf <- get_legend(simp_shan_func_plot)
+ggsave(file="legend_diversity2.png", for_legend_ssf, width =7, height=7, path="big_csv/plots")
+
+```
