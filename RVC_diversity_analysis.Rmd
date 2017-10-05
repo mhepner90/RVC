@@ -1206,14 +1206,16 @@ rich_ys = ggplot(stats_all_matrices_data,aes(x=YEAR,y=richness_mean, colour=STRA
   geom_errorbar(aes(ymin=richness_mean-richness_se, ymax=richness_mean+richness_se), width=.2)+
   labs(title= "D) Richness", x="Year", y="Mean ENS", colour = "Strata")+
   scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016), labels=c("2000","","2004","","2008","","2012","","2016"))+
-  theme_bw()+
+  #theme_bw()+
   theme(
       legend.position="none",
-      panel.grid.major=element_blank(),
+      panel.background=element_rect(fill="grey30"),
+      panel.grid.major=element_line("grey40"), #element_blank(),
       panel.grid.minor=element_blank(),
       axis.title.x=element_text(size=12),
       axis.title.y=element_text(size=12),
-      title=element_text(size=12))
+      title=element_text(size=12),
+      plot.title =element_text(hjust = 0))
 ggsave(file="richness_by_year_and_strata.pdf", path="big_csv/plots")
 
 #simpson
@@ -1848,7 +1850,7 @@ for_legend_vert = ggplot(stats_all_matrices_data,aes(x=YEAR,y=abundance_mean, co
   geom_point(size=3) +
   labs(colour = "Strata")+
   scale_color_manual(name="", 
-                     labels= c("Forereef Deep Linear Reef","Forereef Medium Linear Reef","Forereef Shallow Linear Reef","High Relief Reef","Inshore Patch Reef","Midchannel Patch Reef","Offshore Patch Reef"), 
+                     labels= c("Forereef Deep Linear Reef","Forereef Medium Linear Reef","Forereef Shallow Linear Reef","High Relief Reef","Inshore Patch Reef","Midchannel Patch Reef","Offshore Patch Reef"),
                      values=c("FDLR"="red","FMLR"="yellow","FSLR"="green","HRRF"="orange","INPR"="blue","MCPR"="cyan","OFPR"="magenta"))+
   theme(
       panel.grid.major=element_line(color="grey55"), #element_blank()
