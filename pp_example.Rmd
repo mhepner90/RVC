@@ -668,3 +668,51 @@ for_legend_ssf <- get_legend(simp_shan_func_plot)
 ggsave(file="legend_diversity2.png", for_legend_ssf, width =7, height=7, path="big_csv/plots")
 
 ```
+
+```{r drivers plot}
+
+partial_deviance_list = read_csv("partial_deviance_list.csv")
+
+partial_deviance_list = partial_deviance_list %>%
+  filter(Diversity != "Abundance")%>%
+  filter(Diversity != "Biomass")%>%
+  filter(Diversity != "Evenness") 
+
+partial_deviance_data=subset(partial_deviance_list, Predictor!="All")
+
+diversity_order = c("Richness", "Simpson", "Shannon", "Functional")
+
+partial_deviance_data= partial_deviance_list %>%
+  filter(Predictor != "All") %>%
+  mutate(Diversity = factor(Diversity, levels=diversity_order))
+
+partial_deviance_explained = 
+  ggplot(partial_deviance_data,aes(x= Diversity, y= Partial_Deviance*100, fill=Predictor))+
+  geom_bar(position="dodge", color="black", stat = "identity")+
+  geom_errorbar(aes(max=(Partial_Deviance+Partial_Deviance_SE)*100,
+                    min=(Partial_Deviance-Partial_Deviance_SE)*100),
+                  width=0.3,size=0.6, position=position_dodge(width=0.9))+
+    labs(x="", y="Total % Deviance Explained\n")+
+    #scale_fill_manual(values=c("grey50","grey80","white"))+
+    #theme_bw(base_size=18)+
+  theme(
+    legend.position="bottom", #right 
+    legend.text=element_text(size=16, color = "white"),
+    legend.key.size=unit(5,"mm"),
+    legend.background = element_rect(fill = "grey30"),
+    legend.title = element_text(size=16, color= "white"),
+    panel.background=element_rect(fill="grey30"), #black
+    panel.grid.major=element_line("grey40"),#element_blank(),
+    panel.grid.minor=element_blank(),
+    axis.title.x=element_text(size=20),
+    #axis.title.y=element_text(size=20),
+    axis.text.y=element_text(size=20),
+    axis.text.x=element_text(size=20),
+    plot.title =element_text(hjust = 0),
+    title=element_text(size=20))
+
+ggsave(file="pp_partial_deviance_explained.png", partial_deviance_explained, width=8.5, height=11, path="big_csv/plots")
+
+ggsave(file="pp_partial_deviance_explained.pdf", partial_deviance_explained, width=8.5, height=11, path="big_csv/plots")
+
+```
