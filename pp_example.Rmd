@@ -698,7 +698,8 @@ partial_deviance_explained =
   theme(
     legend.position="bottom", #right 
     legend.text=element_text(size=16, color = "white"),
-    legend.key.size=unit(5,"mm"),
+    legend.key.size=unit(10,"mm"),
+    legend.key.width = unit(14, "mm"),
     legend.background = element_rect(fill = "grey30"),
     legend.title = element_text(size=16, color= "white"),
     panel.background=element_rect(fill="grey30"), #black
