@@ -89,6 +89,7 @@ $Rao Q = \sum_{i=1}^S-1 \sum_{j=i+1}^S d_i p_i p_j$
 #rm(list = ls())
 
 library(ape) #read.tree, as.phylo 
+library(d3treeR)
 library(devtools) #install_github
 library(FD) #gowdis
 library(fpc) #pamk
@@ -106,7 +107,8 @@ library(readr) #saveRDS, read_rds, readRDS
 library(reshape2) #melt
 #devtools::install_github('jeremiaheb/rvc')
 library(rvc) #getPSUAbundance, getStrataAbundance, getDomainAbundance 
-library(tidyverse) #select, filter, mutate, group_by, summarize  
+library(tidyverse) #select, filter, mutate, group_by, summarize 
+library(treemap)
 library(vegan) #spec, diversity 
 library(cowplot)
 
@@ -575,11 +577,21 @@ treemap2 =
     rootname = "Species Traits")
 
 treemap2
+
+library(htmlwidgets)
+library(webshot)
+
+htm = "./htmlwidget_treemap2.html"
+saveWidget(treemap2, htm)
+
+png = "./htmlwidget_treemap2.png"
+webshot(htm, png)
+
 ```
 
 
-
 ```{r trait visualization continued}
+
 treemap3 = 
   d3treeR::d3tree2(
     treemap(
@@ -592,19 +604,6 @@ treemap3 =
     #fontsize.title = 14, 
     #algorithm = "squarified"
     rootname = "Species Traits")
-
-#treemap example 
-data(GNI2014)
-d3tree2(
-  treemap(
-    GNI2014
-    ,index=c("continent", "iso3")
-    ,vSize="population"
-    ,vColor="GNI"
-    ,type="value"
-  )
-  , rootname = "World"
-)
 
 ```
 
