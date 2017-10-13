@@ -11,7 +11,7 @@ library(treemap)
 library(d3treeR) # devtools::install_github("timelyportfolio/d3treeR")
 
 # turn off read_csv messages
-knitr::opts_chunk$set(warning=F, message=F, echo=F)
+#knitr::opts_chunk$set(warning=F, message=F, echo=F)
 ```
 
 ## Create
@@ -81,6 +81,7 @@ treemap2
 ## Static
 
 ```{r htmlwidget to png}
+
 # additional libraries
 library(htmlwidgets)
 library(webshot)
