@@ -557,9 +557,9 @@ trait_matrix_treemap = trait_matrix %>%
   ungroup() %>%
   as.data.frame()
 
-devtools::install_github("timelyportfolio/d3treeR")
+
 library(treemap)
-library(d3treeR)
+library(d3treeR) # devtools::install_github("timelyportfolio/d3treeR")
 
 treemap2 = 
   d3treeR::d3tree2(
@@ -574,6 +574,12 @@ treemap2 =
     #algorithm = "squarified"
     rootname = "Species Traits")
 
+treemap2
+```
+
+
+
+```{r trait visualization continued}
 treemap3 = 
   d3treeR::d3tree2(
     treemap(
