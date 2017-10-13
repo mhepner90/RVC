@@ -448,9 +448,11 @@ write_csv(psu_common_less1, "psu_common1.csv")
 psu_common = read_csv("psu_common1.csv")
 
 library(plotly)
-plot_ly(psu_common, labels=~COMNAME, values =~com_percent, type="pie")
 
-plot_ly(psu_common_less1, labels=~COMNAME, values =~com_percent, type="pie")
+abunpie =plot_ly(psu_common_less1, labels=~COMNAME, values =~com_percent, type="pie")
+
+pie = './htmlwidget_abunpie.html'
+saveWidget(abunpie, pie)
 
 
 
