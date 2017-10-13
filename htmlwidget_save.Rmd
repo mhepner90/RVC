@@ -55,9 +55,11 @@ treemap2 =
 treemap2
 ```
 
-- CSS font styles might clash between standalone html and embedded in presentation, which is fixable with some work
+
 
 ## Static
+
+- CSS font styles might clash between standalone html and embedded in presentation, which is fixable with some work
 
 ```{r htmlwidget to png}
 # additional libraries
