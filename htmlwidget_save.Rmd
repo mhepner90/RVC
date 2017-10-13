@@ -101,4 +101,3 @@ webshot(htm, png)
 - CSS font styles might clash between standalone html and embedded in presentation, which is fixable with some work
 
 ![](./htmlwidget_treemap2.png)
-
