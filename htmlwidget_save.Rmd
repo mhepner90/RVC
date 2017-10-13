@@ -20,6 +20,29 @@ knitr::opts_chunk$set(warning=F, message=F, echo=F)
 
 - Put the rendered `htmlwidgets_save.html` (and `rendered htmlwidgets_save.html`) in a new `docs/` folder, [turn on Github Pages using docs as Source in your repository's Settings](https://github.com/blog/2233-publish-your-project-documentation-with-github-pages) (requires admin privileges), and you'll be able to publicly view it at https://mhepner90.github.io/RVC/htmlwidget_save.html.
 
+## Species Abundances 
+
+```{r pie chart}
+psu_common <- psu_family %>%
+    group_by(COMNAME) %>%
+    summarize(abundance_sum = sum(abundance)) %>%
+    filter(abundance_sum != "0") %>% #removes 32 species 
+  mutate(com_percent = (abundance_sum/sum(abundance_sum))*100) %>%
+  mutate(com_percent=round(com_percent,4))
+write_csv(psu_common, "psu_common.csv")
+
+psu_common = read_csv("psu_common.csv")
+
+library(plotly)
+abunpie = plot_ly(psu_common, labels=~COMNAME, values =~com_percent, type="pie")
+
+pie = './htmlwidget_abunpie.html'
+saveWidget(abunpie, pie)
+
+```
+
+- 293 species accounted for <1% of abundance data
+
 ```{r trait visualization}
 trait_matrix = read_csv('functional_diversity/species_trait_matrix_316_spp.csv')
 trait_matrix_treemap = trait_matrix %>%
@@ -49,17 +72,13 @@ treemap2 =
     rootname = "Species Traits")
 ```
 
-## Interactive
+## Species Traits
 
 ```{r}
 treemap2
 ```
 
-
-
 ## Static
-
-- CSS font styles might clash between standalone html and embedded in presentation, which is fixable with some work
 
 ```{r htmlwidget to png}
 # additional libraries
@@ -78,6 +97,8 @@ webshot(htm, png)
 ```
 
 - You might need to crop and resize image in image editor (eg Preview on Mac) to fit on slide
+
+- CSS font styles might clash between standalone html and embedded in presentation, which is fixable with some work
 
 ![](./htmlwidget_treemap2.png)
 
