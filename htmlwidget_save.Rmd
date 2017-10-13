@@ -94,10 +94,11 @@ saveWidget(treemap2, htm)
 
 # save widget as png
 webshot(htm, png)
+
+#![](./htmlwidget_treemap2.png)
+
+#You might need to crop and resize image in image editor (eg Preview on Mac) to fit on slide
+
+#CSS font styles might clash between standalone html and embedded in presentation, which is fixable with some work
+
 ```
-
-- You might need to crop and resize image in image editor (eg Preview on Mac) to fit on slide
-
-- CSS font styles might clash between standalone html and embedded in presentation, which is fixable with some work
-
-![](./htmlwidget_treemap2.png)
