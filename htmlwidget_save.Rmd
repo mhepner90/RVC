@@ -1,0 +1,47 @@
+---
+title: "Florida Keys Reef Fish Biodiversity"
+author: "Megan Hepner"
+date: "April 28, 2017"
+output: html_document
+---
+
+# Default
+
+```{r setup, include=F}
+library(tidyverse)
+library(treemap)
+library(d3treeR) # devtools::install_github("timelyportfolio/d3treeR")
+
+# turn off read_csv messages
+knitr::opts_chunk$set(warning=F, message=F)
+```
+
+```{r trait visualization}
+trait_matrix = read_csv('functional_diversity/species_trait_matrix_316_spp.csv')
+trait_matrix_treemap = trait_matrix %>%
+  select(Common_name, Maxlength, Trophic_level, Trophic_group, Water_column,Diel_activity,Substrate_type,Complexity, Gregariousness) %>% 
+  group_by(Maxlength,
+           Trophic_level,
+           Trophic_group,
+           Water_column,
+           Diel_activity,
+           Substrate_type,
+           Complexity,
+           Gregariousness) %>%
+  summarise(n = n())%>% 
+  ungroup() %>%
+  as.data.frame()
+
+treemap2 = 
+  d3tree2(
+    treemap(
+      dtf = trait_matrix_treemap,
+      index = c("Trophic_group", "Diel_activity", "Substrate_type", "Trophic_level", "Water_column","Maxlength","Complexity","Gregariousness"),
+      vSize = "n", 
+      vColor = "Trophic_group",
+      type = "index"),
+    rootname = "Species Traits")
+
+treemap2
+```
+
