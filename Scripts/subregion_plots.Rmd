@@ -1,0 +1,121 @@
+---
+title: "trying_multiple_plots"
+author: "Megan Hepner"
+date: "7/26/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+# by subregion and years (plot for each strat_grouped category)
+apply(seq_along(matrices_strat_grouped_with_subregion[,c(4,10,16,22,28,34,40)], function(h){ #mean values 
+  apply(seq_along(matrices_strat_grouped_with_subregion[,c(7,13,19,25,31,37,43)], function(j){ #standard errors
+    ggplot(aes(matrices_strat_grouped_with_subregion, x=YEAR, y=h, group=YEAR)) 
+  }))
+}))
+
+# automating plot-making with functions
+ab_sy_HR = matrices_strat_grouped_with_subregion %>% filter(STRAT_GROUPED=="HIGH_RELIEF" & SUBREGION_DOMAIN!="BiscBay") 
+
+subregion_plot <- function(matrices_strat_grouped_with_subregion, na.rm = TRUE, ...) {
+  mean_matrices <- matrices_strat_grouped_with_subregion[,c(4,10,40,16,22,28,34)]
+  matrices_names <- c("A) Mean Abundance", "B) Mean Biomass", "C) Evenness", "D) Richness", "E) Simpson", "F) Shannon", "G) Functional") 
+  se_matrices <- matrices_strat_grouped_with_subregion[,c(7,13,43,19,25,31,37)]
+ for (i in seq_along(mean_matrices)) {
+   #testplot <- 
+     ggplot(x=YEAR, y=mean_matrices[i], colour=SUBREGION_DOMAIN, group=SUBREGION_DOMAIN) +   
+     geom_point(size=3) +
+     geom_errorbar(aes(ymax=mean_matrices[i]+se_matrices[i],ymin=mean_matrices[i]-se_matrices[i]),width=0.1)
+
+```
+
+```{r}
+
+df = read_rds("matrices_strat_grouped_with_subregion_rds") %>%
+  filter(SUBREGION_DOMAIN != "BiscBay") %>%
+  select(YEAR,SUBREGION_DOMAIN,STRAT_GROUPED,abundance_mean, biomass_mean,evenness_mean,richness_mean,simpson_mean,shannon_mean,func.div_mean,abundance_se, biomass_se,evenness_se,richness_se,simpson_se,shannon_se,func.div_se)
+
+#Plot and facet by month (12" x 18")
+lapply(seq_along(df),function(i) {
+  do.call(grid.arrange,c(lapply(seq_along(df[[i]]),function(j) {
+      ggplot(subset(df,df$SRAT_GROUPED==strata_grp_list[i]),
+                 aes(x= YEAR, y=i, colour=SUBREGION_DOMAIN, group=SUBREGION_DOMAIN))+
+    geom_point(size=3) +
+    geom_errorbar(aes(ymax=abundance_mean+abundance_se,ymin=abundance_mean-abundance_se),width=0.1)+
+    geom_line(aes(group=SUBREGION_DOMAIN),lwd=1)+
+    labs(title= "", x="Year", y="", colour = "Subregion")+
+    scale_colour_manual(labels=c("LK", "MK", "UK"), values= c("red", "green", "blue"))+
+    scale_x_continuous(
+      limits = c(1999, 2016), 
+      breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016),
+      labels=c("2000","","2004","","2008","","2012","","2016"))+
+    theme_bw()+
+    theme(
+      legend.position="none",
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      axis.title.x=element_text(size=12),
+      axis.title.y=element_text(size=12),
+      title=element_text(size=12))
+  }
+}
+
+```
+
+```{r}
+
+df = matrices_strat_grouped_with_subregion
+
+test = matrices_strat_grouped_with_subregion %>%
+  filter(SUBREGION_DOMAIN != "BiscBay")
+
+#Melt dataframe so diversity indices are in a single column
+  x = reshape2::melt(test, id.vars = c("YEAR", "SUBREGION_DOMAIN", "STRAT_GROUPED"), measure.vars=c("abundance_sum", "biomass_sum", "evenness","richness","simpson","shannon","func.div"))
+
+#Summarize means and SEs by year, subregion, and variable
+  x=plyr::ddply(x, c("YEAR", "SUBREGION_DOMAIN", "variable"), summarize, value.mean=mean(value), value.se=plotrix::std.error(value))
+
+#Rename levels for figure plotting
+  levels(x$variable)=c("A) Mean Abundance", "B) Mean Biomass", "C) Evenness", "D) Richness", "E) Simpson", "F) Shannon", "G) Functional")
+
+#Rename regions for figure plotting
+x$SUBREGION_DOMAIN=factor(m$SUBREGION_DOMAIN)
+levels(x$SUBREGION_DOMAIN)=c("Upper Keys", "Middle Keys", "Lower Keys")
+
+#Plot line graph
+p = ggplot(m,aes(x=YEAR, y=value.mean, col=SUBREGION_DOMAIN, group=SUBREGION_DOMAIN))+
+  geom_point(size=3)+
+  geom_errorbar(aes(ymax=value.se+value.se,ymin=value.se-value.se),width=0.1)+
+  facet_wrap(~variable,scales="free")+
+  #facet_wrap(STRAT_GROUPED~variable,scales="free")+
+  labs(title= "", x="Year", y="", colour = "Subregion")+
+  #scale_colour_manual(labels=c("High reef", "Linear reef", "Patch reef"), values= c("red", "green", "blue"))+
+  scale_x_continuous(limits = c(1999, 2016), breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016))+
+  theme_bw(base_size=16)+
+  theme(
+      plot.margin=unit(c(1,1,1,1),"cm"),
+      legend.position="right",
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      strip.background=element_blank())
+
+```
+
+```{r}
+
+df = read_rds("matrices_strat_grouped_with_subregion_rds") %>%
+  filter(SUBREGION_DOMAIN != "BiscBay") %>%
+  select(YEAR,SUBREGION_DOMAIN,STRAT_GROUPED,abundance_mean, biomass_mean,evenness_mean,richness_mean,simpson_mean,shannon_mean,func.div_mean,abundance_se, biomass_se,evenness_se,richness_se,simpson_se,shannon_se,func.div_se)
+
+lapply(seq_along(df[,4:11]), function(j){
+  ggplot(aes(x=YEAR, y=[[j]], color=SUBREGION_DOMAIN, group=SUBREGION_DOMAIN))
+})
+
+for (i in df[,4:10]){
+  #for(j in df[,11:17]){
+   plot = ggplot(data = df, x=YEAR, y=df[[i]], colour=SUBREGION_DOMAIN, group=SUBREGION_DOMAIN)
+  } 
+}
+
+```
+

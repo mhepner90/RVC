@@ -1,0 +1,34 @@
+Comparison,Z,P.unadj,P.adj
+Lower - Middle,-4.047640331,5.17E-05,1.55E-04
+Lower - Upper,-0.447590354,0.654448866,0.654448866
+Middle - Upper,3.844107495,1.21E-04,2.42E-04
+,,,
+Biomass,,,
+Comparison,Z,P.unadj,P.adj
+Lower - Middle,1.980602398,0.04763588,0.04763588
+Lower - Upper,-3.93465955,8.33E-05,1.67E-04
+Middle - Upper,-4.565786719,4.98E-06,1.49E-05
+,,,
+Evenness ,,,
+Comparison,Z,P.unadj,P.adj
+Lower - Middle,3.893189152,9.89E-05,1.98E-04
+Lower - Upper,0.020290626,0.983811534,0.983811534
+Middle - Upper,-3.96257363,7.41E-05,2.22E-04
+,,,
+Simpson,,,
+Comparison,Z,P.unadj,P.adj
+Lower - Middle,3.902137375,9.53E-05,2.86E-04
+Lower - Upper,0.631399822,0.527779132,0.527779132
+Middle - Upper,-3.576713792,3.48E-04,6.96E-04
+,,,
+Shannon,,,
+Comparison,Z,P.unadj,P.adj
+Lower - Middle,4.98736529,6.12E-07,1.84E-06
+Lower - Upper,1.551027597,0.120895071,0.120895071
+Middle - Upper,-4.090526168,4.30E-05,8.61E-05
+,,,
+Functional ,,,
+Comparison,Z,P.unadj,P.adj
+Lower - Middle,2.470236891,0.01350236,0.027004721
+Lower - Upper,3.748133772,1.78E-04,5.34E-04
+Middle - Upper,-0.099932305,0.920398069,0.920398069

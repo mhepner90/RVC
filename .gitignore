@@ -1,13 +1,14 @@
-<<<<<<< HEAD
 .Rproj.user
 .Rhistory
 .RData
 .Ruserdata
-=======
-.Rproj.user
-.Rhistory
-.RData
-.Ruserdata
-
 big_csv
->>>>>>> df6bdd6922a35718dbd5f0350543cec7d7d9a514
+all_matrices_data.csv
+fd.tiff
+ex.tre
+90srvc/.DS_Store
+trophic_level/
+RVC_diversity_analysis.html
+Rplot.tiff
+partial_deviances_explained.pdf
+trait_space.pdf

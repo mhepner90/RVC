@@ -1,0 +1,33 @@
+Species_code,SPECIES_CD,Latin_name,Common_name,Maxlength,Trophic_level,Trophic_group,Water_column,Diel_activity,Substrate_type,Complexity,Gregariousness
+303,ACA SOLA,Acanthocybium solandri,Wahoo,250,4.3,Higher carnivore,Pelagic non-site attached,Day,Hard bottom,Low,3
+413,ACA SPIN,Acanthemblemaria spinosa,Spinyhead blenny,2.8,3.1,Benthic invertivore,Benthic,Day,Hard bottom,Medium,1
+268,ALB VULP,Albula vulpes,Bonefish,104,3.7,Benthic invertivore,Pelagic non-site attached,Day,Soft sediment,Low,1
+426,APO PHEN,Apogon phenax,Mimic cardinalfish,7.5,3.4,Benthic invertivore,Pelagic site attached,Night,Hard bottom,Medium,2
+63,AST PUNC,Astrapogon puncticulatus,Blackfin cardinalfish,8,3.5,Benthic invertivore,Pelagic site attached,Night,Hard bottom,Medium,2
+436,BOL BOQU,Bollmannia boqueronensis,White-eye goby,10,3.3,Omnivore,Benthic,Day,Soft sediment,Low,1
+395,BRO BARB,Brotula barbata,Atlantic bearded brotula,94,3.8,Higher carnivore,Demersal,Day,Hard bottom,Medium,1
+448,DAC VOLI,Dactylopterus volitans,Flying gurnard,50,3.7,Benthic invertivore,Benthic,Day,Hard bottom,NA,1
+233,ELA RAND,Elacatinus randalli,Yellownose goby,4.6,3.5,Cleaner,Benthic,Day,Hard bottom,Medium,1
+434,EMM ATLA,Emmelichthyops atlanticus,Bonnetmouth,13,3.9,Omnivore,Pelagic non-site attached,Day,Hard bottom,Medium,2
+424,ENN ALTI,Enneanectes altivelis,Lofty triplefin,4,2.7,Higher carnivore,Benthic,Day,Hard bottom,Medium,1
+310,EPI DRUM,Epinephelus drummondhayi,Speckled hind,110,4,Higher carnivore,Demersal,Day,Hard bottom,Medium,1
+406,EPI NIVE,Epinephelus niveatus,Snowy grouper,122,4,Higher carnivore,Demersal,Day,Hard bottom,Medium,1
+336,EUC JONE,Eucinostomus jonesii,Slender mojarra,20,3.2,Benthic invertivore,Pelagic site attached,Day,Soft sediment,Low,2
+346,GYM NIGR,Gymnothorax nigromarginatus,Blackedge moray,99,4.1,Higher carnivore,Benthic,Night,Hard bottom,High,1
+377,HIP EREC,Hippocampus erectus,Lined seahorse,19,3.5,Benthic invertivore,Pelagic non-site attached,Day,Hard bottom,Low,1
+290,IST PLAT,Istiophorus platypterus,Sailfish,348,4.5,Higher carnivore,Pelagic non-site attached,Day,Hardbottom,Low,1
+425,LAB KALI,Labrisomus kalisherae,Downy blenny,7.5,3.4,Benthic invertivore,Benthic,Day,Hard bottom,Medium,1
+390,LAB NIGR,Labrisomus nigricinctus,Spotcheek blenny,8,3.5,Benthic invertivore,Benthic,Day,Hard bottom,Medium,1
+437,LIO MOWB,Liopropoma mowbrayi,Cave basslet,9,3.4,Benthic invertivore,Demersal,Day,Hard bottom,Medium,1
+414,MYC ACUT,Mycteroperca acutirostris,Western comb grouper,80,3.4,Higher carnivore,Demersal,Day,Hard bottom,Medium,1
+281,NEG BREV,Negaprion brevirostris,Lemon shark,340,4.3,Higher carnivore,Pelagic non-site attached,Day,Hard bottom,Low,1
+61,PAR NIGR,Paraclinus nigripinnis,Blackfin blenny,6.5,3.5,Benthic invertivore,Benthic,Day,Hard bottom,Medium,1
+379,PRI AQUI,Pristipomoides aquilonaris,Wenchman,56,3.9,Higher carnivore,Demersal,Day,Hard bottom,Low,2
+427,PRI PECT,Pristis pectinata,Smalltooth sawfish,760,4.5,Higher carnivore,Pelagic non-site attached,Day,Hard bottom,Low,1
+301,RAC CANA,Rachycentron canadum,Cobia,200,4,Higher carnivore,Pelagic site attached,Day,Hard bottom,Low,2
+451,RHI LENT,Rhinobatos lentiginosus,Atlantic guitarfish,75,3.6,Benthic invertivore,Benthic,Day,Soft sediment,Low,1
+256,SER PHOE,Serranus phoebe,Tattler,20,3.5,Benthic invertivore,Demersal,Day,Hard bottom,Medium,1
+446,STY LATE,Stygnobrotula latebricola,Black brotula,7.5,3.3,Benthic invertivore,Benthic,Night,Hard bottom,High,1
+99,SYA MICR,Syacium micrurum,Channel flounder,40,3.3,Benthic invertivore,Benthic,Day,Hard bottom,Low,1
+299,SYN SCOV,Syngnathus scovelli,Gulf pipefish,18.3,3.3,Benthic invertivore,Pelagic non-site attached,Day,Hard bottom,Low,1
+459,UMB CORO,Umbrina coroides,Sand drum,35,3.1,Benthic invertivore,Benthic,Day,Hard bottom,Low,1
