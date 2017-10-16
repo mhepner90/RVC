@@ -9,9 +9,9 @@ output: ioslides_presentation
 library(tidyverse)
 library(treemap)
 library(d3treeR) # devtools::install_github("timelyportfolio/d3treeR")
-
-# turn off read_csv messages
-#knitr::opts_chunk$set(warning=F, message=F, echo=F)
+library(htmlwidgets)
+library(webshot)
+knitr::opts_chunk$set(warning=F, message=F, echo=F)
 ```
 
 ## Create
@@ -23,13 +23,6 @@ library(d3treeR) # devtools::install_github("timelyportfolio/d3treeR")
 ## Species Abundances 
 
 ```{r pie chart}
-psu_common <- psu_family %>%
-    group_by(COMNAME) %>%
-    summarize(abundance_sum = sum(abundance)) %>%
-    filter(abundance_sum != "0") %>% #removes 32 species 
-  mutate(com_percent = (abundance_sum/sum(abundance_sum))*100) %>%
-  mutate(com_percent=round(com_percent,4))
-write_csv(psu_common, "psu_common.csv")
 
 psu_common = read_csv("psu_common.csv")
 
@@ -41,6 +34,9 @@ saveWidget(abunpie, pie)
 
 ```
 
+```{r pie}
+abunpie
+```
 - 293 species accounted for <1% of abundance data
 
 ```{r trait visualization}
@@ -81,10 +77,6 @@ treemap2
 ## Static
 
 ```{r htmlwidget to png}
-
-# additional libraries
-library(htmlwidgets)
-library(webshot)
 
 # paths
 htm = './htmlwidget_treemap2.html'
