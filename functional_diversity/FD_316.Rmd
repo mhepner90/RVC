@@ -1307,10 +1307,10 @@ top_23 = trait_matrix_common %>%
   func.dist.23=func.dist.23/max(func.dist.23)
   saveRDS(func.dist.23, "functional_diversity/func_dist_23_rds")
   
-  #with scale 
+#with scale 
 pdf("functional_diversity/functional_dendrogram_23.pdf", width = 8.5, height = 11) 
 par(pin=c(4.5,9.5))         #plot dimensions (width, height)
-plot(func.dist.23, horiz=TRUE, main = "Functional Dendrogram", cex = 1, cex.main = 2, cex.lab = 1)
+plot(func.dist.23, horiz=TRUE, main = "Functional Dendrogram", cex = 1, cex.main = 2, cex.lab = 1, ps = 35)
 dev.off()
 
 plot(func.dist.23, label.offset=0.2, edge.width = 2, type = "cladogram")  
