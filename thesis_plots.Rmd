@@ -121,7 +121,7 @@ ggsave(file="ntmr_plots2.png", ntmr_plot, width=10, height=5, path="big_csv/plot
 
 ```
 
-```{r strat all}
+```{r strat LR PR HR}
 
  matrices_strat_grouped = all_matrices_data %>% 
     mutate(
@@ -143,7 +143,24 @@ ggsave(file="ntmr_plots2.png", ntmr_plot, width=10, height=5, path="big_csv/plot
       func.div_n = length(func.div),
       func.div_sd = sd(func.div),
       func.div_se = func.div_sd / sqrt(func.div_n))
-  
+
+strat_grouped = all_matrices_data %>% 
+    mutate(
+      STRAT_GROUPED = 
+      ifelse(grepl("FMLR|FSLR|FDLR", STRAT), 'LINEAR_REEF', 
+             ifelse(grepl("OFPR|MCPR|INPR", STRAT), 'PATCH_REEF',
+                    ifelse(grepl('HRRF', STRAT), 'HIGH_RELIEF', "IDK")))) %>%
+  mutate(num_group_strat = 
+           ifelse(grepl("HIGH_RELIEF", STRAT_GROUPED), '1',
+                  ifelse(grepl("LINEAR_REEF", STRAT_GROUPED), '2',
+                         ifelse(grepl("PATCH_REEF", STRAT_GROUPED), '3', "NA"))))
+
+write_csv(strat_grouped, 'group_strata.csv')
+
+mpa = strat_grouped %>%
+  filter(MPA_NR != "0")
+write_csv(mpa, "mpa.csv")
+
 library(colortools)
 
 #richness
@@ -453,8 +470,102 @@ abunpie =plot_ly(psu_common_less1, labels=~COMNAME, values =~com_percent, type="
 
 pie = './htmlwidget_abunpie.html'
 saveWidget(abunpie, pie)
-
-
-
-
 ```
+
+```{r all }
+
+diversity_all = all_matrices_data %>% 
+    group_by(YEAR) %>% #add subregion later 
+    summarize(
+      richness_mean = mean(richness),
+      richness_n = length(richness),
+      richness_sd = sd(richness),
+      richness_se = richness_sd / sqrt(richness_n),
+      richness_min = min(richness),
+      richness_max = max(richness),
+      simpson_mean = mean(simpson),
+      simpson_n = length(simpson),
+      simpson_sd = sd(simpson),
+      simpson_se = simpson_sd / sqrt(simpson_n),
+      simpson_min = min(simpson),
+      simpson_max = max(simpson),
+      func.div_mean = mean(func.div),
+      func.div_n = length(func.div),
+      func.div_sd = sd(func.div),
+      func.div_se = func.div_sd / sqrt(func.div_n),
+      func.div_min = min(func.div),
+      func.div_max = max(func.div))
+
+rich = ggplot(diversity_all,aes(x=YEAR,y=richness_mean))+ 
+  geom_line(aes(),lwd=1.2) +
+  geom_point(size=4) +
+  geom_errorbar(aes(ymax=richness_mean+richness_se,ymin=richness_mean-richness_se),width=0.3)+
+  labs(title= "Richness", x="Year", y="Mean Effective \nNumber of Species (± SE)")+
+  scale_color_manual(labels="richness_mean", values = "blue")+
+  scale_x_continuous(
+    limits = c(1999, 2016), 
+    breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016),
+    labels=c("2000","","2004","","2008","","2012","","2016"))+
+  theme_bw() +
+  theme(
+    legend.position="bottom",
+    legend.text =element_text(size=20,color="black"),
+    panel.grid.major=element_blank(),
+    panel.grid.minor=element_blank(),
+    axis.title.x=element_text(size=20),
+    axis.text.x =element_text(size=16, color="black"),
+    axis.title.y=element_text(size=20),
+    axis.text.y =element_text(size=16, color="black"),
+    panel.border =element_rect(size = 1),
+    plot.title =element_text(hjust = 0, size =22))
+ggsave(file="richness.png", path="big_csv/plots")
+#ggsave(file="richness_by_year_PROT_bw.pdf", path="big_csv/plots")
+
+#simpson
+simp_prot = ggplot(diversity_all,aes(x=YEAR,y=simpson_mean))+ 
+  geom_line(aes(),lwd=1.2) +
+  geom_point(size=4) +
+  geom_errorbar(aes(ymax=simpson_mean+simpson_se,ymin=simpson_mean-simpson_se),width=0.3)+
+  labs(title= "Simpson", x="Year", y="Mean Effective \nNumber of Species (± SE)", color = NULL)+
+  scale_x_continuous(
+    limits = c(1999, 2016), 
+    breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016),
+    labels=c("2000","","2004","","2008","","2012","","2016"))+
+  theme_bw()+
+  theme(
+    #legend.position="bottom",
+    legend.text =element_text(size=20,color="black"),
+    panel.grid.major=element_blank(),
+    panel.grid.minor=element_blank(),
+    axis.title.x=element_text(size=20),
+    axis.text.x =element_text(size=16, color="black"),
+    axis.title.y=element_text(size=20),
+    axis.text.y =element_text(size=16, color="black"),
+    panel.border =element_rect(size = 1),
+    plot.title =element_text(hjust = 0, size =22))
+ggsave(file="simpson.png", path="big_csv/plots")
+#ggsave(file="simpson_diversity_by_year_PROT_bw.pdf", path="big_csv/plots")
+
+#functional
+func_prot = ggplot(diversity_all,aes(x=YEAR,y=func.div_mean))+ 
+  geom_line(aes(),lwd=1.2) +
+  geom_point(size=4) +
+  geom_errorbar(aes(ymax=func.div_mean+func.div_se,ymin=func.div_mean-func.div_se),width=0.3)+
+  labs(title= "Functional", x="Year", y="Mean Effective \nNumber of Species (± SE)", color = NULL)+
+  scale_x_continuous(
+    limits = c(1999, 2016), 
+    breaks = c(2000,2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016),
+    labels=c("2000","","2004","","2008","","2012","","2016"))+
+  theme_bw()+
+  theme(
+    #legend.position="bottom",
+    legend.text =element_text(size=20,color="black"),
+    panel.grid.major=element_blank(),
+    panel.grid.minor=element_blank(),
+    axis.title.x=element_text(size=20),
+    axis.text.x =element_text(size=16, color="black"),
+    axis.title.y=element_text(size=20),
+    axis.text.y =element_text(size=16, color="black"),
+    panel.border =element_rect(size = 1),
+    plot.title =element_text(hjust = 0, size =22))
+ggsave(file="functional.png", path="big_csv/plots")
