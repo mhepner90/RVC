@@ -217,7 +217,7 @@ Species_code,SPECIES_CD,Latin_name,Common_name,Maxlength,Trophic_level,Trophic_g
 217,Myc phen,Mycteroperca phenax,Scamp,107,4.5,Higher carnivore,Demersal,Day,Hard bottom,Medium,1
 254,Myc tigr,Mycteroperca tigris,Tiger grouper,101,4.5,Higher carnivore,Demersal,Day,Hard bottom,Medium,1
 218,Myc vene,Mycteroperca venenosa,Yellowfin grouper,100,4.5,Higher carnivore,Demersal,Day,Hard bottom,Medium,1
-450,Myr brev,MyrichthysÖbreviceps,Sharptail eel ,102,3.5,Higher carnivore,Demersal,Night,Hard bottom,Medium,1
+450,Myr brev,Myrichthys…breviceps,Sharptail eel ,102,3.5,Higher carnivore,Demersal,Night,Hard bottom,Medium,1
 107,Myr jaco,Myripristis jacobus,Blackbar soldierfish,25,3.4,Omnivore,Demersal,Night,Hard bottom,Medium,3
 455,Myr ocel,Myrichthys ocellatus,Goldspotted eel,110,3.6,Benthic invertivore,Demersal,Night,Soft sediment,Low,1
 430,Nar banc,Narcine bancroftii,Lesser electric ray,60,3.2,Benthic invertivore,Benthic,Night,Soft sediment,Low,1
