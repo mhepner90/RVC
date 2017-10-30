@@ -8,6 +8,8 @@ output: html_document
 ```{r Functional distance matrix spe, eval = F}
 knitr::opts_chunk$set(echo = TRUE)
 
+library(dendextend)
+
 if (!file.exists("functional_diversity/func_dist_rds")){
  
   trait_matrix_316 = read_csv('functional_diversity/species_trait_matrix_316_spp.csv')
@@ -198,7 +200,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 if (!file.exists("functional_diversity/func_dist_rds")){
  
-  trait_matrix_316 = read_csv('functional_diversity/species_trait_matrix_316_spp.csv')
+  trait_matrix_316 = read_csv('functional_diversity/species_trait_matrix_316_spp_10_25_17.csv')
   
   trait_matrix_common = trait_matrix_316 %>%
     as.tibble() %>%
