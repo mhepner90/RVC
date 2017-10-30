@@ -358,13 +358,13 @@ ggsave(file="diversity_plot.pdf", path="big_csv/plots")
 for_legend_rssf <- get_legend(diversity_year_plot)
 ggsave(file="legend_diversity.png", for_legend_rssf, width =7, height=7, path="big_csv/plots")
 
-diversity_simp_shan_func = diversity_plot %>% 
+diversity_simp_func = diversity_plot %>% 
   filter(variable != "Richness") %>%
   filter(variable != "Shannon")
   as.tibble()
   
 simp_func_plot =  
-    ggplot(diversity_simp_shan_func, aes(x=YEAR, y=value.mean, color=variable))+
+    ggplot(diversity_simp_func, aes(x=YEAR, y=value.mean, color=variable))+
     geom_errorbar(aes(ymax=value.mean+value.se,ymin=value.mean-value.se),width=0.2)+
     geom_point(size=3)+
     geom_line(aes(group=variable),lwd=1)+
@@ -381,17 +381,17 @@ simp_func_plot =
              "Functional"="cyan"))+
   #theme_bw()+
   theme(
-    legend.position="bottom", #right 
-    legend.text=element_text(size=11, color = "white"),
-    legend.key.size=unit(5,"mm"),
-    legend.background = element_rect(fill = "grey30"),
-    panel.background=element_rect(fill="grey30"), #black
-    panel.grid.major=element_line("grey40"),#element_blank(),
+    legend.position="bottom",
+    legend.background = element_rect(fill="black"),
+    legend.text =element_text(size=18,color="white"),
+    panel.background=element_rect(fill="black"), #black
+    panel.grid.major=element_blank(),
     panel.grid.minor=element_blank(),
-    axis.title.x=element_text(size=12),
-    axis.title.y=element_text(size=12),
-    plot.title =element_text(hjust = 0),
-    title=element_text(size=12))
+    axis.title.x=element_text(size=18),
+    axis.text.x =element_text(size=14),
+    axis.title.y=element_text(size=18),
+    axis.text.y =element_text(size=14),
+    plot.title =element_text(hjust = 0, size =20))
 
 ggsave(file="diversity_sf.png", path="big_csv/plots")
 ggsave(file="diversity_ssf.png", path="big_csv/plots")
@@ -569,3 +569,38 @@ func_prot = ggplot(diversity_all,aes(x=YEAR,y=func.div_mean))+
     panel.border =element_rect(size = 1),
     plot.title =element_text(hjust = 0, size =22))
 ggsave(file="functional.png", path="big_csv/plots")
+
+```
+
+
+```{r subregion mean}
+
+compare_strat = matrices_strat_grouped %>%
+  group_by(STRAT_GROUPED) %>%
+  summarize(
+    mean_rich = mean(richness_mean),
+    mean_simp = mean(simpson_mean),
+    mean_func = mean(func.div_mean))
+
+#Richness in HR is 27% > PR 
+#Richness in HR is 21% > LR 
+#Simpson in HR is 11% > PR 
+#Simpson in HR is 19% > LR
+#Functional in HR is 5% > PR
+#Functional in HR is 13% > LR
+
+compare_subregion = matrices_strat_grouped_with_subregion %>%
+  group_by(SUBREGION_DOMAIN) %>%
+  summarize(
+    mean_rich = mean(richness_mean),
+    mean_simp = mean(simpson_mean),
+    mean_func = mean(func.div_mean))
+
+#Simpson in UK is 11% > MK 
+(1-(8.851998/8.524956))*100
+#Simpson in LK is 19% > MK
+(1-(8.851998/8.874883))*100
+#Functional in UK is 5% > MK
+(1-(2.741395/2.688089))*100
+#Functional in LK is 13% > MK
+(1-(2.741395/2.758247))*100
