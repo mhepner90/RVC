@@ -1,0 +1,73 @@
+---
+title: "FK regions"
+output:
+  html_document:
+    code_folding: hide
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = F, warning = F)
+```
+
+## FKNMS sample grid
+
+```{r}
+library(tidyverse)
+library(here)
+library(glue)
+library(sf)
+library(fs)
+library(mapview)
+
+shp <- here("FKNMS_sample_grid/FlaKeys_Grid.shp")
+
+p <- read_sf(shp)
+
+#p %>% st_set_geometry(NULL)
+
+# dissolve
+p_d <- p %>% group_by(subregion) %>% summarize(n = n())
+
+# map
+mapview(p_d, zcol = "subregion")
+```
+
+## FKNMS
+
+- [GIS Data | Office of National Marine Sanctuaries](https://sanctuaries.noaa.gov/library/imast_gis.html)
+  - Florida Keys Boundary Polygon: [904 KB Zipped File](https://sanctuaries.noaa.gov/library/imast/fknms_py2.zip)
+
+```{r pressure, echo=FALSE}
+get_nms_ply <- function(nms){
+  # get polygon for National Marine Sanctuary
+  
+  nms_shp <- here(glue("data/shp/{nms}_py.shp"))
+  
+  if (!file.exists(nms_shp)){
+    # download if needed
+    
+    # https://sanctuaries.noaa.gov/library/imast_gis.html
+    nms_url <- glue("https://sanctuaries.noaa.gov/library/imast/{nms}_py2.zip")
+    nms_zip <- here(glue("data/{nms}.zip"))
+    shp_dir <- here("data/shp")
+    
+    download.file(nms_url, nms_zip)
+    unzip(nms_zip, exdir = shp_dir)
+    file_delete(nms_zip)
+  }
+  # read and convert to standard geographic projection
+  read_sf(nms_shp) %>%
+    st_transform(4326)
+}
+
+nms <- "fknms"
+
+# get nms poly
+nms_ply <- get_nms_ply(nms)
+
+mapview(nms_ply, legend = TRUE, layer.name = "Sanctuary", zcol = "SANCTUARY")
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
