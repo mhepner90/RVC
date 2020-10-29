@@ -604,3 +604,4 @@ compare_subregion = matrices_strat_grouped_with_subregion %>%
 (1-(2.741395/2.688089))*100
 #Functional in LK is 13% > MK
 (1-(2.741395/2.758247))*100
+```
