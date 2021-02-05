@@ -320,7 +320,7 @@ spp_list<- fk2018$taxonomic_data$SPECIES_CD #402 species
 psu_abunfk2018 <- getPSUAbundance(fk2018, spp_list, merge_protected = F) 
 write_csv(psu_abunfk2018, 'Data/psu_abunfk2018.csv') #2016
 
-fk2018 = getRvcData(2016, "FLA KEYS")
+fk2018 = getRvcData(2018, "FLA KEYS")
 fk2018$sample_data = psu_abunfk2018
 fk2018$stratum_data$YEAR = 2018 
 psu_abunfk2018 = getPSUAbundance(fk2018, spp_list$spp_list)
@@ -434,8 +434,6 @@ write_csv(d, 'Data/psu_fk_abun_1999-2018.csv')
   arrange(desc(com_percent))
 
 ```
-
-
 
 ## Functional distance trait based matrix (from Lefcheck et al., 2014 ChessMap.Rmd)
 
